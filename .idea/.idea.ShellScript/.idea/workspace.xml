@@ -1,17 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7fb1ff7e-dfe8-4a66-9abf-015955a94e27" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.ShellScript/.idea/dictionaries/amk.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.ShellScript/.idea/indexLayout.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.ShellScript/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.ShellScript/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.ShellScript/riderModule.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ShellScript/CommandLine/CommandContext.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ShellScript/CommandLine/HelpCommand.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ShellScript/CommandLine/ICommand.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ShellScript/CommandLine/Switch.cs" afterDir="false" />
-    </list>
+    <list default="true" id="7fb1ff7e-dfe8-4a66-9abf-015955a94e27" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -251,12 +241,12 @@
       <option name="presentableId" value="Default" />
       <updated>1534625980640</updated>
       <workItem from="1534625982667" duration="103000" />
-      <workItem from="1534626138228" duration="1367000" />
+      <workItem from="1534626138228" duration="1659000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="1470000" />
+    <option name="totallyTimeSpent" value="1762000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -269,7 +259,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1366" y="0" width="2560" height="1410" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25477707" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
