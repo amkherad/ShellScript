@@ -9,6 +9,23 @@
     <Import_RootNamespace>ShellScript.Core</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ApplicationContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\SdkVariable.cs" />
+    <Folder Include="$(MSBuildThisFileDirectory)Language\Sdk\ClassLibrary\IO" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\DataTypes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\ISdkFunc.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\ISdkClass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\ISdkObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\ISdkParameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\ISdkVariable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\SdkParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringHelpers.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Language\DesignGuides.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Language\Compiler" />
   </ItemGroup>
 </Project>

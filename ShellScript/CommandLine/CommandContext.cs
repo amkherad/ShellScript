@@ -53,10 +53,12 @@ namespace ShellScript.CommandLine
         {
             return names.Any(name => Switches.Any(s => _switchNameComparer.Equals(s.Name, name)));
         }
-
+        
+        
         public static CommandContext Parse(string[] commands)
         {
-            return null;
+
+            return new CommandContext(commands, new Switch[0], null);
         }
     }
 }

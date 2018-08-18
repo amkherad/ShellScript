@@ -8,6 +8,10 @@ namespace ShellScript.CommandLine
 
         bool CanHandle(CommandContext command);
 
-        void Execute(TextWriter writer, CommandContext context);
+        void Execute(
+            TextWriter outputWriter,
+            TextWriter errorWriter,
+            CommandContext context
+        );
     }
 }

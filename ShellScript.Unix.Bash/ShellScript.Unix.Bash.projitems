@@ -9,6 +9,10 @@
     <Import_RootNamespace>ShellScript.Unix.Bash</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Class1.cs"/>
+    <Compile Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\IO\SdkFile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\IO\SdkFile.Exists.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\Process" />
   </ItemGroup>
 </Project>
