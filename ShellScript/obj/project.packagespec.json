@@ -1,0 +1,43 @@
+﻿{
+  "version": "1.0.0",
+  "restore": {
+    "projectUniqueName": "/home/amk/Projects/Software/ShellScript/ShellScript/ShellScript.csproj",
+    "projectName": "ShellScript",
+    "projectPath": "/home/amk/Projects/Software/ShellScript/ShellScript/ShellScript.csproj",
+    "outputPath": "/home/amk/Projects/Software/ShellScript/ShellScript/obj/",
+    "projectStyle": "PackageReference",
+    "fallbackFolders": [
+      "/opt/dotnet/sdk/NuGetFallbackFolder"
+    ],
+    "originalTargetFrameworks": [
+      "netcoreapp2.1"
+    ],
+    "frameworks": {
+      "netcoreapp2.1": {
+        "projectReferences": {}
+      }
+    },
+    "warningProperties": {
+      "warnAsError": [
+        "NU1605"
+      ]
+    }
+  },
+  "frameworks": {
+    "netcoreapp2.1": {
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "suppressParent": "All",
+          "target": "Package",
+          "version": "[2.1.0, )",
+          "autoReferenced": true
+        }
+      },
+      "imports": [
+        "net461"
+      ],
+      "assetTargetFallback": true,
+      "warn": true
+    }
+  }
+}

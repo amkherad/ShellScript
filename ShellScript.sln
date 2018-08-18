@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellScript", "ShellScript\ShellScript.csproj", "{39413563-93C2-43EC-970A-6246C69F5184}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ShellScript.Core", "ShellScript.Core\ShellScript.Core.shproj", "{E28210AA-65CC-4B08-BD22-EF1DE04DBB3D}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ShellScript.Windows.Batch", "ShellScript.Windows.Batch\ShellScript.Windows.Batch.shproj", "{146D2BFB-0CF5-4870-B395-81CC17BF6AB0}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ShellScript.Unix.Bash", "ShellScript.Unix.Bash\ShellScript.Unix.Bash.shproj", "{056908D0-7A54-499A-8929-4E8F258F4F0C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{39413563-93C2-43EC-970A-6246C69F5184}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39413563-93C2-43EC-970A-6246C69F5184}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39413563-93C2-43EC-970A-6246C69F5184}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39413563-93C2-43EC-970A-6246C69F5184}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
