@@ -1,6 +1,6 @@
 namespace ShellScript.Core.Language
 {
-    public class DesignGuides
+    public class DesignGuidelines
     {
         public const string ErrorOutputHead = "!-";
     }

@@ -23,7 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)StringHelpers.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Language\DesignGuides.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\DesignGuidelines.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Language\Compiler" />

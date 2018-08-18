@@ -22,7 +22,7 @@ namespace ShellScript
                 }
             }
 
-            errorWriter.WriteLine(DesignGuides.ErrorOutputHead + " Invalid command-line passed.");
+            errorWriter.WriteLine(DesignGuidelines.ErrorOutputHead + " Invalid command-line passed.");
         }
     }
 }
