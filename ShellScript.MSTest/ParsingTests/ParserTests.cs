@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ShellScript.Core.Language.Compiler.Parsing;
+using ShellScript.Core.Language.CompilerServices.Parsing;
 
 namespace ShellScript.MSTest.ParsingTests
 {
@@ -15,7 +15,7 @@ namespace ShellScript.MSTest.ParsingTests
             var code = "function test(int x) { echo; }";
             var parser = new Parser();
 
-            var statements = parser.Parse(new StringReader(code), new ParserInfo("", "")).ToList();
+            var statements = parser.Parse(new StringReader(code), new ParserInfo(true, "", "")).ToList();
 
             GC.KeepAlive(statements);
 

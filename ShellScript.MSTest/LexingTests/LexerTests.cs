@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ShellScript.Core.Language.Compiler.Lexing;
+using ShellScript.Core.Language.CompilerServices.Lexing;
 
 namespace ShellScript.MSTest.LexingTests
 {

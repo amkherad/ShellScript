@@ -9,9 +9,10 @@
     <Import_RootNamespace>ShellScript.Windows.Batch</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)WindowsBatchSdk.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\IO\SdkFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\IO\SdkFile.Exists.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sdk\WindowsBatchSdk.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WindowsPlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\Process" />

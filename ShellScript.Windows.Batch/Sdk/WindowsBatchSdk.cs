@@ -1,11 +1,11 @@
-using ShellScript.Core.Language.Sdk;
+﻿using ShellScript.Core.Language.Sdk;
 
-namespace ShellScript.Unix.Bash.Sdk
+namespace ShellScript.Windows.Batch.Sdk
 {
-    public class UnixBashSdk : ISdk
+    public class WindowsBatchSdk : ISdk
     {
-        public string Name => "Bash";
-        public string OutputFileExtension => "sh";
+        public string Name => "Batch";
+        public string OutputFileExtension => "bat";
 
 
         public bool TryGetClass(string className, out ISdkClass result)

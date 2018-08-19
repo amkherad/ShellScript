@@ -12,6 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\IO\SdkFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\IO\SdkFile.Exists.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sdk\UnixBashSdk.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UnixPlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\Process" />
