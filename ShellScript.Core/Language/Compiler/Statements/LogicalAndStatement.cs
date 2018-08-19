@@ -1,3 +1,5 @@
+using ShellScript.Core.Language.Compiler.Parsing;
+
 namespace ShellScript.Core.Language.Compiler.Statements
 {
     public class LogicalAndStatement : LogicalOperatorStatement
@@ -5,7 +7,8 @@ namespace ShellScript.Core.Language.Compiler.Statements
         public LogicalStatement Left { get; }
         public LogicalStatement Right { get; }
         
-        public LogicalAndStatement(LogicalStatement left, LogicalStatement right)
+        public LogicalAndStatement(LogicalStatement left, LogicalStatement right, ParserInfo info)
+            : base(info)
         {
             Left = left;
             Right = right;

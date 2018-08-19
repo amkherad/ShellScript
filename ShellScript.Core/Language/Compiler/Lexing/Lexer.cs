@@ -56,6 +56,9 @@ namespace ShellScript.Core.Language.Compiler.Lexing
             {TokenType.Do, "^do"},
             {TokenType.While, "^while"},
             {TokenType.Loop, "^loop"},
+            
+            {TokenType.Class, "^class"},
+            {TokenType.Function, "^function"},
 
             {TokenType.Throw, "^throw"},
             {TokenType.Comment, "(^//)"},
@@ -65,7 +68,7 @@ namespace ShellScript.Core.Language.Compiler.Lexing
             {TokenType.Async, "^async"},
             {TokenType.Await, "^await"},
 
-            {TokenType.In, "^in"},
+            {TokenType.In, "^((in)&(!int))"},
             {TokenType.NotIn, "^notin"},
 
             {TokenType.Like, "^like"},
@@ -73,7 +76,8 @@ namespace ShellScript.Core.Language.Compiler.Lexing
 
             {TokenType.Call, "^call"},
 
-            {TokenType.DataType, "^((const)|(var)|(int)|(long)|(double)|(float)|(object)|(variant)|(number))"},
+            {TokenType.DataType, "^((const)|(var)|(int)|(double)|(float)|(object)|(variant)|(number)|(decimal)|(int\\[\\])|(double\\[\\])|(float\\[\\])|(object\\[\\])|(variant\\[\\])|(number\\[\\])|(decimal\\[\\]))"},//(long)|
+            {TokenType.Null, "^((null)|(nil))"},
 
             {TokenType.Echo, "^echo"},
 

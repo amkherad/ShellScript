@@ -61,6 +61,7 @@ namespace ShellScript.Core.Language.Compiler.Lexing
         Call, //call
         
         DataType, //var,int,double,float,long,byte,char,object,variant,void
+        Null, //null
         
         Echo,
         Number,

@@ -1,25 +1,26 @@
+using System;
+
 namespace ShellScript.Core.Language.Sdk
 {
+    [Flags]
     public enum DataTypes
     {
-        Variant,
+        Array = 0x4000,
         
-        Boolean,
+        Variant = 0,
         
-        Array,
+        Boolean = 1,
         
-        Decimal,
+        Numeric = 2,
         
-        Float,
+        Decimal = 3,
         
-        Numeric,
+        Float = 4,
         
-        Char,
+        String = 16,
         
-        String,
+        Class = 32,
         
-        Class,
-        
-        Delegate,
+        Delegate = 64,
     }
 }

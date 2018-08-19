@@ -4,6 +4,7 @@ using System.IO;
 using ShellScript.Core.Helpers;
 using ShellScript.Core.Language.Compiler.Lexing;
 using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.Compiler.Parsing
 {
@@ -29,22 +30,77 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             }
         }
 
+
+        public DataTypes TokenTypeToDataType(Token token, DataTypes dataType = DataTypes.Variant)
+        {
+            switch (token.Type)
+            {
+                case TokenType.DataType:
+                {
+                    switch (token.Value)
+                    {
+                        case "null":
+                            return dataType;
+                        case "int":
+                            return DataTypes.Decimal;
+                        case "decimal":
+                            return DataTypes.Decimal;
+                        case "number":
+                            return DataTypes.Numeric;
+                        case "float":
+                            return DataTypes.Float;
+                        case "double":
+                            return DataTypes.Float;
+                        case "object":
+                            return DataTypes.Class;
+                        case "variant":
+                        case "var":
+                            return DataTypes.Variant;
+
+                        case "int[]":
+                            return DataTypes.Decimal | DataTypes.Array;
+                        case "decimal[]":
+                            return DataTypes.Decimal | DataTypes.Array;
+                        case "number[]":
+                            return DataTypes.Numeric | DataTypes.Array;
+                        case "float[]":
+                            return DataTypes.Float | DataTypes.Array;
+                        case "double[]":
+                            return DataTypes.Float | DataTypes.Array;
+                        case "object[]":
+                            return DataTypes.Class | DataTypes.Array;
+                        case "variant[]":
+                            return DataTypes.Variant | DataTypes.Array;
+                    }
+
+                    break;
+                }
+                case TokenType.Null:
+                    return dataType;
+            }
+
+            return dataType;
+        }
+
         protected IStatement ReadStatement(PeekingEnumerator<Token> enumerator, ParserInfo info)
         {
+            Token token = null;
+
             while (enumerator.MoveNext())
             {
-                var token = enumerator.Current;
+                token = enumerator.Current;
 
                 switch (token.Type)
                 {
                     case TokenType.Class:
-                        return ReadClass(token, enumerator, info);
-                    
+                        //return ReadClass(token, enumerator, info);
+                        throw new NotImplementedException();
+
                     case TokenType.Function:
                         return ReadFunction(token, enumerator, info);
-                    
+
                     case TokenType.If:
-                        return ReadIf(enumerator, info);
+                        return ReadIf(token, enumerator, info);
 
                     case TokenType.Else:
                         throw UnexpectedSyntax(token, info);
@@ -148,21 +204,41 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                         throw new ArgumentOutOfRangeException();
                 }
             }
+
+            throw UnexpectedSyntax(token, info);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="info"></param>
+        /// <returns type="IllegalSyntaxException">IllegalSyntaxException</returns>
         protected ParserException IllegalSyntax(Token token, ParserInfo info)
         {
-            return new IllegalSyntaxException(token.LineNumber, token.ColumnOffset, info);
+            return new IllegalSyntaxException(token?.LineNumber ?? 0, token?.ColumnOffset ?? 0, info);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="info"></param>
+        /// <returns type="ParserSyntaxException">ParserSyntaxException</returns>
         protected ParserException UnexpectedSyntax(Token token, ParserInfo info)
         {
-            return new IllegalSyntaxException(token.LineNumber, token.ColumnOffset, info);
+            return new ParserSyntaxException(token?.LineNumber ?? 0, token?.ColumnOffset ?? 0, info);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="info"></param>
+        /// <returns type="ParserSyntaxException">ParserSyntaxException</returns>
         protected ParserException EndOfFile(Token token, ParserInfo info)
         {
-            return new ParserException(token.LineNumber, token.ColumnOffset, info);
+            return new ParserSyntaxException(token?.LineNumber ?? 0, token?.ColumnOffset ?? 0, info);
         }
     }
 }
