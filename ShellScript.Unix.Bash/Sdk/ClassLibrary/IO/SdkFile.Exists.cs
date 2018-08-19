@@ -9,6 +9,7 @@ namespace ShellScript.Unix.Bash.Sdk.ClassLibrary.IO
         {
             public string Name => "Exists";
 
+            public bool IsStatic => true;
             public bool AllowDynamicParams => false;
 
             public IEnumerable<ISdkParameter> Parameters { get; } = new[]

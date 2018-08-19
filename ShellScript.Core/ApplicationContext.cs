@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using ShellScript.CommandLine;
 
 namespace ShellScript.Core
@@ -10,6 +12,8 @@ namespace ShellScript.Core
         public static ICollection<ICommand> AvailableCommands { get; } = new List<ICommand>
         {
             HelpCommand
-        }; 
+        };
+        
+        public static Version Version => Assembly.GetExecutingAssembly().GetName().Version;
     }
 }

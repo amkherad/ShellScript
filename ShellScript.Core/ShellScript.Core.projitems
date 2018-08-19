@@ -10,9 +10,26 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)ApplicationContext.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\PeekingEnumerator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Parsing\IllegalSyntaxException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Parsing\Parser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Parsing\Parser.Readers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Parsing\ParserException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Parsing\ParserInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Parsing\ParserSyntaxException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Statements\ArithmeticStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Statements\ConditionalBlockStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Statements\EvaluationStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Statements\IfElseStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Statements\IStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Statements\LogicalAndStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Statements\LogicalOperatorStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Statements\LogicalStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Statements\BlockStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\SdkVariable.cs" />
-    <Folder Include="$(MSBuildThisFileDirectory)Language\Sdk\ClassLibrary\IO" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Lexing\Lexer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Lexing\Token.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Compiler\Lexing\TokenType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\DataTypes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\ISdkFunc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\ISdkClass.cs" />
@@ -24,8 +41,5 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Language\DesignGuidelines.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Language\Compiler" />
   </ItemGroup>
 </Project>

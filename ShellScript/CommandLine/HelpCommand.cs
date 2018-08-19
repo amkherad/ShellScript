@@ -26,7 +26,7 @@ namespace ShellScript.CommandLine
 
         public void Execute(TextWriter writer, TextWriter errorWriter, CommandContext context)
         {
-            writer.WriteLine($"ShellScript ({Helpers.Version}) by Ali Mousavi Kherad");
+            writer.WriteLine($"ShellScript ({ApplicationContext.Version}) by Ali Mousavi Kherad");
 
             writer.WriteLine();
 

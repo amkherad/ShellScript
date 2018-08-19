@@ -1,0 +1,30 @@
+String quotes: " and '
+Comment syntaxes: // and ; single-lines "/* */" multi-line
+
+function dummy() {
+    
+    return "dummy";
+}
+
+function checkReadMe() {
+    return File.Exists("Readme")
+}
+
+function getNativeCommandResult() {
+    var result = `ls /proc`
+}
+
+win:  var result = `dir -R C:\`
+unix: var result = `ls -R /`
+
+#if windows
+
+#endif
+
+#if cmd || powershell
+
+#elseif dash
+
+#else
+
+#endif

@@ -1,6 +1,7 @@
 ﻿namespace ShellScript.Windows.Batch
 {
-    class Class1
+    public class WindowsBatchSdk
     {
+        
     }
 }

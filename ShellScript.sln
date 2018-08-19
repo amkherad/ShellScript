@@ -8,6 +8,13 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ShellScript.Windows.Batch",
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ShellScript.Unix.Bash", "ShellScript.Unix.Bash\ShellScript.Unix.Bash.shproj", "{056908D0-7A54-499A-8929-4E8F258F4F0C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Resources", "Resources", "{08D350BD-16D1-48A7-ABF0-E92A31D55218}"
+ProjectSection(SolutionItems) = preProject
+	Guidelines.txt = Guidelines.txt
+EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellScript.MSTest", "ShellScript.MSTest\ShellScript.MSTest.csproj", "{B0E41259-2058-42D2-81E6-4349CFDF7A59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +25,9 @@ Global
 		{39413563-93C2-43EC-970A-6246C69F5184}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39413563-93C2-43EC-970A-6246C69F5184}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39413563-93C2-43EC-970A-6246C69F5184}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0E41259-2058-42D2-81E6-4349CFDF7A59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0E41259-2058-42D2-81E6-4349CFDF7A59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0E41259-2058-42D2-81E6-4349CFDF7A59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0E41259-2058-42D2-81E6-4349CFDF7A59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
