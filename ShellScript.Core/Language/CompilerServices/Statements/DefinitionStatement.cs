@@ -3,7 +3,7 @@ using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class DefinitionStatement : IStatement
+    public abstract class DefinitionStatement : IStatement
     {
         public bool IsBlockStatement => false;
         public ParserInfo ParserInfo { get; }

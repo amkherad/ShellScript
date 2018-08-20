@@ -26,6 +26,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\DefinitionStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\DoWhileStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\EvaluationStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\ForEachStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\ForStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\FunctionCallStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\FunctionParameterDefinitionStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\FunctionStatement.cs" />
@@ -35,7 +37,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\LogicalOperatorStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\LogicalStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\BlockStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\VariableAccessOrDefinitionStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\VariableAccessStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\VariableDefinitionStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\WhileStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\IPlatform.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\Platforms.cs" />

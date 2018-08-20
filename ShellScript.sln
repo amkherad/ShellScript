@@ -15,6 +15,8 @@ EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellScript.MSTest", "ShellScript.MSTest\ShellScript.MSTest.csproj", "{B0E41259-2058-42D2-81E6-4349CFDF7A59}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ShellScript.Luncher", "ShellScript.Luncher\ShellScript.Luncher.shproj", "{B9852B36-9228-45DC-AB2F-1DD3DD56106F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

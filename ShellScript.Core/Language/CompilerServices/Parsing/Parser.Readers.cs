@@ -46,6 +46,79 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             return new ConstantValueStatement(dataTypeHint, token.Value, info);
         }
 
+
+        public VariableDefinitionStatement ReadVariableDefinition(Token token,
+            PeekingEnumerator<Token> enumerator, bool forceAssignment, ParserInfo info)
+        {
+            if (token.Type != TokenType.DataType)
+                throw UnexpectedSyntax(token, info);
+
+            if (!enumerator.MoveNext()) //variable name.
+                throw EndOfFile(token, info);
+
+            var dataType = TokenTypeToDataType(token);
+
+            var definitionName = enumerator.Current;
+            if (definitionName.Type != TokenType.IdentifierName)
+                throw UnexpectedSyntax(definitionName, info);
+
+            if (forceAssignment)
+            {
+                if (!enumerator.MoveNext()) //assignment
+                    throw EndOfFile(token, info);
+
+                token = enumerator.Current;
+                if (token.Type != TokenType.Assignment)
+                    throw UnexpectedSyntax(token, info);
+
+                if (!enumerator.MoveNext()) //value
+                    throw EndOfFile(token, info);
+
+                IStatement value;
+
+                token = enumerator.Current;
+                if (token.Type == TokenType.IdentifierName)
+                {
+                    value = new VariableAccessStatement(token.Value, info);
+                }
+                else if (token.Type == TokenType.Number)
+                {
+                    value = new ConstantValueStatement(DataTypes.Numeric, token.Value, info);
+                }
+                else if (token.Type == TokenType.StringValue1 || token.Type == TokenType.StringValue2)
+                {
+                    value = new ConstantValueStatement(DataTypes.String, token.Value, info);
+                }
+                else if (token.Type == TokenType.Null)
+                {
+                    value = new ConstantValueStatement(DataTypes.Variant, token.Value, info);
+                }
+                else
+                {
+                    throw UnexpectedSyntax(token, info);
+                }
+
+                return new VariableDefinitionStatement(dataType, definitionName.Value, value, info);
+            }
+            else
+            {
+                if (enumerator.TryPeek(out var peek) && peek.Type == TokenType.Assignment)
+                {
+                    enumerator.MoveNext();
+
+                    if (!enumerator.MoveNext()) //default value.
+                        throw EndOfFile(token, info);
+
+                    var defaultValue = ReadConstantValue(enumerator.Current, enumerator, info, dataType);
+
+                    return new VariableDefinitionStatement(dataType, definitionName.Value, defaultValue, info);
+                }
+
+                return new VariableDefinitionStatement(dataType, definitionName.Value, null, info);
+            }
+        }
+
+
         public FunctionParameterDefinitionStatement ReadParameterDefinition(Token token,
             PeekingEnumerator<Token> enumerator, ParserInfo info)
         {
@@ -221,8 +294,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             }
 
             var elseIfBlocks = new List<ConditionalBlockStatement>();
-            
-            for(;;)
+
+            for (;;)
             {
                 enumerator.MoveNext(); //get the else.
 
@@ -238,7 +311,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 {
                     if (!enumerator.MoveNext()) //open parenthesis
                         throw EndOfFile(token, info);
-                    
+
                     if (token.Type != TokenType.OpenParenthesis)
                         throw UnexpectedSyntax(token, info);
 
@@ -246,33 +319,35 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         throw EndOfFile(token, info);
 
                     var elifCondition = ReadEvaluationStatement(token, enumerator, info);
-                    
+
                     if (!enumerator.MoveNext()) //close parenthesis
                         throw EndOfFile(token, info);
-                    
+
                     if (token.Type != TokenType.CloseParenthesis)
                         throw UnexpectedSyntax(token, info);
-                    
+
                     if (!enumerator.MoveNext()) //open brace
                         throw EndOfFile(token, info);
-                    
+
                     if (token.Type != TokenType.OpenBrace)
                         throw UnexpectedSyntax(token, info);
 
                     var elifBlock = ReadBlockStatement(token, enumerator, info);
-                    
+
                     elseIfBlocks.Add(new ConditionalBlockStatement(elifCondition, elifBlock, info));
                 }
                 else if (token.Type == TokenType.OpenBrace) //else
                 {
                     var elseBlock = ReadBlockStatement(token, enumerator, info);
 
-                    return new IfElseStatement(new ConditionalBlockStatement(condition, block, info), elseIfBlocks.ToArray(), elseBlock, info);
+                    return new IfElseStatement(new ConditionalBlockStatement(condition, block, info),
+                        elseIfBlocks.ToArray(), elseBlock, info);
                 }
-                
+
                 if (!enumerator.TryPeek(out peek) || peek.Type != TokenType.Else) //else or else if
                 {
-                    return new IfElseStatement(new ConditionalBlockStatement(condition, block, info), elseIfBlocks.ToArray(), info);
+                    return new IfElseStatement(new ConditionalBlockStatement(condition, block, info),
+                        elseIfBlocks.ToArray(), info);
                 }
             }
         }
@@ -300,7 +375,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             token = enumerator.Current;
             if (token.Type != TokenType.CloseParenthesis)
                 throw UnexpectedSyntax(token, info);
-            
+
             if (!enumerator.MoveNext()) //open brace or semicolon
                 throw EndOfFile(token, info);
 
@@ -337,24 +412,24 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 throw EndOfFile(token, info);
 
             var statements = ReadBlockStatement(token, enumerator, info);
-            
+
             if (!enumerator.MoveNext()) //while
                 throw EndOfFile(token, info);
-            
+
             token = enumerator.Current;
             if (token.Type != TokenType.While)
                 throw UnexpectedSyntax(token, info);
-            
+
             if (!enumerator.MoveNext()) //open parenthesis
                 throw EndOfFile(token, info);
-            
+
             token = enumerator.Current;
             if (token.Type != TokenType.OpenParenthesis)
                 throw UnexpectedSyntax(token, info);
-            
+
             if (!enumerator.MoveNext()) //skip parenthesis to read evaluation
                 throw EndOfFile(token, info);
-            
+
             var condition = ReadEvaluationStatement(token, enumerator, info);
 
             if (!enumerator.MoveNext()) //close parenthesis
@@ -375,6 +450,155 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             }
 
             return new DoWhileStatement(condition, statements, info);
+        }
+
+        public DoWhileStatement ReadFor(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        {
+            if (token.Type != TokenType.For)
+                throw UnexpectedSyntax(token, info);
+
+            if (!enumerator.MoveNext()) //open parenthesis
+                throw EndOfFile(token, info);
+
+            token = enumerator.Current;
+            if (token.Type != TokenType.OpenParenthesis)
+                throw UnexpectedSyntax(token, info);
+
+            if (!enumerator.MoveNext()) //next token (datatype, variable name, or semicolon)
+                throw EndOfFile(token, info);
+
+            IStatement preLoopAssignments = null;
+            IStatement condition = null;
+            IStatement postLoopEvaluations = null;
+
+            token = enumerator.Current;
+            if (token.Type == TokenType.DataType)
+            {
+                preLoopAssignments = ReadVariableDefinition(token, enumerator, true, info);
+
+                if (!enumerator.MoveNext()) //semicolon
+                    throw EndOfFile(token, info);
+
+                token = enumerator.Current;
+                if (token.Type != TokenType.SequenceTerminator)
+                    throw UnexpectedSyntax(token, info);
+            }
+            else if (token.Type != TokenType.SequenceTerminator)
+            {
+                throw UnexpectedSyntax(token, info);
+            }
+
+            if (!enumerator.MoveNext()) //condition
+                throw EndOfFile(token, info);
+
+            token = enumerator.Current;
+            if (token.Type != TokenType.SequenceTerminator)
+            {
+                condition = ReadEvaluationStatement(token, enumerator, info);
+
+                if (!enumerator.MoveNext()) //semicolon
+                    throw EndOfFile(token, info);
+
+                if (token.Type != TokenType.SequenceTerminator)
+                    throw UnexpectedSyntax(token, info);
+            }
+
+            if (!enumerator.MoveNext()) //post evaluations
+                throw EndOfFile(token, info);
+
+            if (token.Type != TokenType.CloseParenthesis)
+            {
+                postLoopEvaluations = ReadEvaluationStatement(token, enumerator, info);
+
+                if (!enumerator.MoveNext()) //close parenthesis
+                    throw EndOfFile(token, info);
+
+                if (token.Type != TokenType.CloseParenthesis)
+                    throw UnexpectedSyntax(token, info);
+            }
+
+            if (!enumerator.MoveNext()) //open brace
+                throw EndOfFile(token, info);
+
+            if (token.Type != TokenType.OpenBrace)
+                throw UnexpectedSyntax(token, info);
+
+            IStatement block = ReadBlockStatement(token, enumerator, info);
+
+            return new ForStatement(preLoopAssignments, condition, postLoopEvaluations, block);
+        }
+
+        public ForEachStatement ReadForEach(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        {
+            if (token.Type != TokenType.ForEach)
+                throw UnexpectedSyntax(token, info);
+
+            if (!enumerator.MoveNext()) //open parenthesis
+                throw EndOfFile(token, info);
+
+            token = enumerator.Current;
+            if (token.Type != TokenType.OpenParenthesis)
+                throw UnexpectedSyntax(token, info);
+
+            if (!enumerator.MoveNext()) //dataType or identifier name
+                throw EndOfFile(token, info);
+
+            DataTypes? dataType = null;
+
+            token = enumerator.Current;
+            if (token.Type == TokenType.DataType)
+            {
+                dataType = TokenTypeToDataType(token);
+
+                if (!enumerator.MoveNext()) //identifier
+                    throw EndOfFile(token, info);
+
+                token = enumerator.Current;
+                if (token.Type != TokenType.IdentifierName)
+                    throw UnexpectedSyntax(token, info);
+            }
+            else if (token.Type != TokenType.IdentifierName)
+            {
+                throw UnexpectedSyntax(token, info);
+            }
+
+            IStatement variable = dataType == null
+                ? (IStatement)new VariableAccessStatement(token.Value, info)
+                : new VariableDefinitionStatement(dataType.Value, token.Value, null, info);
+
+            if (!enumerator.MoveNext()) //in
+                throw EndOfFile(token, info);
+
+            token = enumerator.Current;
+            if (token.Type != TokenType.In)
+                throw UnexpectedSyntax(token, info);
+            
+            if (!enumerator.MoveNext()) //id
+                throw EndOfFile(token, info);
+            
+            token = enumerator.Current;
+            if (token.Type != TokenType.IdentifierName)
+                throw UnexpectedSyntax(token, info);
+
+            var iterator = new VariableAccessStatement(token.Value, info);
+
+            if (!enumerator.MoveNext()) //close parenthesis
+                throw EndOfFile(token, info);
+
+            token = enumerator.Current;
+            if (token.Type != TokenType.CloseParenthesis)
+                throw UnexpectedSyntax(token, info);
+
+            if (!enumerator.MoveNext()) //open brace
+                throw EndOfFile(token, info);
+
+            token = enumerator.Current;
+            if (token.Type != TokenType.OpenBrace)
+                throw UnexpectedSyntax(token, info);
+
+            var block = ReadBlockStatement(token, enumerator, info);
+            
+            return new ForEachStatement(variable, iterator, info);
         }
     }
 }

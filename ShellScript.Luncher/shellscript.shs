@@ -1,0 +1,17 @@
+#option("reparse-args", "os") //this is default
+#option("rename-args", "Arguments") //renaming the args[] to Arguments to clearness.
+
+
+function getShellScriptRuntimeCommand() {
+    if (!ClrHelpers.IsAny()) {
+        throw "No CLR runtime found.";
+    }
+    
+    if (ClrHelpers.IsDotNetCoreAvailable()) {
+        return ClrHelpers.GetRuntime("dotnet").Command();
+    }
+}
+
+var clrRuntime = getShellScriptRuntimeCommand();
+
+clrRuntime.Invoke("./ShellScript.dll", ...Arguments);

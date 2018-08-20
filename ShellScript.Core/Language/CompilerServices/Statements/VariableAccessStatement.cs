@@ -7,9 +7,12 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public bool IsBlockStatement => false;
         public ParserInfo ParserInfo { get; }
         
+        public string VariableName { get; }
         
-        public VariableAccessStatement(ParserInfo parserInfo)
+        
+        public VariableAccessStatement(string variableName, ParserInfo parserInfo)
         {
+            VariableName = variableName;
             ParserInfo = parserInfo;
         }
     }
