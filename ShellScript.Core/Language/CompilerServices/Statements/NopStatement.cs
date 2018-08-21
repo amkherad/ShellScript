@@ -1,6 +1,6 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public abstract class ArithmeticStatement : EvaluationStatement
+    public class NopStatement : EvaluationStatement
     {
         public override bool IsBlockStatement => false;
     }

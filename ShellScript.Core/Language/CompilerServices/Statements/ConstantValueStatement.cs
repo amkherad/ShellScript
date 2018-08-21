@@ -1,22 +1,19 @@
-using ShellScript.Core.Language.CompilerServices.Parsing;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class ConstantValueStatement : IStatement
+    public class ConstantValueStatement : EvaluationStatement
     {
-        public bool IsBlockStatement => false;
-        public ParserInfo ParserInfo { get; }
+        public override bool IsBlockStatement => false;
 
         public DataTypes DataType { get; }
         public string Value { get; }
 
         
-        public ConstantValueStatement(DataTypes dataType, string value, ParserInfo parserInfo)
+        public ConstantValueStatement(DataTypes dataType, string value)
         {
             DataType = dataType;
             Value = value;
-            ParserInfo = parserInfo;
         }
     }
 }

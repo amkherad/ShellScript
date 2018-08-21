@@ -1,8 +1,8 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class VariableAccessStatement : IStatement
+    public class VariableAccessStatement : EvaluationStatement
     {
-        public bool IsBlockStatement => false;
+        public override bool IsBlockStatement => false;
         
         public string VariableName { get; }
         

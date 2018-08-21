@@ -1,8 +1,8 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class ConditionalBlockStatement : LogicalStatement
+    public class ConditionalBlockStatement : IStatement
     {
-        public override bool IsBlockStatement => true;
+        public bool IsBlockStatement => true;
 
         public IStatement Condition { get; }
         public IStatement Statement { get; }
