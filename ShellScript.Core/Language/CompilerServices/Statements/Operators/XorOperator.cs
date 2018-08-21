@@ -5,5 +5,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements.Operators
     /// </summary>
     public class XorOperator : BitwiseOperator
     {
+        public override int Order => 38;
+        public override OperatorAssociativity Associativity => OperatorAssociativity.LeftToRight;
     }
 }

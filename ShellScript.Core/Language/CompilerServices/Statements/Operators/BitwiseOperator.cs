@@ -1,7 +1,7 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements.Operators
 {
-    public class BitwiseOperator : IOperator
+    public abstract class BitwiseOperator : ArithmeticOperator
     {
-        public bool IsBlockStatement => false;
+        //public bool IsBlockStatement => false;
     }
 }
