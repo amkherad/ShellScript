@@ -1,14 +1,26 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ShellScript.Core.Helpers;
 using ShellScript.Core.Language.CompilerServices.Lexing;
 using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.CompilerServices.Statements.Operators;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.Parsing
 {
     public partial class Parser
     {
+        /// <summary>
+        /// Reads a block (i.e. everything between "{" and "}")
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="enumerator"></param>
+        /// <param name="info"></param>
+        /// <returns></returns>
+        /// <exception cref="IllegalSyntaxException"></exception>
+        /// <exception cref="ParserSyntaxException"></exception>
+        /// <exception cref="ParserException"></exception>
         public BlockStatement ReadBlockStatement(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.OpenBrace)
@@ -29,9 +41,244 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             if (token.Type != TokenType.CloseBrace)
                 throw UnexpectedSyntax(token, info);
 
-            return new BlockStatement(statements.ToArray(), info);
+            return new BlockStatement(statements.ToArray());
         }
 
+
+        private void _addEvaluationToStack(Stack<IStatement> stack, IStatement statement)
+        {
+            if (statement != null)
+            {
+                stack.Push(statement);
+            }
+
+            IStatement result = null;
+
+            if (stack.Count == 2)
+            {
+                var incOp = stack.FirstOrDefault(stt => stt is IncrementOperator);
+                if (incOp != null)
+                {
+                    var operand = stack.FirstOrDefault(stt => !(stt is IncrementOperator)) as VariableAccessStatement;
+                    if (operand == null)
+                    {
+                        throw new ParserException();
+                    }
+
+                    stack.Clear();
+
+                    result = new IncrementStatement(operand);
+                }
+                else
+                {
+                    var decOp = stack.FirstOrDefault(stt => stt is DecrementOperator);
+                    if (decOp != null)
+                    {
+                        var operand =
+                            stack.FirstOrDefault(stt => !(stt is DecrementOperator)) as VariableAccessStatement;
+                        if (operand == null)
+                        {
+                            throw new ParserException();
+                        }
+
+                        stack.Clear();
+
+                        result = new DecrementStatement(operand);
+                    }
+                }
+            }
+            else if (stack.Count == 3)
+            {
+                var right = (EvaluationStatement) stack.Pop();
+                var op = stack.Pop();
+                var left = (EvaluationStatement) stack.Pop();
+
+                if (op is ArithmeticOperator arithOp)
+                {
+                    result = new ArithmeticEvaluationStatement(left, arithOp, right);
+                }
+                else if (op is LogicalOperator logicOp)
+                {
+                    result = new LogicalEvaluationStatement(left, logicOp, right);
+                }
+                else if (op is BitwiseOperator bitOp)
+                {
+                    result = new BitwiseEvaluationStatement(left, bitOp, right);
+                }
+                else
+                {
+                    throw new ParserException();
+                }
+            }
+            else if (stack.Count > 3) //WTF!!
+            {
+                throw new ParserException();
+            }
+
+            if (result != null)
+            {
+                stack.Push(result);
+            }
+        }
+
+        /// <summary>
+        /// Reads an evaluation statement (i.e. "x = 3 * 4")
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="enumerator"></param>
+        /// <param name="info"></param>
+        /// <returns></returns>
+        public EvaluationStatement ReadEvaluationStatement(Token token, PeekingEnumerator<Token> enumerator,
+            ParserInfo info)
+        {
+            var stack = new Stack<IStatement>();
+
+            for (;;)
+            {
+                switch (token.Type)
+                {
+                    case TokenType.OpenParenthesis:
+                    {
+                        if (!enumerator.MoveNext()) //open parenthesis
+                            throw EndOfFile(token, info);
+
+                        token = enumerator.Current;
+                        _addEvaluationToStack(stack, ReadEvaluationStatement(token, enumerator, info));
+
+                        if (!enumerator.MoveNext()) //close parenthesis
+                            throw EndOfFile(token, info);
+
+                        token = enumerator.Current;
+                        if (token.Type != TokenType.CloseParenthesis)
+                            throw UnexpectedSyntax(token, info);
+
+                        break;
+                    }
+                    case TokenType.IdentifierName:
+                    {
+                        _addEvaluationToStack(stack, new VariableAccessStatement(token.Value));
+                        break;
+                    }
+                    case TokenType.StringValue1:
+                    case TokenType.StringValue2:
+                    {
+                        _addEvaluationToStack(stack, new ConstantValueStatement(DataTypes.String, token.Value));
+                        break;
+                    }
+                    case TokenType.Number:
+                    {
+                        _addEvaluationToStack(stack, new ConstantValueStatement(DataTypes.Numeric, token.Value));
+                        break;
+                    }
+                    case TokenType.Null:
+                    {
+                        _addEvaluationToStack(stack, new ConstantValueStatement(DataTypes.Variant, token.Value));
+                        break;
+                    }
+
+                    case TokenType.Plus:
+                    {
+                        _addEvaluationToStack(stack, new AdditionOperator());
+                        break;
+                    }
+                    case TokenType.Minus:
+                    {
+                        _addEvaluationToStack(stack, new SubtractionOperator());
+                        break;
+                    }
+                    case TokenType.Asterisk:
+                    {
+                        _addEvaluationToStack(stack, new MultiplicationOperator());
+                        break;
+                    }
+                    case TokenType.Division:
+                    {
+                        _addEvaluationToStack(stack, new DivisionOperator());
+                        break;
+                    }
+                    case TokenType.Increment:
+                    {
+                        _addEvaluationToStack(stack, new IncrementOperator());
+                        break;
+                    }
+                    case TokenType.Decrement:
+                    {
+                        _addEvaluationToStack(stack, new DecrementOperator());
+                        break;
+                    }
+                    case TokenType.BackSlash:
+                    {
+                        _addEvaluationToStack(stack, new ModulusOperator());
+                        break;
+                    }
+                    case TokenType.Reminder:
+                    {
+                        _addEvaluationToStack(stack, new ReminderOperator());
+                        break;
+                    }
+
+
+                    case TokenType.CloseParenthesis:
+                    case TokenType.SequenceTerminator:
+                    case TokenType.OpenBrace:
+                    case TokenType.SequenceTerminatorNewLine:
+                    {
+                        _addEvaluationToStack(stack, null);
+                        if (stack.Count > 1)
+                        {
+                            throw new ParserException();
+                        }
+
+                        if (stack.Count == 0)
+                        {
+                            return new NopStatement();
+                        }
+
+                        return (EvaluationStatement) stack.Pop();
+                    }
+                    default:
+                        throw UnexpectedSyntax(token, info);
+                }
+
+                if (enumerator.TryPeek(out var peek))
+                {
+                    switch (peek.Type)
+                    {
+                        case TokenType.CloseParenthesis:
+                        case TokenType.SequenceTerminator:
+                        case TokenType.OpenBrace:
+                        {
+                            _addEvaluationToStack(stack, null);
+                            if (stack.Count != 1)
+                            {
+                                throw new ParserException();
+                            }
+
+                            return (EvaluationStatement) stack.Pop();
+                        }
+                        default:
+                        {
+                            if (!enumerator.MoveNext())
+                                throw EndOfFile(token, info);
+                            
+                            token = enumerator.Current;
+                            
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads a constant VALUE (i.e. 3 or "test" or null)
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="enumerator"></param>
+        /// <param name="info"></param>
+        /// <param name="dataTypeHint"></param>
+        /// <returns></returns>
+        /// <exception cref="???"></exception>
         public ConstantValueStatement ReadConstantValue(Token token, PeekingEnumerator<Token> enumerator,
             ParserInfo info, DataTypes dataTypeHint)
         {
@@ -43,7 +290,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 throw UnexpectedSyntax(token, info);
             }
 
-            return new ConstantValueStatement(dataTypeHint, token.Value, info);
+            return new ConstantValueStatement(dataTypeHint, token.Value);
         }
 
 
@@ -79,43 +326,42 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 token = enumerator.Current;
                 if (token.Type == TokenType.IdentifierName)
                 {
-                    value = new VariableAccessStatement(token.Value, info);
+                    value = new VariableAccessStatement(token.Value);
                 }
                 else if (token.Type == TokenType.Number)
                 {
-                    value = new ConstantValueStatement(DataTypes.Numeric, token.Value, info);
+                    value = new ConstantValueStatement(DataTypes.Numeric, token.Value);
                 }
                 else if (token.Type == TokenType.StringValue1 || token.Type == TokenType.StringValue2)
                 {
-                    value = new ConstantValueStatement(DataTypes.String, token.Value, info);
+                    value = new ConstantValueStatement(DataTypes.String, token.Value);
                 }
                 else if (token.Type == TokenType.Null)
                 {
-                    value = new ConstantValueStatement(DataTypes.Variant, token.Value, info);
+                    value = new ConstantValueStatement(DataTypes.Variant, token.Value);
                 }
                 else
                 {
                     throw UnexpectedSyntax(token, info);
                 }
 
-                return new VariableDefinitionStatement(dataType, definitionName.Value, value, info);
+                return new VariableDefinitionStatement(dataType, definitionName.Value, value);
             }
-            else
+
+            if (enumerator.TryPeek(out var peek) && peek.Type == TokenType.Assignment)
             {
-                if (enumerator.TryPeek(out var peek) && peek.Type == TokenType.Assignment)
-                {
-                    enumerator.MoveNext();
+                enumerator.MoveNext();
 
-                    if (!enumerator.MoveNext()) //default value.
-                        throw EndOfFile(token, info);
+                if (!enumerator.MoveNext()) //default value.
+                    throw EndOfFile(token, info);
 
-                    var defaultValue = ReadConstantValue(enumerator.Current, enumerator, info, dataType);
+                token = enumerator.Current;
+                var defaultValue = ReadEvaluationStatement(token, enumerator, info);
 
-                    return new VariableDefinitionStatement(dataType, definitionName.Value, defaultValue, info);
-                }
-
-                return new VariableDefinitionStatement(dataType, definitionName.Value, null, info);
+                return new VariableDefinitionStatement(dataType, definitionName.Value, defaultValue);
             }
+
+            return new VariableDefinitionStatement(dataType, definitionName.Value, null);
         }
 
 
@@ -143,10 +389,10 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
                 var defaultValue = ReadConstantValue(enumerator.Current, enumerator, info, dataType);
 
-                return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, defaultValue, info);
+                return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, defaultValue);
             }
 
-            return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, null, info);
+            return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, null);
         }
 
         public FunctionParameterDefinitionStatement[] ReadParameterDefinitions(Token token,
@@ -244,13 +490,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 throw UnexpectedSyntax(token, info);
             }
 
-            return new FunctionStatement(functionName.Value, parameters, block, info);
-        }
-
-        public EvaluationStatement ReadEvaluationStatement(Token token, PeekingEnumerator<Token> enumerator,
-            ParserInfo info)
-        {
-            return null;
+            return new FunctionStatement(functionName.Value, parameters, block);
         }
 
         public IfElseStatement ReadIf(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
@@ -290,7 +530,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             if (!enumerator.TryPeek(out var peek) || peek.Type != TokenType.Else) //else or else if
             {
-                return new IfElseStatement(new ConditionalBlockStatement(condition, block, info), info);
+                return new IfElseStatement(new ConditionalBlockStatement(condition, block));
             }
 
             var elseIfBlocks = new List<ConditionalBlockStatement>();
@@ -334,20 +574,20 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
                     var elifBlock = ReadBlockStatement(token, enumerator, info);
 
-                    elseIfBlocks.Add(new ConditionalBlockStatement(elifCondition, elifBlock, info));
+                    elseIfBlocks.Add(new ConditionalBlockStatement(elifCondition, elifBlock));
                 }
                 else if (token.Type == TokenType.OpenBrace) //else
                 {
                     var elseBlock = ReadBlockStatement(token, enumerator, info);
 
-                    return new IfElseStatement(new ConditionalBlockStatement(condition, block, info),
-                        elseIfBlocks.ToArray(), elseBlock, info);
+                    return new IfElseStatement(new ConditionalBlockStatement(condition, block),
+                        elseIfBlocks.ToArray(), elseBlock);
                 }
 
                 if (!enumerator.TryPeek(out peek) || peek.Type != TokenType.Else) //else or else if
                 {
-                    return new IfElseStatement(new ConditionalBlockStatement(condition, block, info),
-                        elseIfBlocks.ToArray(), info);
+                    return new IfElseStatement(new ConditionalBlockStatement(condition, block),
+                        elseIfBlocks.ToArray());
                 }
             }
         }
@@ -382,13 +622,13 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             token = enumerator.Current;
             if (token.Type == TokenType.SequenceTerminator)
             {
-                return new WhileStatement(condition, null, info);
+                return new WhileStatement(condition, null);
             }
             else if (token.Type == TokenType.OpenBrace)
             {
                 var statements = ReadBlockStatement(token, enumerator, info);
 
-                return new WhileStatement(condition, statements, info);
+                return new WhileStatement(condition, statements);
             }
             else
             {
@@ -449,10 +689,15 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     throw UnexpectedSyntax(token, info);
             }
 
-            return new DoWhileStatement(condition, statements, info);
+            return new DoWhileStatement(condition, statements);
         }
 
-        public DoWhileStatement ReadFor(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public WhileStatement ReadLoop(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        {
+            return ReadWhile(token, enumerator, info);
+        }
+
+        public ForStatement ReadFor(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.For)
                 throw UnexpectedSyntax(token, info);
@@ -563,8 +808,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             }
 
             IStatement variable = dataType == null
-                ? (IStatement)new VariableAccessStatement(token.Value, info)
-                : new VariableDefinitionStatement(dataType.Value, token.Value, null, info);
+                ? (IStatement) new VariableAccessStatement(token.Value)
+                : new VariableDefinitionStatement(dataType.Value, token.Value, null);
 
             if (!enumerator.MoveNext()) //in
                 throw EndOfFile(token, info);
@@ -572,15 +817,15 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             token = enumerator.Current;
             if (token.Type != TokenType.In)
                 throw UnexpectedSyntax(token, info);
-            
+
             if (!enumerator.MoveNext()) //id
                 throw EndOfFile(token, info);
-            
+
             token = enumerator.Current;
             if (token.Type != TokenType.IdentifierName)
                 throw UnexpectedSyntax(token, info);
 
-            var iterator = new VariableAccessStatement(token.Value, info);
+            var iterator = new VariableAccessStatement(token.Value);
 
             if (!enumerator.MoveNext()) //close parenthesis
                 throw EndOfFile(token, info);
@@ -597,8 +842,13 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 throw UnexpectedSyntax(token, info);
 
             var block = ReadBlockStatement(token, enumerator, info);
-            
-            return new ForEachStatement(variable, iterator, info);
+
+            return new ForEachStatement(variable, iterator);
+        }
+
+        public IStatement ReadClass(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        {
+            return null;
         }
     }
 }

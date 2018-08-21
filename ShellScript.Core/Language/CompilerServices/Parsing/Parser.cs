@@ -25,7 +25,9 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
         public IEnumerable<IStatement> Parse(TextReader reader, ParserInfo info)
         {
-            using (var tokensEnumerator = new PeekingEnumerator<Token>(_lexer.Tokenize(reader).GetEnumerator()))
+            var tokens = _lexer.Tokenize(reader);
+            
+            using (var tokensEnumerator = new PeekingEnumerator<Token>(tokens.GetEnumerator()))
             {
                 IStatement statement;
                 while ((statement = ReadStatement(tokensEnumerator, info)) != null)
@@ -89,7 +91,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
         protected IStatement ReadStatement(PeekingEnumerator<Token> enumerator, ParserInfo info)
         {
-            Token token = null;
+            Token token;
 
             while (enumerator.MoveNext())
             {
@@ -97,58 +99,39 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
                 switch (token.Type)
                 {
+                    case TokenType.IdentifierName:
+                        break;
+                    case TokenType.DataType:
+                        return ReadVariableDefinition(token, enumerator, false, info);
+                    case TokenType.Echo:
+                        break;
+                    
+                    case TokenType.If:
+                        return ReadIf(token, enumerator, info);
+                    case TokenType.For:
+                        return ReadFor(token, enumerator, info);
+                    case TokenType.ForEach:
+                        return ReadForEach(token, enumerator, info);
+                    case TokenType.While:
+                        return ReadWhile(token, enumerator, info);
+                    case TokenType.Do:
+                        return ReadDoWhile(token, enumerator, info);
+                    case TokenType.Loop:
+                        return ReadLoop(token, enumerator, info);
+                    
                     case TokenType.Class:
-                        //return ReadClass(token, enumerator, info);
-                        throw new NotImplementedException();
-
+                        return ReadClass(token, enumerator, info);
                     case TokenType.Function:
                         return ReadFunction(token, enumerator, info);
 
-                    case TokenType.If:
-                        return ReadIf(token, enumerator, info);
-
-                    case TokenType.Else:
-                        throw UnexpectedSyntax(token, info);
-
-                    case TokenType.AndLogical:
-                        break;
-                    case TokenType.And:
-                        break;
-                    case TokenType.OrLogical:
-                        break;
-                    case TokenType.Or:
-                        break;
-                    case TokenType.OpenParenthesis:
-                        break;
-                    case TokenType.CloseParenthesis:
-                        break;
                     case TokenType.OpenBrace:
-                        break;
-                    case TokenType.CloseBrace:
-                        break;
-                    case TokenType.OpenBracket:
-                        break;
-                    case TokenType.CloseBracket:
-                        break;
-                    case TokenType.Dot:
-                        break;
-                    case TokenType.Comma:
-                        break;
-                    case TokenType.Equals:
-                        break;
-                    case TokenType.NotEquals:
-                        break;
-                    case TokenType.Assignment:
+                        return ReadBlockStatement(token, enumerator, info);
+                    
+                    case TokenType.OpenParenthesis:
                         break;
                     case TokenType.Minus:
                         break;
                     case TokenType.Plus:
-                        break;
-                    case TokenType.Asterisk:
-                        break;
-                    case TokenType.Division:
-                        break;
-                    case TokenType.BackSlash:
                         break;
                     case TokenType.Throw:
                         break;
@@ -156,61 +139,58 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         break;
                     case TokenType.Await:
                         break;
-                    case TokenType.In:
-                        break;
-                    case TokenType.NotIn:
-                        break;
-                    case TokenType.For:
-                        break;
-                    case TokenType.ForEach:
-                        break;
-                    case TokenType.While:
-                        break;
-                    case TokenType.Do:
-                        break;
-                    case TokenType.Loop:
-                        break;
-                    case TokenType.Like:
-                        break;
-                    case TokenType.NotLike:
-                        break;
                     case TokenType.Call:
                         break;
-                    case TokenType.DataType:
-                        break;
-                    case TokenType.Echo:
-                        break;
-                    case TokenType.Number:
-                        break;
-                    case TokenType.StringValue1:
-                        break;
-                    case TokenType.StringValue2:
-                        break;
+                    
+                    
+                    
                     case TokenType.SequenceTerminator:
-                        break;
                     case TokenType.SequenceTerminatorNewLine:
-                        break;
+                        continue;
+                    
                     case TokenType.Comment:
-                        break;
                     case TokenType.MultiLineCommentOpen:
-                        break;
                     case TokenType.MultiLineCommentClose:
-                        break;
-                    case TokenType.IdentifierName:
-                        break;
+                        throw UnexpectedSyntax(token, info);
 
+
+                    case TokenType.Else:
+                    case TokenType.AndLogical:
+                    case TokenType.And:
+                    case TokenType.OrLogical:
+                    case TokenType.Or:
+                    case TokenType.Equals:
+                    case TokenType.NotEquals:
+                    case TokenType.Asterisk:
+                    case TokenType.Assignment:
+                    case TokenType.CloseParenthesis:
+                    case TokenType.CloseBrace:
+                    case TokenType.OpenBracket:
+                    case TokenType.CloseBracket:
+                    case TokenType.Division:
+                    case TokenType.BackSlash:
+                    case TokenType.Dot:
+                    case TokenType.Comma:
+                    case TokenType.In:
+                    case TokenType.NotIn:
+                    case TokenType.Like:
+                    case TokenType.NotLike:
+                    case TokenType.Number:
+                    case TokenType.StringValue1:
+                    case TokenType.StringValue2:
+                        throw UnexpectedSyntax(token, info);
+                    
                     case TokenType.NotDefined:
                         throw IllegalSyntax(token, info);
                     case TokenType.Invalid:
                         throw IllegalSyntax(token, info);
-                        break;
-
+                    
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
             }
 
-            throw UnexpectedSyntax(token, info);
+            return null;
         }
 
         /// <summary>
