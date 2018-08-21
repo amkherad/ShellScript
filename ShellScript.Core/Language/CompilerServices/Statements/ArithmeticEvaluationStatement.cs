@@ -17,5 +17,27 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Operator = @operator;
             Right = right;
         }
+
+
+        public static ArithmeticEvaluationStatement CreatePostfixIncrement(IncrementOperator op, EvaluationStatement operand)
+        {
+            return new ArithmeticEvaluationStatement(operand, op, null);
+        }
+
+        public static ArithmeticEvaluationStatement CreatePrefixIncrement(IncrementOperator op, EvaluationStatement operand)
+        {
+            return new ArithmeticEvaluationStatement(null, op, operand);
+        }
+
+        
+        public static ArithmeticEvaluationStatement CreatePostfixDecrement(DecrementOperator op, EvaluationStatement operand)
+        {
+            return new ArithmeticEvaluationStatement(operand, op, null);
+        }
+
+        public static ArithmeticEvaluationStatement CreatePrefixDecrement(DecrementOperator op, EvaluationStatement operand)
+        {
+            return new ArithmeticEvaluationStatement(null, op, operand);
+        }
     }
 }

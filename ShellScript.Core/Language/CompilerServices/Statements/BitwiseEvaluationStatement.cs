@@ -17,5 +17,11 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Operator = @operator;
             Right = right;
         }
+
+
+        public static BitwiseEvaluationStatement CreateNot(BitwiseNotOperator op, EvaluationStatement operand)
+        {
+            return new BitwiseEvaluationStatement(null, op, operand);
+        }
     }
 }

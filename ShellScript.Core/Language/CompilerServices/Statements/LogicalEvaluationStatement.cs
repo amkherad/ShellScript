@@ -17,5 +17,11 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Operator = @operator;
             Right = right;
         }
+        
+        
+        public static LogicalEvaluationStatement CreateNot(NotOperator op, EvaluationStatement operand)
+        {
+            return new LogicalEvaluationStatement(null, op, operand);
+        }
     }
 }

@@ -1,7 +1,6 @@
-namespace a
+namespace ShellScript.Core.Language.CompilerServices.Statements.PreProcessors
 {
-    public interface a
+    public interface ICompilerAnnotationStatement : IStatement
     {
-        
     }
 }
