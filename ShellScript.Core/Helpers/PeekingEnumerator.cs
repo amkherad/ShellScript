@@ -58,7 +58,13 @@ namespace ShellScript.Core.Helpers
         }
 
 
-        public void Reset() => _enumerator.Reset();
+        public void Reset()
+        {
+            _enumerator.Reset();
+
+            _next = null;
+            _current = null;
+        }
 
         public TElement Current => _current;
 
