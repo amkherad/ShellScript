@@ -1,4 +1,3 @@
-using ShellScript.Core.Language.CompilerServices.Parsing;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
@@ -8,9 +7,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public VariableDefinitionStatement(
             DataTypes dataType,
             string name,
-            IStatement value,
-            ParserInfo parserInfo)
-            : base(dataType, name, value, true, parserInfo)
+            IStatement value)
+            : base(dataType, name, value, true)
         {
         }
     }

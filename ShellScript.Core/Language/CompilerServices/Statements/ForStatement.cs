@@ -1,5 +1,3 @@
-using ShellScript.Core.Language.CompilerServices.Parsing;
-
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class ForStatement : ConditionalBlockStatement
@@ -7,8 +5,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public IStatement PreLoopAssignment { get; }
         public IStatement AfterLoopEvaluations { get; }
         
-        public ForStatement(IStatement preLoopAssignment , IStatement condition, IStatement afterLoopEvaluations, IStatement statement, ParserInfo parserInfo)
-            : base(condition, statement, parserInfo)
+        public ForStatement(IStatement preLoopAssignment , IStatement condition, IStatement afterLoopEvaluations, IStatement statement)
+            : base(condition, statement)
         {
             PreLoopAssignment = preLoopAssignment;
             AfterLoopEvaluations = afterLoopEvaluations;
