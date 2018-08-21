@@ -6,10 +6,13 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         
         public VariableAccessStatement Variable { get; }
         
+        public bool IsPostfix { get; }
         
-        public DecrementStatement(VariableAccessStatement variable)
+        
+        public DecrementStatement(VariableAccessStatement variable, bool isPostfix)
         {
             Variable = variable;
+            IsPostfix = isPostfix;
         }
     }
 }

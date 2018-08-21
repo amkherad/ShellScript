@@ -1,16 +1,16 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class FunctionCallStatement : IStatement
+    public class FunctionCallStatement : EvaluationStatement
     {
-        public bool IsBlockStatement => false;
+        public override bool IsBlockStatement => false;
         
-        public string SdkFunctionName { get; }
-        public IStatement[] Parameters { get; }
+        public string FunctionName { get; }
+        public EvaluationStatement[] Parameters { get; }
         
         
-        public FunctionCallStatement(string sdkFunctionName, IStatement[] parameters)
+        public FunctionCallStatement(string functionName, EvaluationStatement[] parameters)
         {
-            SdkFunctionName = sdkFunctionName;
+            FunctionName = functionName;
             Parameters = parameters;
         }
     }
