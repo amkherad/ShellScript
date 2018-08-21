@@ -32,6 +32,9 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         Asterisk, //*
         Division, // /
         BackSlash, // \
+        Increment, // ++
+        Decrement, // --
+        Reminder, // %
         
         Throw, //throw
         Async, //async

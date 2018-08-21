@@ -16,32 +16,34 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             {TokenType.StringValue1, "^'[^']*'"},
             {TokenType.StringValue2, "^\"[^\"]*\""},
 
-            {TokenType.OpenParenthesis, "^\\("},
-            {TokenType.CloseParenthesis, "^\\)"},
+            {TokenType.OpenParenthesis, @"^\("},
+            {TokenType.CloseParenthesis, @"^\)"},
 
-            {TokenType.OpenBrace, "^\\{"},
-            {TokenType.CloseBrace, "^\\}"},
+            {TokenType.OpenBrace, @"^\{"},
+            {TokenType.CloseBrace, @"^\}"},
 
-            {TokenType.OpenBracket, "^\\["},
-            {TokenType.CloseBracket, "^\\]"},
+            {TokenType.OpenBracket, @"^\["},
+            {TokenType.CloseBracket, @"^\]"},
 
-            {TokenType.And, "^&"},
-            {TokenType.AndLogical, "^&&"},
-            {TokenType.Or, "^\\|"},
-            {TokenType.OrLogical, "^\\|\\|"},
+            {TokenType.AndLogical, @"^&&"},
+            {TokenType.And, @"^((&)|(!&&))"},
+            {TokenType.OrLogical, @"^\|\|"},
+            {TokenType.Or, @"^((\|)|(!\|\|))"},
 
-            {TokenType.Dot, "^\\."},
+            {TokenType.Dot, @"^\."},
             {TokenType.Comma, "^,"},
             {TokenType.Assignment, "^="},
             {TokenType.Equals, "^=="},
             {TokenType.NotEquals, "^!="},
 
-            {TokenType.Minus, "^\\-"},
-            {TokenType.Plus, "^\\+"},
-            {TokenType.Asterisk, "^\\*"},
+            {TokenType.Plus, @"^((\+)|(!\+\+))"},
+            {TokenType.Minus, @"^((-)|(!--))"},
+            {TokenType.Asterisk, @"^\*"},
             {TokenType.Division, "^/"},
+            {TokenType.Increment, @"^\+\+"},
+            {TokenType.Decrement, @"^--"},
 
-            {TokenType.BackSlash, "^\\\\"},
+            {TokenType.BackSlash, @"^\\"},
 
             {TokenType.If, "^if"},
             {TokenType.Else, "^else"},
@@ -51,7 +53,7 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             {TokenType.PreprocessorElse, "^#else"},
             {TokenType.PreprocessorEndIf, "^#endif"},
             
-            {TokenType.For, "^for"},
+            {TokenType.For, "^((for)&(!foreach))"},
             {TokenType.ForEach, "^foreach"},
             {TokenType.Do, "^do"},
             {TokenType.While, "^while"},
@@ -61,9 +63,9 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             {TokenType.Function, "^function"},
 
             {TokenType.Throw, "^throw"},
-            {TokenType.Comment, "(^//)"},
-            {TokenType.MultiLineCommentOpen, "(^/\\*)"},
-            {TokenType.MultiLineCommentClose, "(^\\*/)"},
+            {TokenType.Comment, "^//"},
+            {TokenType.MultiLineCommentOpen, @"^/\*"},
+            {TokenType.MultiLineCommentClose, @"^\*/"},
 
             {TokenType.Async, "^async"},
             {TokenType.Await, "^await"},
@@ -76,12 +78,12 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
 
             {TokenType.Call, "^call"},
 
-            {TokenType.DataType, "^((const)|(var)|(int)|(double)|(float)|(object)|(variant)|(number)|(decimal)|(int\\[\\])|(double\\[\\])|(float\\[\\])|(object\\[\\])|(variant\\[\\])|(number\\[\\])|(decimal\\[\\]))"},//(long)|
+            {TokenType.DataType, @"^((const)|(var)|(int)|(double)|(float)|(object)|(variant)|(number)|(decimal)|(int\[\])|(double\[\])|(float\[\])|(object\[\])|(variant\[\])|(number\[\])|(decimal\[\]))"},//(long)|
             {TokenType.Null, "^((null)|(nil))"},
 
             {TokenType.Echo, "^echo"},
 
-            {TokenType.Number, "^\\d+"},
+            {TokenType.Number, @"^\d+"},
 
             {TokenType.SequenceTerminator, "^;"},
         };
