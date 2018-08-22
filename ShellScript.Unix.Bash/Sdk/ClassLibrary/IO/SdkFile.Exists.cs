@@ -1,18 +1,17 @@
-using System.Collections.Generic;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Unix.Bash.Sdk.ClassLibrary.IO
 {
     public partial class SdkFile
     {
-        public class Exists : ISdkFunc
+        public class Exists : SdkBaseFunction
         {
-            public string Name => "Exists";
+            public override string Name => "Exists";
 
-            public bool IsStatic => true;
-            public bool AllowDynamicParams => false;
+            public override bool IsStatic => true;
+            public override bool AllowDynamicParams => false;
 
-            public IEnumerable<ISdkParameter> Parameters { get; } = new[]
+            public override ISdkParameter[] Parameters { get; } =
             {
                 new SdkParameter("FilePath", DataTypes.String), 
             };

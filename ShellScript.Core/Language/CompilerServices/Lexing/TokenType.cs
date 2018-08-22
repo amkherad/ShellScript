@@ -25,7 +25,14 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         
         Equals, //==
         NotEquals, //!=
+        GreaterEqual, //>=
+        Greater, //>
+        LessEqual, //<=
+        Less, //<
         Assignment, //=
+        
+        Not, //!
+        BitwiseNot, //~
         
         Minus, //-
         Plus, //+

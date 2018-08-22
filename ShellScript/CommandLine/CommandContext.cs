@@ -26,8 +26,8 @@ namespace ShellScript.CommandLine
 
         private StringComparer _commandComparer;
         private StringComparer _switchNameComparer;
-        
-        
+
+
         public CommandContext(string[] tokens, Switch[] switches, string command)
         {
             Tokens = tokens;
@@ -49,16 +49,44 @@ namespace ShellScript.CommandLine
             return _commandComparer.Equals(com, command);
         }
 
+        public bool IsCommand(params string[] commands)
+        {
+            var com = Command;
+            if (com == null)
+            {
+                return false;
+            }
+
+            foreach (var command in commands)
+            {
+                if (_commandComparer.Equals(com, command))
+                    return true;
+            }
+
+            return false;
+        }
+
         public bool AnySwitch(params string[] names)
         {
             return names.Any(name => Switches.Any(s => _switchNameComparer.Equals(s.Name, name)));
         }
-        
-        
+
+
         public static CommandContext Parse(string[] commands)
         {
+            return new CommandContext(commands,
+                commands.Where(c => c.StartsWith("-") || c.StartsWith("-")).Select(Switch.Parse).ToArray(),
+                commands.Length > 0 ? commands[0] : null);
+        }
 
-            return new CommandContext(commands, new Switch[0], null);
+        public string GetToken(int index)
+        {
+            if (index >= Tokens.Length - 1)
+            {
+                return null;
+            }
+
+            return Tokens[index + 1];
         }
     }
 }

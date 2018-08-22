@@ -6,20 +6,18 @@ namespace ShellScript.Core.Language
 {
     public class Platforms
     {
-        private static readonly List<IPlatform> AvailablePlatforms = new List<IPlatform>();
+        private static readonly List<IPlatform> AllPlatforms = new List<IPlatform>();
 
+        public static IPlatform[] AvailablePlatforms => AllPlatforms.ToArray();
+        
         public static void AddPlatform(IPlatform platform)
         {
-            AvailablePlatforms.Add(platform);
+            AllPlatforms.Add(platform);
         }
 
         public static IPlatform GetPlatformByName(string name)
         {
-            return AvailablePlatforms.FirstOrDefault(x => StringComparer.CurrentCultureIgnoreCase.Equals(x.Name, name));
-        }
-        public static IPlatform GetSdkByName(string name)
-        {
-            return AvailablePlatforms.FirstOrDefault(x => x.Sdks.Any(sdk => StringComparer.CurrentCultureIgnoreCase.Equals(sdk.Name , name)) );
+            return AllPlatforms.FirstOrDefault(x => StringComparer.CurrentCultureIgnoreCase.Equals(x.Name, name));
         }
     }
 }

@@ -1,5 +1,5 @@
-#option("reparse-args", "os") //this is default
-#option("rename-args", "Arguments") //renaming the args[] to Arguments to clearness.
+//#option("reparse-args", "os") //this is default
+//#option("rename-args", "Arguments") //renaming the args[] to Arguments to clearness.
 
 
 function getShellScriptRuntimeCommand() {
@@ -14,20 +14,20 @@ function getShellScriptRuntimeCommand() {
     } else if (ClrHelpers.IsMonoAvailable()) {
         return ClrHelpers.GetRuntime("mono").Command();
     }
-#if Unix
+//#if Unix
     else {
         var lookup = ServiceLocator.Lookup("wine");
         if (lookup != null) { //trying to run on wine.
             return lookup.Command();
         }
     }
-#elseif
+//#elseif
     else {
         throw "Cannot find the required runtime.";
     }
-#endif
+//#endif
 }
 
 var clrRuntime = getShellScriptRuntimeCommand();
 
-clrRuntime.Invoke("./ShellScript.dll", ...Arguments);
+clrRuntime.Pipe(SaveToFileAndPrint("./log.txt")).Invoke("./ShellScript.dll", ...Arguments);

@@ -14,6 +14,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilationResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Compiler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Compiling\Context.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Compiling\IPlatformStatementTranspiler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Compiling\Scope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Parsing\IllegalSyntaxException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Parsing\Parser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Parsing\Parser.Readers.cs" />
@@ -43,11 +46,14 @@
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\AdditionOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\ArithmeticOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\BitwiseAndOperator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\BitwiseNotOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\BitwiseOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\BitwiseOrOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\DecrementOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\IncrementOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\ModulusOperator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\NotOperator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\OperatorAssociativity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\ReminderOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\XorOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\DivisionOperator.cs" />
@@ -63,6 +69,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\MultiplicationOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\NotEqualOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\SubtractionOperator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\PreProcessors\ICompilerAnnotationStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\PreProcessors\PreProcessorIfElseStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\SdkFunctionCallStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\VariableAccessOrDefinitionStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\VariableAccessStatement.cs" />
@@ -72,6 +80,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Language\Platforms.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\ISdk.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\KeywordLikeFunctions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\SdkBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\SdkBaseClass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\SdkBaseFunction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\SdkVariable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Lexing\Lexer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Lexing\Token.cs" />

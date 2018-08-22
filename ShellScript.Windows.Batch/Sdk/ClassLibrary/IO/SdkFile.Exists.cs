@@ -12,7 +12,7 @@ namespace ShellScript.Windows.Batch.Sdk.ClassLibrary.IO
             public bool IsStatic => true;
             public bool AllowDynamicParams => false;
 
-            public IEnumerable<ISdkParameter> Parameters { get; } = new[]
+            public ISdkParameter[] Parameters { get; } = new[]
             {
                 new SdkParameter("FilePath", DataTypes.String), 
             };

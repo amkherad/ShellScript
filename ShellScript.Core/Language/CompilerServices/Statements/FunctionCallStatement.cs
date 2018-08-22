@@ -4,14 +4,17 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
     {
         public override bool IsBlockStatement => false;
         
-        public string ClassName { get; }
+        /// <summary>
+        /// The name of the instance of the method or class's name itself.
+        /// </summary>
+        public string ObjectName { get; }
         public string FunctionName { get; }
         public EvaluationStatement[] Parameters { get; }
         
         
-        public FunctionCallStatement(string className, string functionName, EvaluationStatement[] parameters)
+        public FunctionCallStatement(string objectName, string functionName, EvaluationStatement[] parameters)
         {
-            ClassName = className;
+            ObjectName = objectName;
             FunctionName = functionName;
             Parameters = parameters;
         }

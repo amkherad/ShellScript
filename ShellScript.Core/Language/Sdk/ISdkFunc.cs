@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace ShellScript.Core.Language.Sdk
 {
     public interface ISdkFunc : ISdkObject
@@ -7,6 +5,6 @@ namespace ShellScript.Core.Language.Sdk
         bool IsStatic { get; }
         bool AllowDynamicParams { get; }
         
-        IEnumerable<ISdkParameter> Parameters { get; }
+        ISdkParameter[] Parameters { get; }
     }
 }

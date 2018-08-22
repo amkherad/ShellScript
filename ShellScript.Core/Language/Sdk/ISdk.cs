@@ -2,6 +2,10 @@ namespace ShellScript.Core.Language.Sdk
 {
     public interface ISdk
     {
+        ISdkVariable[] Variables { get; }
+        ISdkFunc[] Functions { get; }
+        ISdkClass[] Classes { get; }
+        
         string Name { get; }
         
         string OutputFileExtension { get; }

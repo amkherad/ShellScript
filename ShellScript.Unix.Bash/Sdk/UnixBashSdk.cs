@@ -1,26 +1,18 @@
 using ShellScript.Core.Language.Sdk;
+using ShellScript.Unix.Bash.Sdk.ClassLibrary.IO;
 
 namespace ShellScript.Unix.Bash.Sdk
 {
-    public class UnixBashSdk : ISdk
+    public class UnixBashSdk : SdkBase
     {
-        public string Name => "Bash";
-        public string OutputFileExtension => "sh";
-
-
-        public bool TryGetClass(string className, out ISdkClass result)
+        public override ISdkVariable[] Variables => new ISdkVariable[0];
+        public override ISdkFunc[] Functions => new ISdkFunc[0];
+        public override ISdkClass[] Classes { get; } =
         {
-            throw new System.NotImplementedException();
-        }
-
-        public bool TryGetGeneralFunction(string functionName, out ISdkFunc result)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public bool TryGetGeneralVariable(string variableName, out ISdkVariable result)
-        {
-            throw new System.NotImplementedException();
-        }
+            new SdkFile()
+        };
+        
+        public override string Name => "Unix-Bash";
+        public override string OutputFileExtension => "sh";
     }
 }

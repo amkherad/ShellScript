@@ -26,20 +26,27 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             {TokenType.CloseBracket, @"^\]"},
 
             {TokenType.AndLogical, @"^&&"},
-            {TokenType.And, @"^((&)|(!&&))"},
+            {TokenType.And, @"^&(?!&)"},
             {TokenType.OrLogical, @"^\|\|"},
-            {TokenType.Or, @"^((\|)|(!\|\|))"},
+            {TokenType.Or, @"^\|(?!\|)"},
 
             {TokenType.Dot, @"^\."},
             {TokenType.Comma, "^,"},
-            {TokenType.Assignment, "^="},
+            {TokenType.Assignment, "^=(?!=)"},
             {TokenType.Equals, "^=="},
             {TokenType.NotEquals, "^!="},
+            {TokenType.GreaterEqual, "^>="},
+            {TokenType.Greater, "^>(?!=)"},
+            {TokenType.LessEqual, "^<="},
+            {TokenType.Less, "^<(?!=)"},
 
-            {TokenType.Plus, @"^((\+)|(!\+\+))"},
-            {TokenType.Minus, @"^((-)|(!--))"},
+            {TokenType.Not, @"^\!(?!=)"},
+            {TokenType.BitwiseNot, @"^~"},
+            
+            {TokenType.Plus, @"^\+(?!\+)"},
+            {TokenType.Minus, @"^-(?!-)"},
             {TokenType.Asterisk, @"^\*"},
-            {TokenType.Division, "^/"},
+            {TokenType.Division, @"^/(?!/)"},
             {TokenType.Increment, @"^\+\+"},
             {TokenType.Decrement, @"^--"},
 
@@ -53,24 +60,22 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             {TokenType.PreprocessorElse, "^#else"},
             {TokenType.PreprocessorEndIf, "^#endif"},
             
-            {TokenType.For, "^((for)&(!foreach))"},
+            {TokenType.For, "^for(?!each)"},
             {TokenType.ForEach, "^foreach"},
-            {TokenType.Do, "^do"},
+            {TokenType.Do, "^do(?!uble)"},
             {TokenType.While, "^while"},
             {TokenType.Loop, "^loop"},
             
-            {TokenType.Class, "^class"},
+            //{TokenType.Class, "^class"},
             {TokenType.Function, "^function"},
 
             {TokenType.Throw, "^throw"},
-            {TokenType.Comment, "^//"},
-            {TokenType.MultiLineCommentOpen, @"^/\*"},
-            {TokenType.MultiLineCommentClose, @"^\*/"},
+            {TokenType.Comment, "^//.*"},
 
             {TokenType.Async, "^async"},
             {TokenType.Await, "^await"},
 
-            {TokenType.In, "^((in)&(!int))"},
+            {TokenType.In, "^in(?!t)"},
             {TokenType.NotIn, "^notin"},
 
             {TokenType.Like, "^like"},
@@ -78,12 +83,9 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
 
             {TokenType.Call, "^call"},
 
-            {TokenType.DataType, @"^((const)|(var)|(int)|(double)|(float)|(object)|(variant)|(number)|(decimal)|(int\[\])|(double\[\])|(float\[\])|(object\[\])|(variant\[\])|(number\[\])|(decimal\[\]))"},//(long)|
-            {TokenType.Null, "^((null)|(nil))"},
+            {TokenType.Null, "^(null|nil)"},
 
             {TokenType.Echo, "^echo"},
-
-            {TokenType.Number, @"^\d+"},
 
             {TokenType.SequenceTerminator, "^;"},
         };
@@ -95,7 +97,12 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             )
         );
 
+        private static readonly Regex Number = new Regex(@"^([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)", RegexOptions.Compiled);
+        private static readonly Regex DataType = new Regex(@"^(const|var(?!iant)|int(?!\[\])|double(?!\[\])|float(?!\[\])|object(?!\[\])|variant(?!\[\])|number(?!\[\])|decimal(?!\[\])|int\[\]|double\[\]|float\[\]|object\[\]|variant\[\]|number\[\]|decimal\[\])", RegexOptions.Compiled);
         private static readonly Regex ValidIdentifierName = new Regex(@"^\w+", RegexOptions.Compiled);
+        
+        private static readonly Regex MultiLineCommentOpen = new Regex(@"^/\*", RegexOptions.Compiled);
+        private static readonly Regex MultiLineCommentClose = new Regex(@"^\*/", RegexOptions.Compiled);
 
         /// <summary>
         /// This method tokenize the input stream.
@@ -107,33 +114,52 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         /// <returns></returns>
         public IEnumerable<Token> Tokenize(TextReader reader)
         {
-            var line = string.Empty;
+            string line = null;
             var lineNumber = 0;
+
+            var isMultilineCommentOpen = false;
 
             string cline; //current line
             while ((cline = reader.ReadLine()) != null)
             {
-                if (cline[cline.Length - 1] == EscapeCharacter)
+                if (string.IsNullOrWhiteSpace(cline))
+                {
+                    continue;
+                }
+                if (cline.Length > 0 && cline[cline.Length - 1] == EscapeCharacter)
                 {
                     line += cline.Substring(0, cline.Length - 1); //remove the line escape character.
                     lineNumber++;
                     continue;
                 }
-
-                line += ' ' + cline;
+                else if (line == null)
+                {
+                    line = cline;
+                }
+                else
+                {
+                    line += ' ' + cline;
+                }
 
                 var lineLength = line.Length;
 
-                foreach (var token in TokenizeLine(line, lineNumber))
+                var tokenizedLine = TokenizeLine(line, lineNumber, isMultilineCommentOpen, out isMultilineCommentOpen);
+
+                line = null;
+                
+                if (tokenizedLine.Length > 0)
                 {
-                    yield return token;
+                    foreach (var token in tokenizedLine)
+                    {
+                        yield return token;
+                    }
                 }
 
-                yield return new Token(
-                    Environment.NewLine,
-                    TokenType.SequenceTerminatorNewLine,
-                    lineLength,
-                    lineLength);
+//                yield return new Token(
+//                    Environment.NewLine,
+//                    TokenType.SequenceTerminatorNewLine,
+//                    lineLength,
+//                    lineLength);
 
                 lineNumber = 0;
             }
@@ -144,8 +170,10 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         /// </summary>
         /// <param name="line"></param>
         /// <param name="lineNumber"></param>
+        /// <param name="isMultilineCommentOpen"></param>
+        /// <param name="isMultilineCommentOpenResult"></param>
         /// <returns></returns>
-        public Token[] TokenizeLine(string line, int lineNumber)
+        public Token[] TokenizeLine(string line, int lineNumber, bool isMultilineCommentOpen, out bool isMultilineCommentOpenResult)
         {
             if (line == null) throw new ArgumentNullException(nameof(line));
 
@@ -154,9 +182,54 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
 
             while (!string.IsNullOrWhiteSpace(line))
             {
-                if (TryFindMatch(line, out var matchType, out var matchString))
+                if (char.IsWhiteSpace(line[0]))
                 {
-                    tokens.Add(new Token(matchString, matchType, columnNumber, lineNumber));
+                    line = line.Substring(1);
+                    columnNumber++;
+                }
+                else if (TryFindMatch(line, out var matchType, out var matchString))
+                {
+                    var addToken = true;
+                    
+                    if (matchType == TokenType.Comment)
+                    {
+                        if (isMultilineCommentOpen)
+                        {
+                            var multiLineComment = TokenPatterns[TokenType.MultiLineCommentClose];
+                            var multiLineCommentIndex = line.IndexOf(multiLineComment, StringComparison.Ordinal);
+
+                            if (multiLineCommentIndex > 0)
+                            {
+                                var offset = multiLineCommentIndex + multiLineComment.Length;
+                                line = line.Substring(offset);
+                                columnNumber += offset;
+
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            break; //break on comment (i.e. "//")
+                        }
+                    }
+                    else if (matchType == TokenType.MultiLineCommentOpen)
+                    {
+                        isMultilineCommentOpenResult = true;
+                        isMultilineCommentOpen = true;
+                        addToken = false;
+                    }
+                    else if (matchType == TokenType.MultiLineCommentClose)
+                    {
+                        isMultilineCommentOpenResult = false;
+                        isMultilineCommentOpen = false;
+                        addToken = false;
+                    }
+
+                    if (addToken && !isMultilineCommentOpen)
+                    {
+                        tokens.Add(new Token(matchString, matchType, columnNumber, lineNumber));
+                    }
+                    
                     line = line.Substring(matchString.Length);
                     columnNumber += matchString.Length;
                 }
@@ -167,12 +240,46 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
                 }
             }
 
+            isMultilineCommentOpenResult = isMultilineCommentOpen;
             return tokens.ToArray();
         }
 
         public bool TryFindMatch(string text, out TokenType matchType, out string matchString)
         {
             Match match;
+
+            match = MultiLineCommentOpen.Match(text);
+            if (match.Success)
+            {
+                matchType = TokenType.MultiLineCommentOpen;
+                matchString = match.Value;
+                return true;
+            }
+
+            match = MultiLineCommentClose.Match(text);
+            if (match.Success)
+            {
+                matchType = TokenType.MultiLineCommentClose;
+                matchString = match.Value;
+                return true;
+            }
+
+            match = DataType.Match(text);
+            if (match.Success)
+            {
+                matchType = TokenType.DataType;
+                matchString = match.Value;
+                return true;
+            }
+
+            match = Number.Match(text);
+            if (match.Success)
+            {
+                matchType = TokenType.Number;
+                matchString = match.Value;
+                return true;
+            }
+            
             foreach (var token in TokenRegexes)
             {
                 match = token.Value.Match(text);

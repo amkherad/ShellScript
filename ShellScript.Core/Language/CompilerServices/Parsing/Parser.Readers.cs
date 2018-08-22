@@ -28,10 +28,29 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             var statements = new List<IStatement>();
 
-            IStatement statement;
-            while ((statement = ReadStatement(enumerator, info)) != null)
+            var continueRead = true;
+            while(continueRead)
             {
-                statements.Add(statement);
+                if (!enumerator.TryPeek(out var peek))
+                {
+                    break;
+                }
+                switch (peek.Type)
+                {
+                    case TokenType.SequenceTerminator:
+                    //case TokenType.SequenceTerminatorNewLine:
+                        enumerator.MoveNext();
+                        continue;
+                    case TokenType.CloseBrace:
+                        continueRead = false;
+                        break;
+                    default:
+                    {
+                        var statement = ReadStatement(enumerator, info);
+                        statements.Add(statement);
+                        break;
+                    }
+                }
             }
 
             if (!enumerator.MoveNext())
@@ -44,81 +63,286 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             return new BlockStatement(statements.ToArray());
         }
 
-
-        private void _addEvaluationToStack(Stack<IStatement> stack, IStatement statement)
+        public EvaluationStatement ReadAssignmentOrFunctionCall(Token token, PeekingEnumerator<Token> enumerator,
+            ParserInfo info)
         {
-            if (statement != null)
+            if (token.Type != TokenType.IdentifierName)
+                throw UnexpectedSyntax(token, info);
+
+            var firstToken = token;
+
+            if (enumerator.TryPeek(out var peek))
             {
-                stack.Push(statement);
+                switch (peek.Type)
+                {
+                    case TokenType.Assignment:
+                    {
+                        enumerator.MoveNext(); //read the assignment operator
+
+                        if (!enumerator.MoveNext()) //read the next token for ReadEvaluationStatement
+                            throw EndOfFile(token, info);
+
+                        token = enumerator.Current;
+                        var result = ReadEvaluationStatement(token, enumerator, info);
+
+                        return new AssignmentStatement(new VariableAccessStatement(firstToken.Value), result);
+                    }
+                    case TokenType.OpenParenthesis:
+                    case TokenType.Dot:
+                    {
+                        return ReadVariableOrFunctionCall(token, enumerator, info);
+                    }
+                    default:
+                        throw UnexpectedSyntax(peek, info);
+                }
             }
 
-            IStatement result = null;
+            throw UnexpectedSyntax(token, info);
+        }
 
-            if (stack.Count == 2)
+        public EvaluationStatement ReadVariableOrFunctionCall(Token token, PeekingEnumerator<Token> enumerator,
+            ParserInfo info)
+        {
+            if (token.Type != TokenType.IdentifierName)
+                throw UnexpectedSyntax(token, info);
+
+            var functionName = token;
+            Token className = null;
+
+            if (enumerator.TryPeek(out var peek))
             {
-                var incOp = stack.FirstOrDefault(stt => stt is IncrementOperator);
-                if (incOp != null)
+                var isMemberFunction = peek.Type == TokenType.Dot;
+                if (peek.Type == TokenType.OpenParenthesis || isMemberFunction)
                 {
-                    var operand = stack.FirstOrDefault(stt => !(stt is IncrementOperator)) as VariableAccessStatement;
-                    if (operand == null)
+                    enumerator.MoveNext(); //read the open parenthesis or dot
+                    var parameters = new List<EvaluationStatement>();
+
+                    if (!enumerator.MoveNext())
+                        throw EndOfFile(token, info);
+
+                    token = enumerator.Current;
+
+                    if (isMemberFunction)
                     {
-                        throw new ParserException();
+                        className = token;
+
+                        if (!enumerator.MoveNext())
+                            throw EndOfFile(token, info);
+
+                        token = enumerator.Current;
+                        if (token.Type != TokenType.OpenParenthesis)
+                            throw UnexpectedSyntax(token, info);
+
+                        if (!enumerator.MoveNext()) //read the next token for ReadEvaluationStatement
+                            throw EndOfFile(token, info);
+
+                        token = enumerator.Current;
                     }
 
-                    stack.Clear();
-
-                    result = new IncrementStatement(operand);
-                }
-                else
-                {
-                    var decOp = stack.FirstOrDefault(stt => stt is DecrementOperator);
-                    if (decOp != null)
+                    if (token.Type != TokenType.CloseParenthesis)
                     {
-                        var operand =
-                            stack.FirstOrDefault(stt => !(stt is DecrementOperator)) as VariableAccessStatement;
+                        var continueRead = true;
+                        for (; continueRead;)
+                        {
+                            var statement = ReadEvaluationStatement(token, enumerator, info);
+                            parameters.Add(statement);
+
+                            if (enumerator.TryPeek(out var nextPeek))
+                            {
+                                switch (nextPeek.Type)
+                                {
+                                    case TokenType.Comma:
+                                    {
+                                        if (statement is NopStatement)
+                                            throw UnexpectedSyntax(token, info);
+
+                                        enumerator.MoveNext(); //skip the comma
+
+                                        if (!enumerator.MoveNext())
+                                            throw EndOfFile(token, info);
+                                        token = enumerator.Current;
+
+                                        break;
+                                    }
+                                    case TokenType.CloseParenthesis:
+                                    {
+                                        continueRead = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    return new FunctionCallStatement(
+                        className?.Value,
+                        functionName.Value,
+                        parameters.Where(p => !(p is NopStatement)).ToArray());
+                }
+            }
+
+            return new VariableAccessStatement(token.Value);
+        }
+
+
+        private EvaluationStatement _createEvaluation(LinkedList<IStatement> statements, Token token, ParserInfo info)
+        {
+            if (statements.Count < 1)
+            {
+                return new NopStatement();
+            }
+
+            while (statements.Count > 1)
+            {
+                var op = statements.OfType<IOperator>().OrderByDescending(s => s.Order).FirstOrDefault();
+
+                if (op == null)
+                {
+                    throw UnexpectedSyntax(token, info);
+                }
+
+                var node = statements.Find(op);
+                if (node == null)
+                    throw UnexpectedSyntax(token, info);
+
+                if (op is BitwiseOperator bitwiseOperator)
+                {
+                    if (op is BitwiseNotOperator bitwiseNotOperator)
+                    {
+                        var operandNode = node.Next;
+                        var operand = operandNode?.Value as EvaluationStatement;
                         if (operand == null)
                         {
-                            throw new ParserException();
+                            throw UnexpectedSyntax(token, info);
                         }
 
-                        stack.Clear();
+                        node.Value = BitwiseEvaluationStatement.CreateNot(bitwiseNotOperator, operand);
+                        statements.Remove(operandNode);
+                    }
+                    else
+                    {
+                        var leftNode = node.Previous;
+                        var left = leftNode?.Value as EvaluationStatement;
+                        var rightNode = node.Next;
+                        var right = rightNode?.Value as EvaluationStatement;
 
-                        result = new DecrementStatement(operand);
+                        if (left == null || right == null)
+                        {
+                            throw UnexpectedSyntax(token, info);
+                        }
+
+                        node.Value = new BitwiseEvaluationStatement(left, bitwiseOperator, right);
+                        statements.Remove(leftNode);
+                        statements.Remove(rightNode);
                     }
                 }
-            }
-            else if (stack.Count == 3)
-            {
-                var right = (EvaluationStatement) stack.Pop();
-                var op = stack.Pop();
-                var left = (EvaluationStatement) stack.Pop();
+                else if (op is LogicalOperator logicalOperator)
+                {
+                    if (op is NotOperator notOperator)
+                    {
+                        var operandNode = node.Next;
+                        var operand = operandNode?.Value as EvaluationStatement;
+                        if (operand == null)
+                        {
+                            throw UnexpectedSyntax(token, info);
+                        }
 
-                if (op is ArithmeticOperator arithOp)
-                {
-                    result = new ArithmeticEvaluationStatement(left, arithOp, right);
+                        node.Value = LogicalEvaluationStatement.CreateNot(notOperator, operand);
+                        statements.Remove(operandNode);
+                    }
+                    else
+                    {
+                        var leftNode = node.Previous;
+                        var left = leftNode?.Value as EvaluationStatement;
+                        var rightNode = node.Next;
+                        var right = rightNode?.Value as EvaluationStatement;
+
+                        if (left == null || right == null)
+                        {
+                            throw UnexpectedSyntax(token, info);
+                        }
+
+                        node.Value = new LogicalEvaluationStatement(left, logicalOperator, right);
+                        statements.Remove(leftNode);
+                        statements.Remove(rightNode);
+                    }
                 }
-                else if (op is LogicalOperator logicOp)
+                else if (op is ArithmeticOperator arithmeticOperator)
                 {
-                    result = new LogicalEvaluationStatement(left, logicOp, right);
-                }
-                else if (op is BitwiseOperator bitOp)
-                {
-                    result = new BitwiseEvaluationStatement(left, bitOp, right);
+                    if (op is IncrementOperator incOperator)
+                    {
+                        var operandNode = node.Previous;
+                        var operand = operandNode?.Value as VariableAccessStatement;
+                        if (operand == null)
+                        {
+                            operandNode = node.Next;
+                            operand = operandNode?.Value as VariableAccessStatement;
+
+                            if (operand == null)
+                            {
+                                throw UnexpectedSyntax(token, info);
+                            }
+
+                            node.Value = ArithmeticEvaluationStatement.CreatePrefixIncrement(incOperator, operand);
+                        }
+                        else
+                        {
+                            node.Value = ArithmeticEvaluationStatement.CreatePostfixIncrement(incOperator, operand);
+                        }
+
+                        statements.Remove(operandNode);
+                    }
+                    else if (op is DecrementOperator decOperator)
+                    {
+                        var operandNode = node.Previous;
+                        var operand = operandNode?.Value as VariableAccessStatement;
+                        if (operand == null)
+                        {
+                            operandNode = node.Next;
+                            operand = operandNode?.Value as VariableAccessStatement;
+
+                            if (operand == null)
+                            {
+                                throw UnexpectedSyntax(token, info);
+                            }
+
+                            node.Value = ArithmeticEvaluationStatement.CreatePrefixDecrement(decOperator, operand);
+                        }
+                        else
+                        {
+                            node.Value = ArithmeticEvaluationStatement.CreatePostfixDecrement(decOperator, operand);
+                        }
+
+                        statements.Remove(operandNode);
+                    }
+                    else
+                    {
+                        var leftNode = node.Previous;
+                        var left = leftNode?.Value as EvaluationStatement;
+                        var rightNode = node.Next;
+                        var right = rightNode?.Value as EvaluationStatement;
+
+                        if (left == null || right == null)
+                        {
+                            throw UnexpectedSyntax(token, info);
+                        }
+
+                        node.Value = new ArithmeticEvaluationStatement(left, arithmeticOperator, right);
+                        statements.Remove(leftNode);
+                        statements.Remove(rightNode);
+                    }
                 }
                 else
                 {
-                    throw new ParserException();
+                    throw UnexpectedSyntax(token, info);//WTF!
                 }
             }
-            else if (stack.Count > 3) //WTF!!
-            {
-                throw new ParserException();
-            }
 
-            if (result != null)
-            {
-                stack.Push(result);
-            }
+            return (EvaluationStatement) statements.First.Value;
         }
 
         /// <summary>
@@ -131,7 +355,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         public EvaluationStatement ReadEvaluationStatement(Token token, PeekingEnumerator<Token> enumerator,
             ParserInfo info)
         {
-            var stack = new Stack<IStatement>();
+            var statements = new LinkedList<IStatement>();
 
             for (;;)
             {
@@ -143,7 +367,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw EndOfFile(token, info);
 
                         token = enumerator.Current;
-                        _addEvaluationToStack(stack, ReadEvaluationStatement(token, enumerator, info));
+                        statements.AddLast(ReadEvaluationStatement(token, enumerator, info));
 
                         if (!enumerator.MoveNext()) //close parenthesis
                             throw EndOfFile(token, info);
@@ -156,85 +380,119 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     }
                     case TokenType.IdentifierName:
                     {
-                        _addEvaluationToStack(stack, new VariableAccessStatement(token.Value));
+                        statements.AddLast(ReadVariableOrFunctionCall(token, enumerator, info));
                         break;
                     }
                     case TokenType.StringValue1:
                     case TokenType.StringValue2:
                     {
-                        _addEvaluationToStack(stack, new ConstantValueStatement(DataTypes.String, token.Value));
+                        statements.AddLast(new ConstantValueStatement(DataTypes.String, token.Value));
                         break;
                     }
                     case TokenType.Number:
                     {
-                        _addEvaluationToStack(stack, new ConstantValueStatement(DataTypes.Numeric, token.Value));
+                        statements.AddLast(new ConstantValueStatement(DataTypes.Numeric, token.Value));
                         break;
                     }
                     case TokenType.Null:
                     {
-                        _addEvaluationToStack(stack, new ConstantValueStatement(DataTypes.Variant, token.Value));
+                        statements.AddLast(new ConstantValueStatement(DataTypes.Variant, token.Value));
                         break;
                     }
 
                     case TokenType.Plus:
                     {
-                        _addEvaluationToStack(stack, new AdditionOperator());
+                        statements.AddLast(new AdditionOperator());
                         break;
                     }
                     case TokenType.Minus:
                     {
-                        _addEvaluationToStack(stack, new SubtractionOperator());
+                        statements.AddLast(new SubtractionOperator());
                         break;
                     }
                     case TokenType.Asterisk:
                     {
-                        _addEvaluationToStack(stack, new MultiplicationOperator());
+                        statements.AddLast(new MultiplicationOperator());
                         break;
                     }
                     case TokenType.Division:
                     {
-                        _addEvaluationToStack(stack, new DivisionOperator());
+                        statements.AddLast(new DivisionOperator());
                         break;
                     }
                     case TokenType.Increment:
                     {
-                        _addEvaluationToStack(stack, new IncrementOperator());
+                        statements.AddLast(new IncrementOperator());
                         break;
                     }
                     case TokenType.Decrement:
                     {
-                        _addEvaluationToStack(stack, new DecrementOperator());
+                        statements.AddLast(new DecrementOperator());
                         break;
                     }
                     case TokenType.BackSlash:
                     {
-                        _addEvaluationToStack(stack, new ModulusOperator());
+                        statements.AddLast(new ModulusOperator());
                         break;
                     }
                     case TokenType.Reminder:
                     {
-                        _addEvaluationToStack(stack, new ReminderOperator());
+                        statements.AddLast(new ReminderOperator());
+                        break;
+                    }
+                    case TokenType.Not:
+                    {
+                        statements.AddLast(new ReminderOperator());
                         break;
                     }
 
+                    case TokenType.Equals:
+                    {
+                        statements.AddLast(new EqualOperator());
+                        break;
+                    }
+                    case TokenType.NotEquals:
+                    {
+                        statements.AddLast(new NotEqualOperator());
+                        break;
+                    }
+                    case TokenType.GreaterEqual:
+                    {
+                        statements.AddLast(new GreaterEqualOperator());
+                        break;
+                    }
+                    case TokenType.Greater:
+                    {
+                        statements.AddLast(new GreaterOperator());
+                        break;
+                    }
+                    case TokenType.LessEqual:
+                    {
+                        statements.AddLast(new LessEqualOperator());
+                        break;
+                    }
+                    case TokenType.Less:
+                    {
+                        statements.AddLast(new LessOperator());
+                        break;
+                    }
 
                     case TokenType.CloseParenthesis:
                     case TokenType.SequenceTerminator:
                     case TokenType.OpenBrace:
                     case TokenType.SequenceTerminatorNewLine:
+                    case TokenType.Comma:
                     {
-                        _addEvaluationToStack(stack, null);
-                        if (stack.Count > 1)
+                        try
                         {
-                            throw new ParserException();
-                        }
+                            var result = _createEvaluation(statements, token, info);
 
-                        if (stack.Count == 0)
+                            return result;
+                        }
+                        catch (Exception ex)
                         {
-                            return new NopStatement();
+                            throw UnexpectedSyntax(token, info);
                         }
-
-                        return (EvaluationStatement) stack.Pop();
                     }
                     default:
                         throw UnexpectedSyntax(token, info);
@@ -247,22 +505,26 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         case TokenType.CloseParenthesis:
                         case TokenType.SequenceTerminator:
                         case TokenType.OpenBrace:
+                        case TokenType.Comma:
                         {
-                            _addEvaluationToStack(stack, null);
-                            if (stack.Count != 1)
+                            try
                             {
-                                throw new ParserException();
-                            }
+                                var result = _createEvaluation(statements, token, info);
 
-                            return (EvaluationStatement) stack.Pop();
+                                return result;
+                            }
+                            catch (Exception ex)
+                            {
+                                throw UnexpectedSyntax(token, info);
+                            }
                         }
                         default:
                         {
                             if (!enumerator.MoveNext())
                                 throw EndOfFile(token, info);
-                            
+
                             token = enumerator.Current;
-                            
+
                             break;
                         }
                     }
@@ -849,6 +1111,22 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         public IStatement ReadClass(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             return null;
+        }
+
+
+        public IStatement ReadEcho(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        {
+            if (token.Type != TokenType.Echo)
+                throw UnexpectedSyntax(token, info);
+
+            if (!enumerator.MoveNext())
+                throw UnexpectedSyntax(token, info);
+
+            token = enumerator.Current;
+
+            var statement = ReadEvaluationStatement(token, enumerator, info);
+
+            return new SdkFunctionCallStatement("echo", new [] {statement});
         }
     }
 }

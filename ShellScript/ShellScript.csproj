@@ -8,8 +8,6 @@
 
     <Import Project="..\ShellScript.Core\ShellScript.Core.projitems" Label="Shared" />
 
-    <Import Project="..\ShellScript.Windows.Batch\ShellScript.Windows.Batch.projitems" Label="Shared" />
-
     <Import Project="..\ShellScript.Unix.Bash\ShellScript.Unix.Bash.projitems" Label="Shared" />
 
     <Import Project="..\ShellScript.Luncher\ShellScript.Luncher.projitems" Label="Shared" />

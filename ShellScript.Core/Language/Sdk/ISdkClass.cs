@@ -1,11 +1,14 @@
-using System.Collections.Generic;
-
 namespace ShellScript.Core.Language.Sdk
 {
     public interface ISdkClass : ISdkObject
     {
-        IEnumerable<ISdkVariable> Variables { get; }
+        ISdkVariable[] Variables { get; }
         
-        IEnumerable<ISdkFunc> Functions { get; }
+        ISdkFunc[] Functions { get; }
+        
+        
+        bool TryGetFunction(string functionName, out ISdkFunc result);
+        
+        bool TryGetVariable(string variableName, out ISdkVariable result);
     }
 }

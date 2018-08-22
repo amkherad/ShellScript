@@ -99,12 +99,12 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
                 switch (token.Type)
                 {
+                    case TokenType.Echo:
+                        return ReadEcho(token, enumerator, info);
                     case TokenType.IdentifierName:
-                        break;
+                        return ReadAssignmentOrFunctionCall(token, enumerator, info);
                     case TokenType.DataType:
                         return ReadVariableDefinition(token, enumerator, false, info);
-                    case TokenType.Echo:
-                        break;
                     
                     case TokenType.If:
                         return ReadIf(token, enumerator, info);
@@ -119,8 +119,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     case TokenType.Loop:
                         return ReadLoop(token, enumerator, info);
                     
-                    case TokenType.Class:
-                        return ReadClass(token, enumerator, info);
+                    //case TokenType.Class:
+                    //    return ReadClass(token, enumerator, info);
                     case TokenType.Function:
                         return ReadFunction(token, enumerator, info);
 
@@ -128,10 +128,6 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         return ReadBlockStatement(token, enumerator, info);
                     
                     case TokenType.OpenParenthesis:
-                        break;
-                    case TokenType.Minus:
-                        break;
-                    case TokenType.Plus:
                         break;
                     case TokenType.Throw:
                         break;
@@ -154,6 +150,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         throw UnexpectedSyntax(token, info);
 
 
+                    case TokenType.Minus:
+                    case TokenType.Plus:
                     case TokenType.Else:
                     case TokenType.AndLogical:
                     case TokenType.And:

@@ -7,6 +7,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         public ParserInfo ParserInfo { get; }
 
         public ParserSyntaxException(int lineNumber, int columnNumber, ParserInfo info)
+            : base($"Parse exception in '{info?.File}' at {lineNumber}:{columnNumber}")
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;

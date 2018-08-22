@@ -1,6 +1,6 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class AssignmentStatement : IStatement
+    public class AssignmentStatement : EvaluationStatement
     {
         public AssignmentStatement(IStatement leftSide, IStatement rightSide)
         {
@@ -8,7 +8,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             RightSide = rightSide;
         }
 
-        public bool IsBlockStatement => false;
+        public override bool IsBlockStatement => false;
         
         public IStatement LeftSide { get; }
         public IStatement RightSide { get; }

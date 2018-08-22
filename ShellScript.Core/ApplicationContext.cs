@@ -11,7 +11,12 @@ namespace ShellScript.Core
         
         public static ICollection<ICommand> AvailableCommands { get; } = new List<ICommand>
         {
-            HelpCommand
+            HelpCommand,
+            new CompileCommand(),
+            new PlatformsCommand(),
+            new ExecuteCommand(),
+            new VersionInfoCommand(),
+            new DaemonCommand(),
         };
         
         public static Version Version => Assembly.GetExecutingAssembly().GetName().Version;
