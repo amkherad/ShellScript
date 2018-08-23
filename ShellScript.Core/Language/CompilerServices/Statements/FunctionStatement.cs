@@ -10,8 +10,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public string Name { get; }
         public BlockStatement Block { get; }
         public FunctionParameterDefinitionStatement[] Parameters { get; }
-        
-        
+
+
         public FunctionStatement(string name, FunctionParameterDefinitionStatement[] parameters, BlockStatement block)
         {
             Name = name;
@@ -21,7 +21,19 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
         public override string ToString()
         {
-            return $"function {Name}({string.Join(',', (IEnumerable<FunctionParameterDefinitionStatement>) Parameters)}) {{{Environment.NewLine}{Block}{Environment.NewLine}}}";
+            return
+                $"function {Name}({string.Join(',', (IEnumerable<FunctionParameterDefinitionStatement>) Parameters)}) {{{Environment.NewLine}{Block}{Environment.NewLine}}}";
+        }
+
+
+        public IEnumerable<IStatement> TraversableChildren
+        {
+            get
+            {
+                yield return Block;
+                foreach (var p in Parameters)
+                    yield return p;
+            }
         }
     }
 }

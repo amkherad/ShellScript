@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class DecrementStatement : EvaluationStatement
@@ -13,6 +15,15 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             Variable = variable;
             IsPostfix = isPostfix;
+        }
+
+
+        public override IEnumerable<IStatement> TraversableChildren
+        {
+            get
+            {
+                yield return Variable;
+            }
         }
     }
 }

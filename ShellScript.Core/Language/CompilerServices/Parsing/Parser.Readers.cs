@@ -1105,7 +1105,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             var block = ReadBlockStatement(token, enumerator, info);
 
-            return new ForEachStatement(variable, iterator);
+            return new ForEachStatement(variable, iterator, block);
         }
 
         public IStatement ReadClass(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)

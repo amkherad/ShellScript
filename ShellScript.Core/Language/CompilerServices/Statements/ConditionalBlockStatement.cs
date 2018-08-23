@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class ConditionalBlockStatement : IStatement
@@ -12,6 +14,16 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             Condition = condition;
             Statement = statement;
+        }
+
+
+        public IEnumerable<IStatement> TraversableChildren
+        {
+            get
+            {
+                yield return Condition;
+                yield return Statement;
+            }
         }
     }
 }

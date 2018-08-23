@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
@@ -15,5 +17,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             DataType = dataType;
             Value = value;
         }
+
+
+        public override IEnumerable<IStatement> TraversableChildren => Enumerable.Empty<IStatement>();
     }
 }

@@ -1,4 +1,4 @@
-using ShellScript.Core.Language.CompilerServices.Compiling;
+using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language

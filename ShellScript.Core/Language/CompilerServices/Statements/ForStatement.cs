@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class ForStatement : ConditionalBlockStatement
@@ -10,6 +12,18 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             PreLoopAssignment = preLoopAssignment;
             AfterLoopEvaluations = afterLoopEvaluations;
+        }
+
+
+        public IEnumerable<IStatement> TraversableChildren
+        {
+            get
+            {
+                yield return PreLoopAssignment;
+                yield return Condition;
+                yield return AfterLoopEvaluations;
+                yield return Statement;
+            }
         }
     }
 }

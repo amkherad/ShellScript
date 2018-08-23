@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class IfElseStatement : IStatement
@@ -31,6 +33,18 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             MainIf = mainIf;
             Else = @else;
+        }
+
+
+        public IEnumerable<IStatement> TraversableChildren
+        {
+            get
+            {
+                yield return MainIf;
+                foreach (var ei in ElseIfs)
+                    yield return ei;
+                if (Else != null) yield return Else;
+            }
         }
     }
 }

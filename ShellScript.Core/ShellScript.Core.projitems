@@ -14,9 +14,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilationResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Compiler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerException.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Compiling\Context.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Compiling\IPlatformStatementTranspiler.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Compiling\Scope.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\IdentifierNameExistsCompilerException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\InvalidIdentifierNameCompilerException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\StatementHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\Context.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\IPlatformEvaluationStatementTranspiler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\IPlatformStatementTranspiler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\Scope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Parsing\IllegalSyntaxException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Parsing\Parser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Parsing\Parser.Readers.cs" />
@@ -76,6 +80,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\VariableAccessStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\VariableDefinitionStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\WhileStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\TypeMismatchCompilerException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\VariableInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\IPlatform.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\Platforms.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\Sdk\ISdk.cs" />
@@ -98,5 +104,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Language\DesignGuidelines.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\BaseImplementations\EvaluationStatementTranspilerBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\BaseImplementations\VariableDefinitionStatementTranspilerBase.cs" />
   </ItemGroup>
 </Project>

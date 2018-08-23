@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.ExceptionServices;
+using ShellScript.Core.Language.CompilerServices.Compiling;
 using ShellScript.Core.Language.CompilerServices.Lexing;
 using ShellScript.Core.Language.CompilerServices.Parsing;
 using ShellScript.Core.Language.CompilerServices.Statements;
@@ -60,7 +61,7 @@ namespace ShellScript.Core.Language.CompilerServices
 
                         foreach (var statement in _parser.Parse(reader, info))
                         {
-                            Compile(statement, outputWriter, metaWriter);
+                            Compile(statement, outputWriter, metaWriter, platform);
                         }
 
                         return new CompilationResult(true);
@@ -87,9 +88,11 @@ namespace ShellScript.Core.Language.CompilerServices
         private void Compile(
             IStatement statement,
             TextWriter outputWriter,
-            TextWriter metatWriter
+            TextWriter metatWriter,
+            IPlatform platform
         )
         {
+            var compileContext = new Context(metatWriter, outputWriter, platform);
             outputWriter.WriteLine(statement.GetType().Name);
             metatWriter.WriteLine(statement.GetType().Name);
         }

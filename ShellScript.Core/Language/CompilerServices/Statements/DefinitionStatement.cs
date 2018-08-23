@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
@@ -19,6 +20,15 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Name = name;
             DefaultValue = defaultValue;
             HasDefaultValue = hasDefaultValue;
+        }
+
+
+        public IEnumerable<IStatement> TraversableChildren
+        {
+            get
+            {
+                if (DefaultValue != null) yield return DefaultValue;
+            }
         }
     }
 }

@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class VariableAccessStatement : EvaluationStatement
@@ -11,5 +14,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             VariableName = variableName;
         }
+
+
+        public override IEnumerable<IStatement> TraversableChildren => Enumerable.Empty<IStatement>();
     }
 }

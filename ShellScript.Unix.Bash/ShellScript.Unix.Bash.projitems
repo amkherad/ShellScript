@@ -9,7 +9,10 @@
     <Import_RootNamespace>ShellScript.Unix.Bash</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)PlatformTranspiler\IfElseTranspiler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PlatformTranspiler\BashTranspilerHelpers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PlatformTranspiler\EvaluationStatementTranspiler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PlatformTranspiler\IfElseStatementTranspiler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PlatformTranspiler\VariableDefinitionStatementTranspiler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\IO\SdkFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sdk\ClassLibrary\IO\SdkFile.Exists.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sdk\UnixBashSdk.cs" />

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class BlockStatement : IStatement
@@ -11,5 +13,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             Statements = statements;
         }
+
+
+        public IEnumerable<IStatement> TraversableChildren => Statements;
     }
 }

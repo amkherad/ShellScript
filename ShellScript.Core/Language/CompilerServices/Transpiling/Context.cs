@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.Sdk;
 
-namespace ShellScript.Core.Language.CompilerServices.Compiling
+namespace ShellScript.Core.Language.CompilerServices.Transpiling
 {
     public class Context
     {
@@ -37,6 +38,26 @@ namespace ShellScript.Core.Language.CompilerServices.Compiling
             _typeTranspilers = Transpilers.ToDictionary(key => key.StatementType);
         }
 
+
+        public IPlatformStatementTranspiler GetTranspilerForStatement(IStatement statement)
+        {
+            if (_typeTranspilers.TryGetValue(statement.GetType(), out var value))
+            {
+                return value;
+            }
+
+            throw new InvalidOperationException();
+        }
+        public IPlatformEvaluationStatementTranspiler GetEvaluationTranspilerForStatement(EvaluationStatement statement)
+        {
+            if (_typeTranspilers.TryGetValue(statement.GetType(), out var value))
+            {
+                return value as IPlatformEvaluationStatementTranspiler;
+            }
+
+            throw new InvalidOperationException();
+        }
+        
 
         public TTranspiler GetTranspiler<TTranspiler, TStatement>()
             where TTranspiler : class, IPlatformStatementTranspiler

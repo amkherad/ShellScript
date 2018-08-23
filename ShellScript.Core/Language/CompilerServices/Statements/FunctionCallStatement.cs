@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class FunctionCallStatement : EvaluationStatement
@@ -18,5 +20,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             FunctionName = functionName;
             Parameters = parameters;
         }
+
+
+        public override IEnumerable<IStatement> TraversableChildren => Parameters;
     }
 }

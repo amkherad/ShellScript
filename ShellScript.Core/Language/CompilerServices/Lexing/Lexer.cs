@@ -97,12 +97,12 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             )
         );
 
-        private static readonly Regex Number = new Regex(@"^([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)", RegexOptions.Compiled);
-        private static readonly Regex DataType = new Regex(@"^(const|var(?!iant)|int(?!\[\])|double(?!\[\])|float(?!\[\])|object(?!\[\])|variant(?!\[\])|number(?!\[\])|decimal(?!\[\])|int\[\]|double\[\]|float\[\]|object\[\]|variant\[\]|number\[\]|decimal\[\])", RegexOptions.Compiled);
-        private static readonly Regex ValidIdentifierName = new Regex(@"^\w+", RegexOptions.Compiled);
+        public static readonly Regex Number = new Regex(@"^([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)", RegexOptions.Compiled);
+        public static readonly Regex DataType = new Regex(@"^(const|var(?!iant)|int(?!\[\])|double(?!\[\])|float(?!\[\])|object(?!\[\])|variant(?!\[\])|number(?!\[\])|decimal(?!\[\])|int\[\]|double\[\]|float\[\]|object\[\]|variant\[\]|number\[\]|decimal\[\])", RegexOptions.Compiled);
+        public static readonly Regex ValidIdentifierName = new Regex(@"^\w+", RegexOptions.Compiled);
         
-        private static readonly Regex MultiLineCommentOpen = new Regex(@"^/\*", RegexOptions.Compiled);
-        private static readonly Regex MultiLineCommentClose = new Regex(@"^\*/", RegexOptions.Compiled);
+        public static readonly Regex MultiLineCommentOpen = new Regex(@"^/\*", RegexOptions.Compiled);
+        public static readonly Regex MultiLineCommentClose = new Regex(@"^\*/", RegexOptions.Compiled);
 
         /// <summary>
         /// This method tokenize the input stream.
