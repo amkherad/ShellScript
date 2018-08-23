@@ -4,5 +4,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements.Operators
     {
         OperatorAssociativity Associativity { get; }
         int Order { get; }
+
+        string ToString();
     }
 }

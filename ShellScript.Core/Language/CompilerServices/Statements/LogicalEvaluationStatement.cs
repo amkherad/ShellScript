@@ -6,17 +6,19 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
     public class LogicalEvaluationStatement : EvaluationStatement
     {
         public override bool IsBlockStatement => false;
+        public override StatementInfo Info { get; }
 
         public EvaluationStatement Left { get; }
         public LogicalOperator Operator { get; }
         public EvaluationStatement Right { get; }
         
         
-        public LogicalEvaluationStatement(EvaluationStatement left, LogicalOperator @operator, EvaluationStatement right)
+        public LogicalEvaluationStatement(EvaluationStatement left, LogicalOperator @operator, EvaluationStatement right, StatementInfo info)
         {
             Left = left;
             Operator = @operator;
             Right = right;
+            Info = info;
         }
 
 
@@ -32,9 +34,9 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
         
         
-        public static LogicalEvaluationStatement CreateNot(NotOperator op, EvaluationStatement operand)
+        public static LogicalEvaluationStatement CreateNot(NotOperator op, EvaluationStatement operand, StatementInfo info)
         {
-            return new LogicalEvaluationStatement(null, op, operand);
+            return new LogicalEvaluationStatement(null, op, operand, info);
         }
     }
 }

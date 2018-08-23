@@ -8,9 +8,11 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         public Context Context { get; }
         public Scope Parent { get; }
 
+        public bool IsRootScope => Parent == null;
 
-        public HashSet<string> _identifiers;
-        public HashSet<VariableInfo> _variables;
+        private readonly HashSet<string> _identifiers;
+        private readonly HashSet<ConstantInfo> _constants;
+        private readonly HashSet<VariableInfo> _variables;
 
 
         public Scope(Context context)
@@ -30,24 +32,30 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             _variables = new HashSet<VariableInfo>();
         }
 
-        public Scope Clone()
+        public Scope Fork()
         {
             return new Scope(Context, this);
         }
 
+
         public bool IsVariableExists(string name)
         {
-            if (_variables.Contains(new VariableInfo(DataTypes.Variant, name)))
+            var that = this;
+            do
             {
-                return true;
-            }
-            
-            if (_identifiers.Contains(name))
-            {
-                return true;
-            }
+                if (that._variables.Contains(new VariableInfo(DataTypes.Variant, name)))
+                {
+                    return true;
+                }
 
-            return Parent?.IsVariableExists(name) ?? false;
+                if (that._identifiers.Contains(name))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
         }
 
         public string ReserveNewVariable(DataTypes dataType, string nameHint)
@@ -76,6 +84,40 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             _variables.Add(new VariableInfo(dataType, nameHint));
 
             return nameHint;
+        }
+
+        public bool TryGetVariableInfo(string variableName, out VariableInfo variableInfo)
+        {
+            var varInfo = new VariableInfo(DataTypes.Variant, variableName);
+
+            var that = this;
+            do
+            {
+                if (that._variables.TryGetValue(varInfo, out variableInfo))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
+
+        public bool TryGetConstantInfo(string constantName, out ConstantInfo constantInfo)
+        {
+            var varInfo = new ConstantInfo(DataTypes.Variant, constantName);
+
+            var that = this;
+            do
+            {
+                if (that._constants.TryGetValue(varInfo, out constantInfo))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
         }
     }
 }

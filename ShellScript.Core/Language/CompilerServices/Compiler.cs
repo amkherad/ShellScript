@@ -1,11 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.ExceptionServices;
-using ShellScript.Core.Language.CompilerServices.Compiling;
 using ShellScript.Core.Language.CompilerServices.Lexing;
 using ShellScript.Core.Language.CompilerServices.Parsing;
 using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.CompilerServices.Transpiling;
 
 namespace ShellScript.Core.Language.CompilerServices
 {

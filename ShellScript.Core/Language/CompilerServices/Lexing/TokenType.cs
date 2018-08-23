@@ -65,6 +65,7 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         
         Function, //function
         Class, //class
+        Return, //return
         
         Like, //like
         NotLike, //notlike

@@ -1,7 +1,8 @@
 using System;
+using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.Sdk;
 
-namespace ShellScript.Core.Language.CompilerServices
+namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
 {
     public class TypeMismatchCompilerException : CompilerException
     {
@@ -17,6 +18,19 @@ namespace ShellScript.Core.Language.CompilerServices
 
         public TypeMismatchCompilerException(Exception innerException) : base(innerException)
         {
+        }
+
+        public static string CreateMessage(DataTypes specifiedType, DataTypes expectedType, StatementInfo info)
+        {
+            // ReSharper disable once UseStringInterpolation
+            return string.Format(
+                "A type mismatch exception has been thrown, expectation was: '{0}' but a type of '{1}' is specified in '{2}' at {3}:{4}.",
+                expectedType,
+                specifiedType,
+                info.FilePath,
+                info.LineNumber,
+                info.ColumnNumber
+            );
         }
 
         public static string CreateMessage(DataTypes specifiedType, DataTypes expectedType)

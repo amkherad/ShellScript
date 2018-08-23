@@ -1,6 +1,6 @@
 using System;
 
-namespace ShellScript.Core.Language.CompilerServices
+namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
 {
     public class CompilerException : Exception
     {

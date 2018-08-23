@@ -1,7 +1,6 @@
 using ShellScript.Core.Language;
-using ShellScript.Core.Language.CompilerServices.Compiling;
+using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.Sdk;
-using ShellScript.Unix.Bash.PlatformTranspiler;
 using ShellScript.Unix.Bash.Sdk;
 
 namespace ShellScript.Unix.Bash
@@ -10,11 +9,17 @@ namespace ShellScript.Unix.Bash
     {
         public string Name => "Unix-Bash";
 
+        public string[] CompilerConstants { get; } =
+        {
+            "unix",
+            "bash",
+        };
+
         public ISdk Sdk { get; } = new UnixBashSdk();
 
         public IPlatformStatementTranspiler[] Transpilers { get; } =
         {
-            new IfElseTranspiler()
+            //new IfElseTranspiler()
         };
     }
 }

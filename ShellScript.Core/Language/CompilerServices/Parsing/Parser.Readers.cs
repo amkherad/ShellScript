@@ -60,7 +60,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             if (token.Type != TokenType.CloseBrace)
                 throw UnexpectedSyntax(token, info);
 
-            return new BlockStatement(statements.ToArray());
+            return new BlockStatement(statements.ToArray(), CreateStatementInfo(info, token));
         }
 
         public EvaluationStatement ReadAssignmentOrFunctionCall(Token token, PeekingEnumerator<Token> enumerator,
@@ -85,7 +85,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         token = enumerator.Current;
                         var result = ReadEvaluationStatement(token, enumerator, info);
 
-                        return new AssignmentStatement(new VariableAccessStatement(firstToken.Value), result);
+                        var sttInfo = CreateStatementInfo(info, token);
+                        return new AssignmentStatement(new VariableAccessStatement(firstToken.Value, sttInfo), result, sttInfo);
                     }
                     case TokenType.OpenParenthesis:
                     case TokenType.Dot:
@@ -181,11 +182,13 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     return new FunctionCallStatement(
                         className?.Value,
                         functionName.Value,
-                        parameters.Where(p => !(p is NopStatement)).ToArray());
+                        parameters.Where(p => !(p is NopStatement)).ToArray(),
+                        CreateStatementInfo(info, token)
+                        );
                 }
             }
 
-            return new VariableAccessStatement(token.Value);
+            return new VariableAccessStatement(token.Value, CreateStatementInfo(info, token));
         }
 
 
@@ -193,7 +196,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         {
             if (statements.Count < 1)
             {
-                return new NopStatement();
+                return new NopStatement(CreateStatementInfo(info, token));
             }
 
             while (statements.Count > 1)
@@ -220,7 +223,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        node.Value = BitwiseEvaluationStatement.CreateNot(bitwiseNotOperator, operand);
+                        node.Value = BitwiseEvaluationStatement.CreateNot(bitwiseNotOperator, operand, CreateStatementInfo(info, token));
                         statements.Remove(operandNode);
                     }
                     else
@@ -235,7 +238,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        node.Value = new BitwiseEvaluationStatement(left, bitwiseOperator, right);
+                        node.Value = new BitwiseEvaluationStatement(left, bitwiseOperator, right, CreateStatementInfo(info, token));
                         statements.Remove(leftNode);
                         statements.Remove(rightNode);
                     }
@@ -251,7 +254,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        node.Value = LogicalEvaluationStatement.CreateNot(notOperator, operand);
+                        node.Value = LogicalEvaluationStatement.CreateNot(notOperator, operand, CreateStatementInfo(info, token));
                         statements.Remove(operandNode);
                     }
                     else
@@ -266,7 +269,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        node.Value = new LogicalEvaluationStatement(left, logicalOperator, right);
+                        node.Value = new LogicalEvaluationStatement(left, logicalOperator, right, CreateStatementInfo(info, token));
                         statements.Remove(leftNode);
                         statements.Remove(rightNode);
                     }
@@ -287,11 +290,11 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                                 throw UnexpectedSyntax(token, info);
                             }
 
-                            node.Value = ArithmeticEvaluationStatement.CreatePrefixIncrement(incOperator, operand);
+                            node.Value = ArithmeticEvaluationStatement.CreatePrefixIncrement(incOperator, operand, CreateStatementInfo(info, token));
                         }
                         else
                         {
-                            node.Value = ArithmeticEvaluationStatement.CreatePostfixIncrement(incOperator, operand);
+                            node.Value = ArithmeticEvaluationStatement.CreatePostfixIncrement(incOperator, operand, CreateStatementInfo(info, token));
                         }
 
                         statements.Remove(operandNode);
@@ -310,11 +313,11 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                                 throw UnexpectedSyntax(token, info);
                             }
 
-                            node.Value = ArithmeticEvaluationStatement.CreatePrefixDecrement(decOperator, operand);
+                            node.Value = ArithmeticEvaluationStatement.CreatePrefixDecrement(decOperator, operand, CreateStatementInfo(info, token));
                         }
                         else
                         {
-                            node.Value = ArithmeticEvaluationStatement.CreatePostfixDecrement(decOperator, operand);
+                            node.Value = ArithmeticEvaluationStatement.CreatePostfixDecrement(decOperator, operand, CreateStatementInfo(info, token));
                         }
 
                         statements.Remove(operandNode);
@@ -331,7 +334,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        node.Value = new ArithmeticEvaluationStatement(left, arithmeticOperator, right);
+                        node.Value = new ArithmeticEvaluationStatement(left, arithmeticOperator, right, CreateStatementInfo(info, token));
                         statements.Remove(leftNode);
                         statements.Remove(rightNode);
                     }
@@ -386,94 +389,94 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     case TokenType.StringValue1:
                     case TokenType.StringValue2:
                     {
-                        statements.AddLast(new ConstantValueStatement(DataTypes.String, token.Value));
+                        statements.AddLast(new ConstantValueStatement(DataTypes.String, token.Value, CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Number:
                     {
-                        statements.AddLast(new ConstantValueStatement(DataTypes.Numeric, token.Value));
+                        statements.AddLast(new ConstantValueStatement(DataTypes.Numeric, token.Value, CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Null:
                     {
-                        statements.AddLast(new ConstantValueStatement(DataTypes.Variant, token.Value));
+                        statements.AddLast(new ConstantValueStatement(DataTypes.Variant, token.Value, CreateStatementInfo(info, token)));
                         break;
                     }
 
                     case TokenType.Plus:
                     {
-                        statements.AddLast(new AdditionOperator());
+                        statements.AddLast(new AdditionOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Minus:
                     {
-                        statements.AddLast(new SubtractionOperator());
+                        statements.AddLast(new SubtractionOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Asterisk:
                     {
-                        statements.AddLast(new MultiplicationOperator());
+                        statements.AddLast(new MultiplicationOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Division:
                     {
-                        statements.AddLast(new DivisionOperator());
+                        statements.AddLast(new DivisionOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Increment:
                     {
-                        statements.AddLast(new IncrementOperator());
+                        statements.AddLast(new IncrementOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Decrement:
                     {
-                        statements.AddLast(new DecrementOperator());
+                        statements.AddLast(new DecrementOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.BackSlash:
                     {
-                        statements.AddLast(new ModulusOperator());
+                        statements.AddLast(new ModulusOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Reminder:
                     {
-                        statements.AddLast(new ReminderOperator());
+                        statements.AddLast(new ReminderOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Not:
                     {
-                        statements.AddLast(new ReminderOperator());
+                        statements.AddLast(new ReminderOperator(CreateStatementInfo(info, token)));
                         break;
                     }
 
                     case TokenType.Equals:
                     {
-                        statements.AddLast(new EqualOperator());
+                        statements.AddLast(new EqualOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.NotEquals:
                     {
-                        statements.AddLast(new NotEqualOperator());
+                        statements.AddLast(new NotEqualOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.GreaterEqual:
                     {
-                        statements.AddLast(new GreaterEqualOperator());
+                        statements.AddLast(new GreaterEqualOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Greater:
                     {
-                        statements.AddLast(new GreaterOperator());
+                        statements.AddLast(new GreaterOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.LessEqual:
                     {
-                        statements.AddLast(new LessEqualOperator());
+                        statements.AddLast(new LessEqualOperator(CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Less:
                     {
-                        statements.AddLast(new LessOperator());
+                        statements.AddLast(new LessOperator(CreateStatementInfo(info, token)));
                         break;
                     }
 
@@ -552,7 +555,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 throw UnexpectedSyntax(token, info);
             }
 
-            return new ConstantValueStatement(dataTypeHint, token.Value);
+            return new ConstantValueStatement(dataTypeHint, token.Value, CreateStatementInfo(info, token));
         }
 
 
@@ -588,26 +591,26 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 token = enumerator.Current;
                 if (token.Type == TokenType.IdentifierName)
                 {
-                    value = new VariableAccessStatement(token.Value);
+                    value = new VariableAccessStatement(token.Value, CreateStatementInfo(info, token));
                 }
                 else if (token.Type == TokenType.Number)
                 {
-                    value = new ConstantValueStatement(DataTypes.Numeric, token.Value);
+                    value = new ConstantValueStatement(DataTypes.Numeric, token.Value, CreateStatementInfo(info, token));
                 }
                 else if (token.Type == TokenType.StringValue1 || token.Type == TokenType.StringValue2)
                 {
-                    value = new ConstantValueStatement(DataTypes.String, token.Value);
+                    value = new ConstantValueStatement(DataTypes.String, token.Value, CreateStatementInfo(info, token));
                 }
                 else if (token.Type == TokenType.Null)
                 {
-                    value = new ConstantValueStatement(DataTypes.Variant, token.Value);
+                    value = new ConstantValueStatement(DataTypes.Variant, token.Value, CreateStatementInfo(info, token));
                 }
                 else
                 {
                     throw UnexpectedSyntax(token, info);
                 }
 
-                return new VariableDefinitionStatement(dataType, definitionName.Value, value);
+                return new VariableDefinitionStatement(dataType, definitionName.Value, value, CreateStatementInfo(info, token));
             }
 
             if (enumerator.TryPeek(out var peek) && peek.Type == TokenType.Assignment)
@@ -620,10 +623,10 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 token = enumerator.Current;
                 var defaultValue = ReadEvaluationStatement(token, enumerator, info);
 
-                return new VariableDefinitionStatement(dataType, definitionName.Value, defaultValue);
+                return new VariableDefinitionStatement(dataType, definitionName.Value, defaultValue, CreateStatementInfo(info, token));
             }
 
-            return new VariableDefinitionStatement(dataType, definitionName.Value, null);
+            return new VariableDefinitionStatement(dataType, definitionName.Value, null, CreateStatementInfo(info, token));
         }
 
 
@@ -651,10 +654,10 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
                 var defaultValue = ReadConstantValue(enumerator.Current, enumerator, info, dataType);
 
-                return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, defaultValue);
+                return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, defaultValue, CreateStatementInfo(info, token));
             }
 
-            return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, null);
+            return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, null, CreateStatementInfo(info, token));
         }
 
         public FunctionParameterDefinitionStatement[] ReadParameterDefinitions(Token token,
@@ -752,7 +755,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 throw UnexpectedSyntax(token, info);
             }
 
-            return new FunctionStatement(functionName.Value, parameters, block);
+            return new FunctionStatement(functionName.Value, parameters, block, CreateStatementInfo(info, token));
         }
 
         public IfElseStatement ReadIf(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
@@ -792,7 +795,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             if (!enumerator.TryPeek(out var peek) || peek.Type != TokenType.Else) //else or else if
             {
-                return new IfElseStatement(new ConditionalBlockStatement(condition, block));
+                var sttInfo = CreateStatementInfo(info, token);
+                return new IfElseStatement(new ConditionalBlockStatement(condition, block, sttInfo), sttInfo);
             }
 
             var elseIfBlocks = new List<ConditionalBlockStatement>();
@@ -836,20 +840,22 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
                     var elifBlock = ReadBlockStatement(token, enumerator, info);
 
-                    elseIfBlocks.Add(new ConditionalBlockStatement(elifCondition, elifBlock));
+                    elseIfBlocks.Add(new ConditionalBlockStatement(elifCondition, elifBlock, CreateStatementInfo(info, token)));
                 }
                 else if (token.Type == TokenType.OpenBrace) //else
                 {
                     var elseBlock = ReadBlockStatement(token, enumerator, info);
 
-                    return new IfElseStatement(new ConditionalBlockStatement(condition, block),
-                        elseIfBlocks.ToArray(), elseBlock);
+                    var sttInfo = CreateStatementInfo(info, token);
+                    return new IfElseStatement(new ConditionalBlockStatement(condition, block, sttInfo),
+                        elseIfBlocks.ToArray(), elseBlock, sttInfo);
                 }
 
                 if (!enumerator.TryPeek(out peek) || peek.Type != TokenType.Else) //else or else if
                 {
-                    return new IfElseStatement(new ConditionalBlockStatement(condition, block),
-                        elseIfBlocks.ToArray());
+                    var sttInfo = CreateStatementInfo(info, token);
+                    return new IfElseStatement(new ConditionalBlockStatement(condition, block, sttInfo),
+                        elseIfBlocks.ToArray(), sttInfo);
                 }
             }
         }
@@ -884,13 +890,13 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             token = enumerator.Current;
             if (token.Type == TokenType.SequenceTerminator)
             {
-                return new WhileStatement(condition, null);
+                return new WhileStatement(condition, null, CreateStatementInfo(info, token));
             }
             else if (token.Type == TokenType.OpenBrace)
             {
                 var statements = ReadBlockStatement(token, enumerator, info);
 
-                return new WhileStatement(condition, statements);
+                return new WhileStatement(condition, statements, CreateStatementInfo(info, token));
             }
             else
             {
@@ -951,7 +957,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     throw UnexpectedSyntax(token, info);
             }
 
-            return new DoWhileStatement(condition, statements);
+            return new DoWhileStatement(condition, statements, CreateStatementInfo(info, token));
         }
 
         public WhileStatement ReadLoop(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
@@ -1032,7 +1038,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             IStatement block = ReadBlockStatement(token, enumerator, info);
 
-            return new ForStatement(preLoopAssignments, condition, postLoopEvaluations, block);
+            return new ForStatement(preLoopAssignments, condition, postLoopEvaluations, block, CreateStatementInfo(info, token));
         }
 
         public ForEachStatement ReadForEach(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
@@ -1070,8 +1076,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             }
 
             IStatement variable = dataType == null
-                ? (IStatement) new VariableAccessStatement(token.Value)
-                : new VariableDefinitionStatement(dataType.Value, token.Value, null);
+                ? (IStatement) new VariableAccessStatement(token.Value, CreateStatementInfo(info, token))
+                : new VariableDefinitionStatement(dataType.Value, token.Value, null, CreateStatementInfo(info, token));
 
             if (!enumerator.MoveNext()) //in
                 throw EndOfFile(token, info);
@@ -1087,7 +1093,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             if (token.Type != TokenType.IdentifierName)
                 throw UnexpectedSyntax(token, info);
 
-            var iterator = new VariableAccessStatement(token.Value);
+            var iterator = new VariableAccessStatement(token.Value, CreateStatementInfo(info, token));
 
             if (!enumerator.MoveNext()) //close parenthesis
                 throw EndOfFile(token, info);
@@ -1105,7 +1111,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             var block = ReadBlockStatement(token, enumerator, info);
 
-            return new ForEachStatement(variable, iterator, block);
+            return new ForEachStatement(variable, iterator, block, CreateStatementInfo(info, token));
         }
 
         public IStatement ReadClass(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
@@ -1126,7 +1132,22 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             var statement = ReadEvaluationStatement(token, enumerator, info);
 
-            return new SdkFunctionCallStatement("echo", new [] {statement});
+            return new SdkFunctionCallStatement("echo", new [] {statement}, CreateStatementInfo(info, token));
+        }
+
+        public ReturnStatement ReadReturn(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        {
+            if (token.Type != TokenType.Return)
+                throw UnexpectedSyntax(token, info);
+
+            if (!enumerator.MoveNext())
+                throw UnexpectedSyntax(token, info);
+
+            token = enumerator.Current;
+
+            var statement = ReadEvaluationStatement(token, enumerator, info);
+
+            return new ReturnStatement(statement, CreateStatementInfo(info, token));
         }
     }
 }

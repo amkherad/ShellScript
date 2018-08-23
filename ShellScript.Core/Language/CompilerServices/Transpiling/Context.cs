@@ -60,14 +60,20 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         
 
         public TTranspiler GetTranspiler<TTranspiler, TStatement>()
-            where TTranspiler : class, IPlatformStatementTranspiler
+            where TTranspiler : IPlatformStatementTranspiler
         {
             if (_typeTranspilers.TryGetValue(typeof(TStatement), out var value))
             {
-                return value as TTranspiler;
+                return (TTranspiler)value;
             }
             
             throw new InvalidOperationException();
+        }
+        
+        public TTranspiler GetTranspiler<TTranspiler>()
+            where TTranspiler : IPlatformStatementTranspiler
+        {
+            return Transpilers.OfType<TTranspiler>().FirstOrDefault();
         }
         
 

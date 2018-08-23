@@ -9,5 +9,7 @@ namespace ShellScript.Core.Language
         ISdk Sdk { get; }
         
         string Name { get; }
+        
+        string[] CompilerConstants { get; }
     }
 }

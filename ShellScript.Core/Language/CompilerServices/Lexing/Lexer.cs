@@ -68,6 +68,7 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             
             //{TokenType.Class, "^class"},
             {TokenType.Function, "^function"},
+            {TokenType.Return, "^return"},
 
             {TokenType.Throw, "^throw"},
             {TokenType.Comment, "^//.*"},

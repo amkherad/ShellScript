@@ -38,6 +38,12 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         }
 
 
+        public StatementInfo CreateStatementInfo(ParserInfo info, Token token)
+        {
+            return new StatementInfo(info.FilePath, token.LineNumber, token.ColumnOffset);
+        }
+
+
         public DataTypes TokenTypeToDataType(Token token, DataTypes dataType = DataTypes.Variant)
         {
             switch (token.Type)

@@ -6,7 +6,7 @@ using ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
-    public class VariableDefinitionStatementTranspiler : VariableDefinitionStatementTranspilerBase
+    public class BashVariableDefinitionStatementTranspiler : VariableDefinitionStatementTranspilerBase
     {
         public override void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter nonInlinePartWriter, IStatement statement)
         {
@@ -33,7 +33,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 //x=$((34 * myFuncResult))
                 var defaultValue = transpiler.PinEvaluationToInline(context, scope, writer, def);
                 
-                writer.WriteLine($"{varDefStt.Name}={defaultValue}");
+                if (scope.IsRootScope)
+                    writer.WriteLine($"{varDefStt.Name}={defaultValue}");
+                else
+                    writer.WriteLine($"local {varDefStt.Name}={defaultValue}");
             }
             else
             {

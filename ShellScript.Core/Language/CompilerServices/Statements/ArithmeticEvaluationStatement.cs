@@ -6,6 +6,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
     public class ArithmeticEvaluationStatement : EvaluationStatement
     {
         public override bool IsBlockStatement => false;
+        public override StatementInfo Info { get; }
 
         public EvaluationStatement Left { get; }
         public ArithmeticOperator Operator { get; }
@@ -13,11 +14,12 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
 
 
-        public ArithmeticEvaluationStatement(EvaluationStatement left, ArithmeticOperator @operator, EvaluationStatement right)
+        public ArithmeticEvaluationStatement(EvaluationStatement left, ArithmeticOperator @operator, EvaluationStatement right, StatementInfo info)
         {
             Left = left;
             Operator = @operator;
             Right = right;
+            Info = info;
         }
 
 
@@ -32,25 +34,25 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
         
 
-        public static ArithmeticEvaluationStatement CreatePostfixIncrement(IncrementOperator op, EvaluationStatement operand)
+        public static ArithmeticEvaluationStatement CreatePostfixIncrement(IncrementOperator op, EvaluationStatement operand, StatementInfo info)
         {
-            return new ArithmeticEvaluationStatement(operand, op, null);
+            return new ArithmeticEvaluationStatement(operand, op, null, info);
         }
 
-        public static ArithmeticEvaluationStatement CreatePrefixIncrement(IncrementOperator op, EvaluationStatement operand)
+        public static ArithmeticEvaluationStatement CreatePrefixIncrement(IncrementOperator op, EvaluationStatement operand, StatementInfo info)
         {
-            return new ArithmeticEvaluationStatement(null, op, operand);
+            return new ArithmeticEvaluationStatement(null, op, operand, info);
         }
 
         
-        public static ArithmeticEvaluationStatement CreatePostfixDecrement(DecrementOperator op, EvaluationStatement operand)
+        public static ArithmeticEvaluationStatement CreatePostfixDecrement(DecrementOperator op, EvaluationStatement operand, StatementInfo info)
         {
-            return new ArithmeticEvaluationStatement(operand, op, null);
+            return new ArithmeticEvaluationStatement(operand, op, null, info);
         }
 
-        public static ArithmeticEvaluationStatement CreatePrefixDecrement(DecrementOperator op, EvaluationStatement operand)
+        public static ArithmeticEvaluationStatement CreatePrefixDecrement(DecrementOperator op, EvaluationStatement operand, StatementInfo info)
         {
-            return new ArithmeticEvaluationStatement(null, op, operand);
+            return new ArithmeticEvaluationStatement(null, op, operand, info);
         }
     }
 }

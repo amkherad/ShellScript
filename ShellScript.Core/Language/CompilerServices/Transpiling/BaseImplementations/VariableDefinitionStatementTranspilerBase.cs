@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Lexing;
 using ShellScript.Core.Language.CompilerServices.Statements;
 

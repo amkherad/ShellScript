@@ -9,6 +9,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         /// </summary>
         bool IsBlockStatement { get; }
         
+        StatementInfo Info { get; }
         
         IEnumerable<IStatement> TraversableChildren { get; }
     }

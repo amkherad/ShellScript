@@ -6,16 +6,18 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
     public class FunctionStatement : IStatement
     {
         public bool IsBlockStatement => true;
+        public StatementInfo Info { get; }
 
         public string Name { get; }
         public BlockStatement Block { get; }
         public FunctionParameterDefinitionStatement[] Parameters { get; }
 
 
-        public FunctionStatement(string name, FunctionParameterDefinitionStatement[] parameters, BlockStatement block)
+        public FunctionStatement(string name, FunctionParameterDefinitionStatement[] parameters, BlockStatement block, StatementInfo info)
         {
             Name = name;
             Block = block;
+            Info = info;
             Parameters = parameters ?? new FunctionParameterDefinitionStatement[0];
         }
 
