@@ -13,5 +13,10 @@ namespace ShellScript.Core
         {
             return Regex.Split(input, splitChar + "(?=(?:[^']*'[^']*')*[^']*$)");
         }
+
+        public static bool IsMultiLineString(string input)
+        {
+            return input.Contains('\n') || input.Contains('\r');
+        }
     }
 }
