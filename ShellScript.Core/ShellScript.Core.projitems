@@ -20,12 +20,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerErrors\TypeMismatchCompilerException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerErrors\CompilerException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\ConstantInfo.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\StatementHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\PositionInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\ReturnStatement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\StatementHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\StatementInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\BaseImplementations\FunctionStatementTranspilerBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\Context.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\IPlatformEvaluationStatementTranspiler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\IPlatformFunctionCallTranspiler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\IPlatformMetaInfoTranspiler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\IPlatformStatementTranspiler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\IPlatformStringTranspiler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Transpiling\Scope.cs" />

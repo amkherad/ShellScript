@@ -40,11 +40,11 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
         public StatementInfo CreateStatementInfo(ParserInfo info, Token token)
         {
-            return new StatementInfo(info.FilePath, token.LineNumber, token.ColumnOffset);
+            return new StatementInfo(info.FilePath, token.LineNumber, token.ColumnStart);
         }
 
 
-        public DataTypes TokenTypeToDataType(Token token, DataTypes dataType = DataTypes.Variant)
+        public DataTypes TokenTypeToDataType(Token token, DataTypes dataType = DataTypes.String)
         {
             switch (token.Type)
             {
@@ -67,8 +67,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         case "object":
                             return DataTypes.Class;
                         case "variant":
-                        case "var":
-                            return DataTypes.Variant;
+                        //case "var":
+                        //    return DataTypes.Variant;
 
                         case "int[]":
                             return DataTypes.Decimal | DataTypes.Array;
@@ -82,8 +82,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             return DataTypes.Float | DataTypes.Array;
                         case "object[]":
                             return DataTypes.Class | DataTypes.Array;
-                        case "variant[]":
-                            return DataTypes.Variant | DataTypes.Array;
+                        //case "variant[]":
+                        //    return DataTypes.Variant | DataTypes.Array;
                     }
 
                     break;
@@ -205,7 +205,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         /// <returns type="IllegalSyntaxException">IllegalSyntaxException</returns>
         protected ParserException IllegalSyntax(Token token, ParserInfo info)
         {
-            return new IllegalSyntaxException(token?.LineNumber ?? 0, token?.ColumnOffset ?? 0, info);
+            return new IllegalSyntaxException(token?.LineNumber ?? 0, token?.ColumnStart ?? 0, info);
         }
 
         /// <summary>
@@ -216,7 +216,9 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         /// <returns type="ParserSyntaxException">ParserSyntaxException</returns>
         protected ParserException UnexpectedSyntax(Token token, ParserInfo info)
         {
-            return new ParserSyntaxException(token?.LineNumber ?? 0, token?.ColumnOffset ?? 0, info);
+            return new ParserSyntaxException(
+                $"Unexpected token '{token.Value}' found",
+                token?.LineNumber ?? 0, token?.ColumnStart ?? 0, info);
         }
 
         /// <summary>
@@ -227,7 +229,9 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         /// <returns type="ParserSyntaxException">ParserSyntaxException</returns>
         protected ParserException EndOfFile(Token token, ParserInfo info)
         {
-            return new ParserSyntaxException(token?.LineNumber ?? 0, token?.ColumnOffset ?? 0, info);
+            return new ParserSyntaxException(
+                "Unexpected end of file reached",
+                token?.LineNumber ?? 0, token?.ColumnStart ?? 0, info);
         }
     }
 }

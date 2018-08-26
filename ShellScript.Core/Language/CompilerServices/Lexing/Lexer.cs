@@ -99,7 +99,7 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         );
 
         public static readonly Regex Number = new Regex(@"^([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)", RegexOptions.Compiled);
-        public static readonly Regex DataType = new Regex(@"^(const|var(?!iant)|int(?!\[\])|double(?!\[\])|float(?!\[\])|object(?!\[\])|variant(?!\[\])|number(?!\[\])|decimal(?!\[\])|int\[\]|double\[\]|float\[\]|object\[\]|variant\[\]|number\[\]|decimal\[\])", RegexOptions.Compiled);
+        public static readonly Regex DataType = new Regex(@"^(const|int(?!\[\])|double(?!\[\])|float(?!\[\])|string(?!\[\])|object(?!\[\])|number(?!\[\])|decimal(?!\[\])|int\[\]|double\[\]|float\[\]|string\[\]|object\[\]|number\[\]|decimal\[\])", RegexOptions.Compiled);
         public static readonly Regex ValidIdentifierName = new Regex(@"^\w+", RegexOptions.Compiled);
         
         public static readonly Regex MultiLineCommentOpen = new Regex(@"^/\*", RegexOptions.Compiled);
@@ -125,12 +125,13 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             {
                 if (string.IsNullOrWhiteSpace(cline))
                 {
+                    lineNumber++;
                     continue;
                 }
                 if (cline.Length > 0 && cline[cline.Length - 1] == EscapeCharacter)
                 {
                     line += cline.Substring(0, cline.Length - 1); //remove the line escape character.
-                    lineNumber++;
+                    //lineNumber++;
                     continue;
                 }
                 else if (line == null)
@@ -141,6 +142,8 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
                 {
                     line += ' ' + cline;
                 }
+                
+                lineNumber++;
 
                 var lineLength = line.Length;
 
@@ -162,7 +165,7 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
 //                    lineLength,
 //                    lineLength);
 
-                lineNumber = 0;
+                //lineNumber = 0;
             }
         }
 
@@ -228,7 +231,7 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
 
                     if (addToken && !isMultilineCommentOpen)
                     {
-                        tokens.Add(new Token(matchString, matchType, columnNumber, lineNumber));
+                        tokens.Add(new Token(matchString, matchType, columnNumber, columnNumber + matchString.Length, lineNumber));
                     }
                     
                     line = line.Substring(matchString.Length);

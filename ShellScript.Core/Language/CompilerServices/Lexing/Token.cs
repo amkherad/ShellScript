@@ -3,21 +3,22 @@ using System.Diagnostics;
 namespace ShellScript.Core.Language.CompilerServices.Lexing
 {
     [DebuggerDisplay("{Type}: ({Value})")]
-    public class Token
+    public class Token : PositionInfo
     {
         public string Value { get; }
         
         public TokenType Type { get; }
         
-        public int ColumnOffset { get; }
-        public int LineNumber { get; }
+        public int ColumnStart { get; }
+        public int ColumnEnd { get; }
         
-        public Token(string value, TokenType type, int columnOffset, int lineNumber)
+        public Token(string value, TokenType type, int columnStart, int columnEnd, int lineNumber)
+            : base(null, lineNumber, columnStart)
         {
             Value = value;
             Type = type;
-            ColumnOffset = columnOffset;
-            LineNumber = lineNumber;
+            ColumnStart = columnStart;
+            ColumnEnd = columnEnd;
         }
     }
 }

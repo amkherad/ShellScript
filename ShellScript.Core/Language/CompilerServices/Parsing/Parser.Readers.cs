@@ -399,7 +399,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     }
                     case TokenType.Null:
                     {
-                        statements.AddLast(new ConstantValueStatement(DataTypes.Variant, token.Value, CreateStatementInfo(info, token)));
+                        statements.AddLast(new ConstantValueStatement(DataTypes.String, token.Value, CreateStatementInfo(info, token)));
                         break;
                     }
 
@@ -603,7 +603,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 }
                 else if (token.Type == TokenType.Null)
                 {
-                    value = new ConstantValueStatement(DataTypes.Variant, token.Value, CreateStatementInfo(info, token));
+                    value = new ConstantValueStatement(DataTypes.String, token.Value, CreateStatementInfo(info, token));
                 }
                 else
                 {
@@ -636,10 +636,10 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             if (token.Type != TokenType.DataType)
                 throw UnexpectedSyntax(token, info);
 
+            var dataType = TokenTypeToDataType(token);
+
             if (!enumerator.MoveNext()) //variable name.
                 throw EndOfFile(token, info);
-
-            var dataType = TokenTypeToDataType(token);
 
             var definitionName = enumerator.Current;
             if (definitionName.Type != TokenType.IdentifierName)
@@ -723,6 +723,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 throw EndOfFile(token, info);
 
             var functionName = enumerator.Current;
+            token = enumerator.Current;
             if (functionName.Type != TokenType.IdentifierName)
                 throw UnexpectedSyntax(token, info);
 
@@ -735,8 +736,22 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             token = enumerator.Current;
             if (token.Type == TokenType.OpenParenthesis)
             {
-                parameters = ReadParameterDefinitions(token, enumerator, info);
-
+                if (enumerator.TryPeek(out var peek))
+                {
+                    if (peek.Type == TokenType.CloseParenthesis)
+                    {
+                        enumerator.MoveNext(); //read close parenthesis.
+                    }
+                    else
+                    {
+                        parameters = ReadParameterDefinitions(token, enumerator, info);
+                    }
+                }
+                else
+                {
+                    throw EndOfFile(token, info);
+                }
+                
                 if (!enumerator.MoveNext())
                     throw EndOfFile(token, info);
 
@@ -818,6 +833,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     if (!enumerator.MoveNext()) //open parenthesis
                         throw EndOfFile(token, info);
 
+                    token = enumerator.Current;
                     if (token.Type != TokenType.OpenParenthesis)
                         throw UnexpectedSyntax(token, info);
 
@@ -829,12 +845,14 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     if (!enumerator.MoveNext()) //close parenthesis
                         throw EndOfFile(token, info);
 
+                    token = enumerator.Current;
                     if (token.Type != TokenType.CloseParenthesis)
                         throw UnexpectedSyntax(token, info);
 
                     if (!enumerator.MoveNext()) //open brace
                         throw EndOfFile(token, info);
 
+                    token = enumerator.Current;
                     if (token.Type != TokenType.OpenBrace)
                         throw UnexpectedSyntax(token, info);
 
@@ -1012,6 +1030,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 if (!enumerator.MoveNext()) //semicolon
                     throw EndOfFile(token, info);
 
+                token = enumerator.Current;
                 if (token.Type != TokenType.SequenceTerminator)
                     throw UnexpectedSyntax(token, info);
             }
@@ -1026,6 +1045,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 if (!enumerator.MoveNext()) //close parenthesis
                     throw EndOfFile(token, info);
 
+                token = enumerator.Current;
                 if (token.Type != TokenType.CloseParenthesis)
                     throw UnexpectedSyntax(token, info);
             }
@@ -1033,6 +1053,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             if (!enumerator.MoveNext()) //open brace
                 throw EndOfFile(token, info);
 
+            token = enumerator.Current;
             if (token.Type != TokenType.OpenBrace)
                 throw UnexpectedSyntax(token, info);
 
@@ -1126,7 +1147,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 throw UnexpectedSyntax(token, info);
 
             if (!enumerator.MoveNext())
-                throw UnexpectedSyntax(token, info);
+                throw EndOfFile(token, info);
 
             token = enumerator.Current;
 
@@ -1141,7 +1162,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 throw UnexpectedSyntax(token, info);
 
             if (!enumerator.MoveNext())
-                throw UnexpectedSyntax(token, info);
+                throw EndOfFile(token, info);
 
             token = enumerator.Current;
 

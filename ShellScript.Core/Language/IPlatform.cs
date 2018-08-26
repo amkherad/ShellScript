@@ -5,6 +5,7 @@ namespace ShellScript.Core.Language
 {
     public interface IPlatform
     {
+        IPlatformMetaInfoTranspiler MetaInfoWriter { get; }
         IPlatformStatementTranspiler[] Transpilers { get; }
         ISdk Sdk { get; }
         
