@@ -4,19 +4,24 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
 {
     public class CompilerException : Exception
     {
-        public CompilerException(string message)
+        public PositionInfo PositionInfo { get; }
+        
+        public CompilerException(string message, PositionInfo positionInfo)
             : base(message)
         {
+            PositionInfo = positionInfo;
         }
 
-        public CompilerException(string message, Exception innerException)
+        public CompilerException(string message, PositionInfo positionInfo, Exception innerException)
             : base(message, innerException)
         {
+            PositionInfo = positionInfo;
         }
 
-        public CompilerException(Exception innerException)
+        public CompilerException(PositionInfo positionInfo, Exception innerException)
             : base("", innerException)
         {
+            PositionInfo = positionInfo;
         }
     }
 }

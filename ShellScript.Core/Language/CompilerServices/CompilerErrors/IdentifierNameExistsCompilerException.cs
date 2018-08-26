@@ -8,7 +8,7 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
         
         
         public IdentifierNameExistsCompilerException(string variableName, StatementInfo info)
-            : base(CreateMessage(variableName, info))
+            : base(CreateMessage(variableName, info), info)
         {
             VariableName = variableName;
         }
@@ -17,9 +17,9 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
         {
             return $"Identifier name '{variableName}' already exists in current scope in '{info.FilePath}' at {info.LineNumber}:{info.ColumnNumber}";
         }
-        public static string CreateMessage(string variableName)
-        {
-            return $"Identifier name '{variableName}' already exists in current scope.";
-        }
+//        public static string CreateMessage(string variableName)
+//        {
+//            return $"Identifier name '{variableName}' already exists in current scope.";
+//        }
     }
 }

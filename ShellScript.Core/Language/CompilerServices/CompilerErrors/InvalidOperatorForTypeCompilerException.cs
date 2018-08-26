@@ -1,27 +1,28 @@
 using System;
+using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
 {
     public class InvalidOperatorForTypeCompilerException : CompilerException
     {
-        public InvalidOperatorForTypeCompilerException(Type operatorType, DataTypes dataType)
-            : base(CreateMessage(operatorType, dataType))
+        public InvalidOperatorForTypeCompilerException(Type operatorType, DataTypes dataType, StatementInfo statementInfo)
+            : base(CreateMessage(operatorType, dataType), statementInfo)
         {
         }
         
-        public InvalidOperatorForTypeCompilerException(string message)
-            : base(message)
-        {
-        }
-
-        public InvalidOperatorForTypeCompilerException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-
-        public InvalidOperatorForTypeCompilerException(Exception innerException) : base(innerException)
-        {
-        }
+//        public InvalidOperatorForTypeCompilerException(string message)
+//            : base(message)
+//        {
+//        }
+//
+//        public InvalidOperatorForTypeCompilerException(string message, Exception innerException) : base(message, innerException)
+//        {
+//        }
+//
+//        public InvalidOperatorForTypeCompilerException(Exception innerException) : base(innerException)
+//        {
+//        }
 
         public static string CreateMessage(Type operatorType, DataTypes dataType)
         {
