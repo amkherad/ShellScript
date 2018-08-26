@@ -95,7 +95,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                 }
                 case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
                 {
-                    arithmeticEvaluationStatement.
+                    //arithmeticEvaluationStatement.
+
+                    break;
                 }
             }
 

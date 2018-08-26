@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ShellScript.Core.Language;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations;
@@ -26,13 +27,19 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     throw new InvalidOperationException();
                 }
 
+                string defaultValue;
                 //it pins the non-inlineable values to a helper variable:
                 //int x = 34 * myFunc();
                 //becomes:
                 //myFuncResult=myFunc()
                 //x=$((34 * myFuncResult))
-                var defaultValue = transpiler.PinEvaluationToInline(context, scope, writer, def);
-                
+                using (var textWriter = new StringWriter())
+                {
+                    transpiler.WriteInline(context, scope, textWriter, writer, def);
+
+                    defaultValue = textWriter.ToString();
+                }
+
                 if (scope.IsRootScope)
                     writer.WriteLine($"{varDefStt.Name}={defaultValue}");
                 else
@@ -40,7 +47,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
             else
             {
-                writer.WriteLine($"{varDefStt.Name}=0");
+                writer.WriteLine($"{varDefStt.Name}={DesignGuidelines.GetDefaultValue(varDefStt.DataType)}");
             }
         }
     }

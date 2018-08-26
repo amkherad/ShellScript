@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using ShellScript.Core;
 using ShellScript.Core.Language.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
@@ -86,6 +88,94 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         }
 
 
+        private static ConstantValueStatement EvaluateConstantValues(ConstantValueStatement stt1, ConstantValueStatement stt2)
+        {
+            if (stt1.DataType == DataTypes.String)
+            {
+                string result;
+                if (stt2.DataType == DataTypes.String)
+                {
+                    result = BashTranspilerHelpers.StandardizeString(stt1.Value, true) +
+                           BashTranspilerHelpers.StandardizeString(stt2.Value, true);
+                }
+                else
+                {
+                    result = BashTranspilerHelpers.StandardizeString(stt1.Value, true) + stt2.Value;
+                }
+
+                return new ConstantValueStatement(DataTypes.String, result, stt1.Info);
+            }
+
+            if (stt2.DataType == DataTypes.String)
+            {
+                return new ConstantValueStatement(DataTypes.String,
+                    stt1.Value + BashTranspilerHelpers.StandardizeString(stt2.Value, true),
+                    stt1.Info);
+            }
+            
+        }
+
+        private static string CreateArithmetic(Context context, Scope scope, TextWriter nonInlinePartWriter,
+            IStatement statement)
+        {
+
+            return null;
+        }
+        
+        
+        private static string CreateStringConcatenation(Context context, Scope scope, TextWriter nonInlinePartWriter,
+            IStatement statement)
+        {
+            var sb = new StringBuilder();
+
+            switch (statement)
+            {
+                case ConstantValueStatement constantValueStatement:
+                {
+                    if (constantValueStatement.DataType == DataTypes.String)
+                    {
+                        var str = BashTranspilerHelpers.StandardizeString(constantValueStatement.Value, true);
+                        sb.Append(str);
+                    }
+                    else
+                    {
+                        sb.Append(constantValueStatement.Value);
+                    }
+                    break;
+                }
+                case VariableAccessStatement variableAccessStatement:
+                {
+                    sb.Append("$(");
+                    sb.Append(variableAccessStatement.VariableName);
+                    sb.Append(')');
+                    break;
+                }
+                case BitwiseEvaluationStatement bitwiseEvaluationStatement:
+                {
+                    break;
+                }
+                case LogicalEvaluationStatement logicalEvaluationStatement:
+                {
+                    break;
+                }
+                case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
+                {
+                    break;
+                }
+                case FunctionCallStatement functionCallStatement:
+                {
+                    break;
+                }
+                default:
+                {
+                    throw new InvalidStatementStructureCompilerException(statement, statement.Info);
+                }
+            }
+            
+            return sb.ToString();
+        }
+        
+
         public override void WriteInline(Context context, Scope scope, TextWriter writer,
             TextWriter nonInlinePartWriter, IStatement statement)
         {
@@ -95,27 +185,28 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             if (structure.Types.Contains(DataTypes.String))
             {
-                structure.OperatorTypes.Remove(typeof(AdditionOperator));
-                if (structure.OperatorTypes.Count > 0)
-                {
-                    throw new InvalidOperatorForTypeCompilerException(structure.OperatorTypes.First(), DataTypes.String);
-                }
-                
-                
+                var stringConcatenationExpression =
+                    CreateStringConcatenation(context, scope, nonInlinePartWriter, statement);
+
+                writer.Write('"');
+                writer.Write(stringConcatenationExpression);
+                writer.Write('"');
             }
             
             
 
-            writer.Write(expression);
+            //writer.Write(expression);
         }
 
         public override void WriteBlock(Context context, Scope scope, TextWriter writer, IStatement statement)
         {
+            
         }
 
         public override string PinEvaluationToInline(Context context, Scope scope, TextWriter pinCodeWriter,
             EvaluationStatement statement)
         {
+            return null;
         }
     }
 }

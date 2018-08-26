@@ -8,5 +8,15 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             writer.WriteLine("#{0}", comment);
         }
+
+        public static string StandardizeString(string value, bool deQuote)
+        {
+            if (deQuote && value[0] == '"' && value[value.Length - 1] == '"')
+            {
+                value = value.Substring(1, value.Length - 2);
+            }
+
+            return value.Replace(@"\r\n", @"\n");
+        }
     }
 }
