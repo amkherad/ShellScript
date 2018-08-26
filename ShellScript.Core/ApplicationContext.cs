@@ -6,7 +6,9 @@ using ShellScript.CommandLine;
 namespace ShellScript.Core
 {
     public class ApplicationContext
-    {        
+    {
+        public const string Url = "https://github.com/amkherad/ShellScript";
+        
         public static ICommand HelpCommand { get; } = new HelpCommand();
         
         public static ICollection<ICommand> AvailableCommands { get; } = new List<ICommand>
