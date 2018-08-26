@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class IncrementStatement : EvaluationStatement
@@ -17,15 +15,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Variable = variable;
             IsPostfix = isPostfix;
             Info = info;
-        }
 
-
-        public override  IEnumerable<IStatement> TraversableChildren
-        {
-            get
-            {
-                yield return Variable;
-            }
+            TraversableChildren = StatementHelpers.CreateChildren(variable);
         }
     }
 }

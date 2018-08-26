@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class NopStatement : EvaluationStatement
@@ -11,9 +8,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public NopStatement(StatementInfo info)
         {
             Info = info;
+
+            TraversableChildren = new IStatement[0];
         }
-
-
-        public override IEnumerable<IStatement> TraversableChildren => Enumerable.Empty<IStatement>();
     }
 }

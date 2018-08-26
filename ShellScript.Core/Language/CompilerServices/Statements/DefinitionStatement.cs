@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
@@ -14,6 +13,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public IStatement DefaultValue { get; }
         public bool HasDefaultValue { get; }
 
+        public IStatement[] TraversableChildren { get; protected set; }
+
         
         public DefinitionStatement(DataTypes dataType, string name, IStatement defaultValue, bool hasDefaultValue, StatementInfo info)
         {
@@ -22,15 +23,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             DefaultValue = defaultValue;
             HasDefaultValue = hasDefaultValue;
             Info = info;
-        }
 
-
-        public IEnumerable<IStatement> TraversableChildren
-        {
-            get
-            {
-                if (DefaultValue != null) yield return DefaultValue;
-            }
+            TraversableChildren = StatementHelpers.CreateChildren(defaultValue);
         }
     }
 }

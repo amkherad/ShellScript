@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class ForEachStatement : IStatement
@@ -13,6 +11,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         
         public IStatement Statement { get; }
         
+        public IStatement[] TraversableChildren { get; }
+
         
         public ForEachStatement(IStatement variable, VariableAccessStatement iterator, IStatement statement, StatementInfo info)
         {
@@ -20,17 +20,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Iterator = iterator;
             Statement = statement;
             Info = info;
-        }
 
-
-        public IEnumerable<IStatement> TraversableChildren
-        {
-            get
-            {
-                yield return Variable;
-                yield return Iterator;
-                yield return Statement;
-            }
+            TraversableChildren = StatementHelpers.CreateChildren(variable, iterator, statement);
         }
     }
 }

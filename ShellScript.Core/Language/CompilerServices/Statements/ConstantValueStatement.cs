@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
@@ -12,15 +10,14 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public DataTypes DataType { get; }
         public string Value { get; }
 
-        
+       
         public ConstantValueStatement(DataTypes dataType, string value, StatementInfo info)
         {
             DataType = dataType;
             Value = value;
             Info = info;
+            
+            TraversableChildren = new IStatement[0];
         }
-
-
-        public override IEnumerable<IStatement> TraversableChildren => Enumerable.Empty<IStatement>();
     }
 }

@@ -9,7 +9,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             string name,
             IStatement value,
             StatementInfo info)
-            : base(dataType, name, value, true, info)
+            : base(dataType, name, value, value != null, info)
         {
         }
     }

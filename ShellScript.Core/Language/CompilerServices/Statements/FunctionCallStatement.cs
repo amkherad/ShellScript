@@ -21,9 +21,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             FunctionName = functionName;
             Parameters = parameters;
             Info = info;
+
+            TraversableChildren = StatementHelpers.CreateChildren(parameters);
         }
-
-
-        public override IEnumerable<IStatement> TraversableChildren => Parameters;
     }
 }

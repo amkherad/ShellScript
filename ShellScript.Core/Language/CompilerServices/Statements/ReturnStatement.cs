@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class ReturnStatement : IStatement
@@ -9,17 +7,15 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
         public EvaluationStatement Statement { get; }
         
+        public IStatement[] TraversableChildren { get; protected set; }
+
         
         public ReturnStatement(EvaluationStatement statement, StatementInfo info)
         {
             Statement = statement;
             Info = info;
-        }
 
-        
-        public IEnumerable<IStatement> TraversableChildren
-        {
-            get { yield return Statement; }
+            TraversableChildren = StatementHelpers.CreateChildren(statement);
         }
     }
 }

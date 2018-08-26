@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-
 namespace ShellScript.Core.Language.CompilerServices.Statements.Operators
 {
     public abstract class ArithmeticOperator : IOperator
@@ -10,6 +7,6 @@ namespace ShellScript.Core.Language.CompilerServices.Statements.Operators
         public abstract OperatorAssociativity Associativity { get; }
         public abstract int Order { get; }
         
-        public IEnumerable<IStatement> TraversableChildren => Enumerable.Empty<IStatement>();
+        public IStatement[] TraversableChildren => new IStatement[0];
     }
 }

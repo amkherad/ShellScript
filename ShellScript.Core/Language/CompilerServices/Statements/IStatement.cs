@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public interface IStatement
@@ -11,6 +9,6 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         
         StatementInfo Info { get; }
         
-        IEnumerable<IStatement> TraversableChildren { get; }
+        IStatement[] TraversableChildren { get; }
     }
 }

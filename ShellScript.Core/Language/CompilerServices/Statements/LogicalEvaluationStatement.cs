@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using ShellScript.Core.Language.CompilerServices.Statements.Operators;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
@@ -19,20 +18,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Operator = @operator;
             Right = right;
             Info = info;
+
+            TraversableChildren = StatementHelpers.CreateChildren(left, @operator, right);
         }
-
-
-        public override IEnumerable<IStatement> TraversableChildren
-        {
-            get
-            {
-                if (Left != null) yield return Left;
-                yield return Operator;
-                if (Right != null) yield return Right;
-            }
-        }
-
-        
+       
         
         public static LogicalEvaluationStatement CreateNot(NotOperator op, EvaluationStatement operand, StatementInfo info)
         {

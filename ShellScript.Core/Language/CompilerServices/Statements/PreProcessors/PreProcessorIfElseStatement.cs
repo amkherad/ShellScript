@@ -1,36 +1,24 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements.PreProcessors
 {
-    public class PreProcessorIfElseStatement : ICompilerAnnotationStatement
+    public class PreProcessorIfElseStatement : IfElseStatement
     {
-        public bool IsBlockStatement => true;
-        
-        public ConditionalBlockStatement MainIf { get; }
-        public ConditionalBlockStatement[] ElseIfs { get; }
-        public IStatement Else { get; }
-        
-        
-        public PreProcessorIfElseStatement(ConditionalBlockStatement mainIf)
+        public PreProcessorIfElseStatement(ConditionalBlockStatement mainIf, StatementInfo info) : base(mainIf, info)
         {
-            MainIf = mainIf;
         }
-        
-        public PreProcessorIfElseStatement(ConditionalBlockStatement mainIf, ConditionalBlockStatement[] elseIfs, IStatement @else)
+
+        public PreProcessorIfElseStatement(ConditionalBlockStatement mainIf, ConditionalBlockStatement[] elseIfs,
+            IStatement @else, StatementInfo info) : base(mainIf, elseIfs, @else, info)
         {
-            MainIf = mainIf;
-            ElseIfs = elseIfs;
-            Else = @else;
         }
-        
-        public PreProcessorIfElseStatement(ConditionalBlockStatement mainIf, ConditionalBlockStatement[] elseIfs)
+
+        public PreProcessorIfElseStatement(ConditionalBlockStatement mainIf, ConditionalBlockStatement[] elseIfs,
+            StatementInfo info) : base(mainIf, elseIfs, info)
         {
-            MainIf = mainIf;
-            ElseIfs = elseIfs;
         }
-        
-        public PreProcessorIfElseStatement(ConditionalBlockStatement mainIf, IStatement @else)
+
+        public PreProcessorIfElseStatement(ConditionalBlockStatement mainIf, IStatement @else, StatementInfo info) :
+            base(mainIf, @else, info)
         {
-            MainIf = mainIf;
-            Else = @else;
         }
     }
 }
