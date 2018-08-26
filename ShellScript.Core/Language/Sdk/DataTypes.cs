@@ -5,17 +5,17 @@ namespace ShellScript.Core.Language.Sdk
     [Flags]
     public enum DataTypes
     {
+        Void = 0, //Should not be used in code.
+        
         Array = 0x4000,
         
-        Variant = 0,
+        Boolean = 0x2001,
         
-        Boolean = 1,
+        Decimal = 1,
         
-        Numeric = 2,
+        Float = 2,
         
-        Decimal = 3,
-        
-        Float = 4,
+        Numeric = 3,
         
         String = 16,
         
