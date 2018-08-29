@@ -26,7 +26,7 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
         public static string CreateMessage(IStatement statement, StatementInfo info)
         {
             return
-                $"Invalid statement of type '{statement.GetType().Name}' was found in '{info.FilePath}' at {info.LineNumber}:{info.ColumnNumber}.";
+                $"Invalid statement of type '{statement?.GetType().Name}' was found in '{info?.FilePath}' at {info?.LineNumber}:{info?.ColumnNumber}.";
         }
 
 //        public static string CreateMessage(IStatement statement)

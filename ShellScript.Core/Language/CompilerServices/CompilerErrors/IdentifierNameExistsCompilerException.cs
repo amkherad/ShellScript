@@ -15,7 +15,7 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
 
         public static string CreateMessage(string variableName, StatementInfo info)
         {
-            return $"Identifier name '{variableName}' already exists in current scope in '{info.FilePath}' at {info.LineNumber}:{info.ColumnNumber}";
+            return $"Identifier name '{variableName}' already exists in current scope in '{info?.FilePath}' at {info?.LineNumber}:{info?.ColumnNumber}";
         }
 //        public static string CreateMessage(string variableName)
 //        {

@@ -28,9 +28,9 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
                 "A type mismatch exception has been thrown, expectation was: '{0}' but a type of '{1}' is specified in '{2}' at {3}:{4}.",
                 expectedType,
                 specifiedType,
-                info.FilePath,
-                info.LineNumber,
-                info.ColumnNumber
+                info?.FilePath,
+                info?.LineNumber,
+                info?.ColumnNumber
             );
         }
 

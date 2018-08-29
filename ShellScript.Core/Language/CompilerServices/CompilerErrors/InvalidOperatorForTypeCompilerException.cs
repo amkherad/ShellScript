@@ -10,6 +10,11 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
             : base(CreateMessage(operatorType, dataType), statementInfo)
         {
         }
+
+        public InvalidOperatorForTypeCompilerException(string message, StatementInfo statementInfo)
+            : base(message, statementInfo)
+        {
+        }
         
 //        public InvalidOperatorForTypeCompilerException(string message)
 //            : base(message)
@@ -27,6 +32,11 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
         public static string CreateMessage(Type operatorType, DataTypes dataType)
         {
             return $"Invalid operator '{operatorType.Name}' on variable of type '{dataType}'.";
+        }
+        
+        public static string CreateMessageForConstant(Type operatorType)
+        {
+            return $"Invalid operator '{operatorType.Name}' on constant value.";
         }
     }
 }
