@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using ShellScript.Core.Language.CompilerServices.CompilerErrors;
+using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
@@ -16,7 +19,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
             return result.ToArray();
         }
-        
+
         private static bool _traverseTreeContains<TStatement>(IStatement statement)
             where TStatement : IStatement
         {
@@ -35,7 +38,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
             return false;
         }
-        
+
         private static bool _traverseTreeContains(IStatement statement, Type[] types)
         {
             foreach (var child in statement.TraversableChildren)
@@ -48,7 +51,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                         return true;
                     }
                 }
-                
+
                 if (_traverseTreeContains(child, types))
                 {
                     return true;
@@ -57,19 +60,19 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
             return false;
         }
-        
+
         public static bool TreeContains<TStatement>(this IStatement statement)
             where TStatement : IStatement
         {
             return _traverseTreeContains<TStatement>(statement);
         }
-        
+
         public static bool TreeContains(this IStatement statement, params Type[] types)
         {
             return _traverseTreeContains(statement, types);
         }
 
-        
+
         private static bool _traverseTreeAny(IStatement statement, Predicate<IStatement> predicate)
         {
             foreach (var child in statement.TraversableChildren)
@@ -78,7 +81,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                 {
                     return true;
                 }
-                
+
                 if (_traverseTreeAny(child, predicate))
                 {
                     return true;
@@ -92,7 +95,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             return _traverseTreeAny(statement, predicate);
         }
-        
+
         private static bool _traverseTreeAll(IStatement statement, Predicate<IStatement> predicate)
         {
             var atLeastOneExecuted = false;
@@ -102,7 +105,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                 {
                     return false;
                 }
-                
+
                 if (_traverseTreeAny(child, predicate))
                 {
                     return false;
@@ -118,7 +121,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             return _traverseTreeAll(statement, predicate);
         }
-        
+
 //        public static IStatement[] CreateChildren(IStatement firstChild, IStatement[] children)
 //        {
 //            var result = new List<IStatement>(children.Length + 1);
@@ -134,5 +137,121 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 //
 //            return result.ToArray();
 //        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNumeric(this DataTypes dataType)
+        {
+            return dataType == DataTypes.Decimal || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNumeric(this ConstantValueStatement constantValueStatement)
+        {
+            var dataType = constantValueStatement.DataType;
+            return dataType == DataTypes.Decimal || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsDecimal(this DataTypes dataType)
+        {
+            return dataType == DataTypes.Decimal;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsDecimal(this ConstantValueStatement constantValueStatement)
+        {
+            var dataType = constantValueStatement.DataType;
+            return dataType == DataTypes.Decimal;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsBoolean(this DataTypes dataType)
+        {
+            return dataType == DataTypes.Boolean;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsBoolean(this ConstantValueStatement constantValueStatement)
+        {
+            var dataType = constantValueStatement.DataType;
+            return dataType == DataTypes.Boolean;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsString(this DataTypes dataType)
+        {
+            return dataType == DataTypes.String;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsString(this ConstantValueStatement constantValueStatement)
+        {
+            var dataType = constantValueStatement.DataType;
+            return dataType == DataTypes.String;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsArray(this DataTypes dataType)
+        {
+            return dataType == DataTypes.Array;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsArray(this ConstantValueStatement constantValueStatement)
+        {
+            var dataType = constantValueStatement.DataType;
+            return dataType == DataTypes.Array;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsObject(this DataTypes dataType)
+        {
+            return dataType == DataTypes.Class;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsObject(this ConstantValueStatement constantValueStatement)
+        {
+            var dataType = constantValueStatement.DataType;
+            return dataType == DataTypes.Class;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsFunction(this DataTypes dataType)
+        {
+            return dataType == DataTypes.Delegate;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsFunction(this ConstantValueStatement constantValueStatement)
+        {
+            var dataType = constantValueStatement.DataType;
+            return dataType == DataTypes.Delegate;
+        }
+
+        public static bool TryParseBooleanFromString(string value, out bool result)
+        {
+            if (bool.TryParse(value, out var boolResult))
+            {
+                result = boolResult;
+                return true;
+            }
+
+            if (long.TryParse(value, out var intResult))
+            {
+                result = intResult != 0;
+                return true;
+            }
+
+            if (double.TryParse(value, out var doubleResult))
+            {
+                result = intResult != 0;
+                return true;
+            }
+
+            result = default;
+            return false;
+        }
     }
 }

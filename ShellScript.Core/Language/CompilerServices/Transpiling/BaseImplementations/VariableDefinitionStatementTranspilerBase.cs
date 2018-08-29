@@ -28,15 +28,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
             var variableName = varDefStt.Name;
             
-            if (scope.IsVariableExists(variableName))
+            if (scope.IsIdentifierExists(variableName))
             {
                 message = IdentifierNameExistsCompilerException.CreateMessage(variableName, varDefStt.Info);
                 return false;
             }
 
-            scope.ReserveNewVariable(varDefStt.DataType, variableName);
-
-            
             var regex = Lexer.ValidIdentifierName.Match(variableName);
             if (!regex.Success) // Unlikely to happen.
             {

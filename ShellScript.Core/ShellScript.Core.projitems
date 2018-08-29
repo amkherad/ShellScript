@@ -16,11 +16,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerErrors\IdentifierNameExistsCompilerException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerErrors\InvalidIdentifierNameCompilerException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerErrors\InvalidOperatorForTypeCompilerException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerErrors\InvalidStatementCompilerException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerErrors\InvalidStatementStructureCompilerException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerErrors\TypeMismatchCompilerException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\CompilerErrors\CompilerException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\ConstantInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\ErrorMessages.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\FunctionInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\PositionInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\Operators\NegativeNumberOperator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\ReturnStatement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\StatementHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Language\CompilerServices\Statements\StatementInfo.cs" />

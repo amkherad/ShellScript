@@ -29,16 +29,17 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             var statements = new List<IStatement>();
 
             var continueRead = true;
-            while(continueRead)
+            while (continueRead)
             {
                 if (!enumerator.TryPeek(out var peek))
                 {
                     break;
                 }
+
                 switch (peek.Type)
                 {
                     case TokenType.SequenceTerminator:
-                    //case TokenType.SequenceTerminatorNewLine:
+                        //case TokenType.SequenceTerminatorNewLine:
                         enumerator.MoveNext();
                         continue;
                     case TokenType.CloseBrace:
@@ -86,7 +87,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         var result = ReadEvaluationStatement(token, enumerator, info);
 
                         var sttInfo = CreateStatementInfo(info, token);
-                        return new AssignmentStatement(new VariableAccessStatement(firstToken.Value, sttInfo), result, sttInfo);
+                        return new AssignmentStatement(new VariableAccessStatement(firstToken.Value, sttInfo), result,
+                            sttInfo);
                     }
                     case TokenType.OpenParenthesis:
                     case TokenType.Dot:
@@ -184,7 +186,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         functionName.Value,
                         parameters.Where(p => !(p is NopStatement)).ToArray(),
                         CreateStatementInfo(info, token)
-                        );
+                    );
                 }
             }
 
@@ -212,6 +214,69 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 if (node == null)
                     throw UnexpectedSyntax(token, info);
 
+                //this block checks if there's a addition or subtraction operator in the first place of statements or
+                //- the statement before op is another operator.
+                //digit sign (negative/positive operator)
+                var prev = node.Previous;
+                if (prev == null || prev.Value is IOperator)
+                {
+                    if (op is SubtractionOperator)
+                    {
+                        var valNode = node.Next;
+                        var val = valNode?.Value as EvaluationStatement;
+                        if (val == null) //next may be operator or null !!!
+                        {
+                            throw new InvalidOperationException();
+                        }
+
+                        var negation = ArithmeticEvaluationStatement.CreateNegate(
+                            new NegativeNumberOperator(op.Info), val, op.Info);
+
+                        node.Value = negation;
+                        statements.Remove(valNode);
+                        continue;
+                    }
+
+                    if (op is AdditionOperator)
+                    {
+                        statements.Remove(node);
+                        continue;
+                    }
+
+                    throw new InvalidOperationException();
+                }
+
+                //digit sign (negative/positive operator)
+                var next = node.Next;
+                if (next != null && next.Value is IOperator)
+                {
+                    var nOp = next.Value;
+                    var nNode = next.Next;
+                    var nOperand = nNode?.Value as EvaluationStatement;
+
+                    if (nOperand == null)
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    if (nOp is SubtractionOperator)
+                    {
+                        var negation = ArithmeticEvaluationStatement.CreateNegate(
+                            new NegativeNumberOperator(nOp.Info), nOperand, nOp.Info);
+
+                        next.Value = negation;
+                        statements.Remove(nNode);
+                    }
+                    else if (nOp is AdditionOperator)
+                    {
+                        statements.Remove(nOp);
+                    }
+                    else //Invalid expression.
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+
                 if (op is BitwiseOperator bitwiseOperator)
                 {
                     if (op is BitwiseNotOperator bitwiseNotOperator)
@@ -223,7 +288,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        node.Value = BitwiseEvaluationStatement.CreateNot(bitwiseNotOperator, operand, CreateStatementInfo(info, token));
+                        node.Value = BitwiseEvaluationStatement.CreateNot(bitwiseNotOperator, operand,
+                            CreateStatementInfo(info, token));
                         statements.Remove(operandNode);
                     }
                     else
@@ -238,7 +304,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        node.Value = new BitwiseEvaluationStatement(left, bitwiseOperator, right, CreateStatementInfo(info, token));
+                        node.Value = new BitwiseEvaluationStatement(left, bitwiseOperator, right,
+                            CreateStatementInfo(info, token));
                         statements.Remove(leftNode);
                         statements.Remove(rightNode);
                     }
@@ -254,7 +321,9 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        node.Value = LogicalEvaluationStatement.CreateNot(notOperator, operand, CreateStatementInfo(info, token));
+                        node.Value =
+                            LogicalEvaluationStatement.CreateNot(notOperator, operand,
+                                CreateStatementInfo(info, token));
                         statements.Remove(operandNode);
                     }
                     else
@@ -269,14 +338,15 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        node.Value = new LogicalEvaluationStatement(left, logicalOperator, right, CreateStatementInfo(info, token));
+                        node.Value = new LogicalEvaluationStatement(left, logicalOperator, right,
+                            CreateStatementInfo(info, token));
                         statements.Remove(leftNode);
                         statements.Remove(rightNode);
                     }
                 }
                 else if (op is ArithmeticOperator arithmeticOperator)
                 {
-                    if (op is IncrementOperator incOperator)
+                    if (op is IncrementOperator || op is DecrementOperator)
                     {
                         var operandNode = node.Previous;
                         var operand = operandNode?.Value as VariableAccessStatement;
@@ -290,34 +360,13 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                                 throw UnexpectedSyntax(token, info);
                             }
 
-                            node.Value = ArithmeticEvaluationStatement.CreatePrefixIncrement(incOperator, operand, CreateStatementInfo(info, token));
+                            node.Value = ArithmeticEvaluationStatement.CreatePrefix(arithmeticOperator, operand,
+                                CreateStatementInfo(info, token));
                         }
                         else
                         {
-                            node.Value = ArithmeticEvaluationStatement.CreatePostfixIncrement(incOperator, operand, CreateStatementInfo(info, token));
-                        }
-
-                        statements.Remove(operandNode);
-                    }
-                    else if (op is DecrementOperator decOperator)
-                    {
-                        var operandNode = node.Previous;
-                        var operand = operandNode?.Value as VariableAccessStatement;
-                        if (operand == null)
-                        {
-                            operandNode = node.Next;
-                            operand = operandNode?.Value as VariableAccessStatement;
-
-                            if (operand == null)
-                            {
-                                throw UnexpectedSyntax(token, info);
-                            }
-
-                            node.Value = ArithmeticEvaluationStatement.CreatePrefixDecrement(decOperator, operand, CreateStatementInfo(info, token));
-                        }
-                        else
-                        {
-                            node.Value = ArithmeticEvaluationStatement.CreatePostfixDecrement(decOperator, operand, CreateStatementInfo(info, token));
+                            node.Value = ArithmeticEvaluationStatement.CreatePostfix(arithmeticOperator, operand,
+                                CreateStatementInfo(info, token));
                         }
 
                         statements.Remove(operandNode);
@@ -334,14 +383,15 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        node.Value = new ArithmeticEvaluationStatement(left, arithmeticOperator, right, CreateStatementInfo(info, token));
+                        node.Value = new ArithmeticEvaluationStatement(left, arithmeticOperator, right,
+                            CreateStatementInfo(info, token));
                         statements.Remove(leftNode);
                         statements.Remove(rightNode);
                     }
                 }
                 else
                 {
-                    throw UnexpectedSyntax(token, info);//WTF!
+                    throw UnexpectedSyntax(token, info); //WTF!
                 }
             }
 
@@ -389,17 +439,20 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     case TokenType.StringValue1:
                     case TokenType.StringValue2:
                     {
-                        statements.AddLast(new ConstantValueStatement(DataTypes.String, token.Value, CreateStatementInfo(info, token)));
+                        statements.AddLast(new ConstantValueStatement(DataTypes.String, token.Value,
+                            CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Number:
                     {
-                        statements.AddLast(new ConstantValueStatement(DataTypes.Numeric, token.Value, CreateStatementInfo(info, token)));
+                        statements.AddLast(new ConstantValueStatement(DataTypes.Numeric, token.Value,
+                            CreateStatementInfo(info, token)));
                         break;
                     }
                     case TokenType.Null:
                     {
-                        statements.AddLast(new ConstantValueStatement(DataTypes.String, token.Value, CreateStatementInfo(info, token)));
+                        statements.AddLast(new ConstantValueStatement(DataTypes.String, token.Value,
+                            CreateStatementInfo(info, token)));
                         break;
                     }
 
@@ -494,7 +547,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         }
                         catch (Exception ex)
                         {
-                            throw UnexpectedSyntax(token, info);
+                            throw UnexpectedSyntax(token, info, ex);
                         }
                     }
                     default:
@@ -518,7 +571,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             }
                             catch (Exception ex)
                             {
-                                throw UnexpectedSyntax(token, info);
+                                throw UnexpectedSyntax(token, info, ex);
                             }
                         }
                         default:
@@ -530,6 +583,19 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
                             break;
                         }
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        var result = _createEvaluation(statements, token, info);
+
+                        return result;
+                    }
+                    catch (Exception ex)
+                    {
+                        throw UnexpectedSyntax(token, info, ex);
                     }
                 }
             }
@@ -565,16 +631,32 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             if (token.Type != TokenType.DataType)
                 throw UnexpectedSyntax(token, info);
 
-            if (!enumerator.MoveNext()) //variable name.
+            if (!enumerator.MoveNext()) //variable name or constant type.
                 throw EndOfFile(token, info);
+
+            var isConstant = false;
+            if (token.Value == ConstantKeyword)
+            {
+                token = enumerator.Current;
+                
+                if (token.Type != TokenType.DataType)
+                    throw UnexpectedSyntax(token, info);
+                
+                isConstant = true;
+                
+                if (!enumerator.MoveNext()) //variable name.
+                    throw EndOfFile(token, info);
+            }
 
             var dataType = TokenTypeToDataType(token);
 
             var definitionName = enumerator.Current;
             if (definitionName.Type != TokenType.IdentifierName)
                 throw UnexpectedSyntax(definitionName, info);
+            if (Keywords.Contains(definitionName.Value)) //impossible check.
+                throw InvalidIdentifierName(definitionName.Value, token, info);
 
-            if (forceAssignment)
+            if (forceAssignment || isConstant)
             {
                 if (!enumerator.MoveNext()) //assignment
                     throw EndOfFile(token, info);
@@ -586,7 +668,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 if (!enumerator.MoveNext()) //value
                     throw EndOfFile(token, info);
 
-                IStatement value;
+                EvaluationStatement value;
 
                 token = enumerator.Current;
                 if (token.Type == TokenType.IdentifierName)
@@ -595,7 +677,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 }
                 else if (token.Type == TokenType.Number)
                 {
-                    value = new ConstantValueStatement(DataTypes.Numeric, token.Value, CreateStatementInfo(info, token));
+                    value = new ConstantValueStatement(DataTypes.Numeric, token.Value,
+                        CreateStatementInfo(info, token));
                 }
                 else if (token.Type == TokenType.StringValue1 || token.Type == TokenType.StringValue2)
                 {
@@ -610,7 +693,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     throw UnexpectedSyntax(token, info);
                 }
 
-                return new VariableDefinitionStatement(dataType, definitionName.Value, value, CreateStatementInfo(info, token));
+                return new VariableDefinitionStatement(dataType, definitionName.Value, isConstant, value,
+                    CreateStatementInfo(info, token));
             }
 
             if (enumerator.TryPeek(out var peek) && peek.Type == TokenType.Assignment)
@@ -623,10 +707,12 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 token = enumerator.Current;
                 var defaultValue = ReadEvaluationStatement(token, enumerator, info);
 
-                return new VariableDefinitionStatement(dataType, definitionName.Value, defaultValue, CreateStatementInfo(info, token));
+                return new VariableDefinitionStatement(dataType, definitionName.Value, isConstant, defaultValue,
+                    CreateStatementInfo(info, token));
             }
 
-            return new VariableDefinitionStatement(dataType, definitionName.Value, null, CreateStatementInfo(info, token));
+            return new VariableDefinitionStatement(dataType, definitionName.Value, isConstant, null,
+                CreateStatementInfo(info, token));
         }
 
 
@@ -654,10 +740,12 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
                 var defaultValue = ReadConstantValue(enumerator.Current, enumerator, info, dataType);
 
-                return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, defaultValue, CreateStatementInfo(info, token));
+                return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, defaultValue,
+                    CreateStatementInfo(info, token));
             }
 
-            return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, null, CreateStatementInfo(info, token));
+            return new FunctionParameterDefinitionStatement(dataType, definitionName.Value, null,
+                CreateStatementInfo(info, token));
         }
 
         public FunctionParameterDefinitionStatement[] ReadParameterDefinitions(Token token,
@@ -726,6 +814,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             token = enumerator.Current;
             if (functionName.Type != TokenType.IdentifierName)
                 throw UnexpectedSyntax(token, info);
+            if (Keywords.Contains(functionName.Value)) //impossible check.
+                throw InvalidIdentifierName(functionName.Value, token, info);
 
             if (!enumerator.MoveNext()) //parenthesis or braces
                 throw EndOfFile(token, info);
@@ -751,7 +841,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 {
                     throw EndOfFile(token, info);
                 }
-                
+
                 if (!enumerator.MoveNext())
                     throw EndOfFile(token, info);
 
@@ -858,7 +948,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
                     var elifBlock = ReadBlockStatement(token, enumerator, info);
 
-                    elseIfBlocks.Add(new ConditionalBlockStatement(elifCondition, elifBlock, CreateStatementInfo(info, token)));
+                    elseIfBlocks.Add(new ConditionalBlockStatement(elifCondition, elifBlock,
+                        CreateStatementInfo(info, token)));
                 }
                 else if (token.Type == TokenType.OpenBrace) //else
                 {
@@ -1059,7 +1150,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             IStatement block = ReadBlockStatement(token, enumerator, info);
 
-            return new ForStatement(preLoopAssignments, condition, postLoopEvaluations, block, CreateStatementInfo(info, token));
+            return new ForStatement(preLoopAssignments, condition, postLoopEvaluations, block,
+                CreateStatementInfo(info, token));
         }
 
         public ForEachStatement ReadForEach(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
@@ -1153,7 +1245,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             var statement = ReadEvaluationStatement(token, enumerator, info);
 
-            return new SdkFunctionCallStatement("echo", new [] {statement}, CreateStatementInfo(info, token));
+            return new SdkFunctionCallStatement("echo", new[] {statement}, CreateStatementInfo(info, token));
         }
 
         public ReturnStatement ReadReturn(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)

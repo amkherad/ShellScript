@@ -1,4 +1,7 @@
 using System.IO;
+using ShellScript.Core.Language.CompilerServices.CompilerErrors;
+using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.CompilerServices.Transpiling;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
@@ -17,6 +20,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
 
             return value.Replace(@"\r\n", @"\n");
+        }
+
+        public static InvalidStatementStructureCompilerException InvalidStatementStructure(Scope scope, EvaluationStatement statement)
+        {
+            return new InvalidStatementStructureCompilerException(statement, statement?.Info);
         }
     }
 }

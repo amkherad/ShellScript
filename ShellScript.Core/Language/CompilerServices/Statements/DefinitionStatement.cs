@@ -10,13 +10,13 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public DataTypes DataType { get; }
         public string Name { get; }
         
-        public IStatement DefaultValue { get; }
+        public EvaluationStatement DefaultValue { get; }
         public bool HasDefaultValue { get; }
 
         public IStatement[] TraversableChildren { get; protected set; }
 
         
-        public DefinitionStatement(DataTypes dataType, string name, IStatement defaultValue, bool hasDefaultValue, StatementInfo info)
+        public DefinitionStatement(DataTypes dataType, string name, EvaluationStatement defaultValue, bool hasDefaultValue, StatementInfo info)
         {
             DataType = dataType;
             Name = name;

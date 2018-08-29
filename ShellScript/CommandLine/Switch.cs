@@ -26,7 +26,7 @@ namespace ShellScript.CommandLine
                 var matchValue = regexValue.Match(s);
                 if (matchValue.Success)
                 {
-                    return new Switch(match.Value, matchValue.Value);
+                    return new Switch(match.Value, matchValue.Value.Substring(1));
                 }
                 return new Switch(match.Value, null);
             }

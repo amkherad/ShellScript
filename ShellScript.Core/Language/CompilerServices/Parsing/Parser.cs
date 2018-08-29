@@ -10,6 +10,54 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 {
     public partial class Parser
     {
+        public const string ConstantKeyword = "const";
+        
+        public static HashSet<string> Keywords = new HashSet<string>
+        {
+            "if",
+            "else",
+            "while",
+            "do",
+            "switch",
+            "case",
+            "function",
+            "int",
+            "long",
+            "double",
+            "float",
+            "void",
+            "decimal",
+            "null",
+            "nil",
+            "numeric",
+            "string",
+            "object",
+            "class",
+            "delegate",
+            "const",
+            "array",
+            "int[]",
+            "long[]",
+            "double[]",
+            "float[]",
+            "var",
+            "variant[]",
+            "numeric[]",
+            "decimal[]",
+            "for",
+            "foreach",
+            "loop",
+            "return",
+            "async",
+            "await",
+            "in",
+            "notin",
+            "like",
+            "notlike",
+            "call",
+            "echo",
+        };
+        
         private Lexer _lexer;
 
         public Parser()
@@ -36,7 +84,6 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 }
             }
         }
-
 
         public StatementInfo CreateStatementInfo(ParserInfo info, Token token)
         {
@@ -213,12 +260,39 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         /// </summary>
         /// <param name="token"></param>
         /// <param name="info"></param>
+        /// <returns type="IllegalSyntaxException">IllegalSyntaxException</returns>
+        protected ParserException InvalidIdentifierName(string identifierName, Token token, ParserInfo info)
+        {
+            return new IllegalSyntaxException(
+                $"Invalid identifier name '{identifierName}'",
+                token?.LineNumber ?? 0, token?.ColumnStart ?? 0, info);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="info"></param>
         /// <returns type="ParserSyntaxException">ParserSyntaxException</returns>
         protected ParserException UnexpectedSyntax(Token token, ParserInfo info)
         {
             return new ParserSyntaxException(
                 $"Unexpected token '{token.Value}' found",
                 token?.LineNumber ?? 0, token?.ColumnStart ?? 0, info);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="info"></param>
+        /// <returns type="ParserSyntaxException">ParserSyntaxException</returns>
+        protected ParserException UnexpectedSyntax(Token token, ParserInfo info, Exception innerException)
+        {
+            return new ParserSyntaxException(
+                $"Unexpected token '{token.Value}' found",
+                token?.LineNumber ?? 0, token?.ColumnStart ?? 0, info,
+                innerException);
         }
 
         /// <summary>

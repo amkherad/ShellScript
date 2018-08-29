@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Linq;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
@@ -22,7 +22,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Parameters = parameters;
             Info = info;
 
-            TraversableChildren = StatementHelpers.CreateChildren(parameters);
+            TraversableChildren = StatementHelpers.CreateChildren(parameters.Cast<IStatement>().ToArray());
         }
     }
 }

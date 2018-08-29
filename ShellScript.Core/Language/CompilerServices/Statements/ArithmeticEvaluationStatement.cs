@@ -11,8 +11,9 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public ArithmeticOperator Operator { get; }
         public EvaluationStatement Right { get; }
 
-        
-        public ArithmeticEvaluationStatement(EvaluationStatement left, ArithmeticOperator @operator, EvaluationStatement right, StatementInfo info)
+
+        public ArithmeticEvaluationStatement(EvaluationStatement left, ArithmeticOperator @operator,
+            EvaluationStatement right, StatementInfo info)
         {
             Left = left;
             Operator = @operator;
@@ -23,25 +24,46 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
 
+        public static ArithmeticEvaluationStatement CreateNegate(NegativeNumberOperator op,
+            EvaluationStatement operand, StatementInfo info)
+        {
+            return new ArithmeticEvaluationStatement(null, op, operand, info);
+        }
         
-
-        public static ArithmeticEvaluationStatement CreatePostfixIncrement(IncrementOperator op, EvaluationStatement operand, StatementInfo info)
+        public static ArithmeticEvaluationStatement CreatePostfixIncrement(IncrementOperator op,
+            EvaluationStatement operand, StatementInfo info)
         {
             return new ArithmeticEvaluationStatement(operand, op, null, info);
         }
 
-        public static ArithmeticEvaluationStatement CreatePrefixIncrement(IncrementOperator op, EvaluationStatement operand, StatementInfo info)
+        public static ArithmeticEvaluationStatement CreatePrefixIncrement(IncrementOperator op,
+            EvaluationStatement operand, StatementInfo info)
         {
             return new ArithmeticEvaluationStatement(null, op, operand, info);
         }
 
-        
-        public static ArithmeticEvaluationStatement CreatePostfixDecrement(DecrementOperator op, EvaluationStatement operand, StatementInfo info)
+
+        public static ArithmeticEvaluationStatement CreatePostfixDecrement(DecrementOperator op,
+            EvaluationStatement operand, StatementInfo info)
         {
             return new ArithmeticEvaluationStatement(operand, op, null, info);
         }
 
-        public static ArithmeticEvaluationStatement CreatePrefixDecrement(DecrementOperator op, EvaluationStatement operand, StatementInfo info)
+        public static ArithmeticEvaluationStatement CreatePrefixDecrement(DecrementOperator op,
+            EvaluationStatement operand, StatementInfo info)
+        {
+            return new ArithmeticEvaluationStatement(null, op, operand, info);
+        }
+
+
+        public static ArithmeticEvaluationStatement CreatePostfix(ArithmeticOperator op,
+            EvaluationStatement operand, StatementInfo info)
+        {
+            return new ArithmeticEvaluationStatement(operand, op, null, info);
+        }
+
+        public static ArithmeticEvaluationStatement CreatePrefix(ArithmeticOperator op,
+            EvaluationStatement operand, StatementInfo info)
         {
             return new ArithmeticEvaluationStatement(null, op, operand, info);
         }

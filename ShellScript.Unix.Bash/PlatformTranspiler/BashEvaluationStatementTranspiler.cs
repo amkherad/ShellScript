@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using ShellScript.Core;
 using ShellScript.Core.Language.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
@@ -16,6 +18,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
     public class BashEvaluationStatementTranspiler : EvaluationStatementTranspilerBase
     {
+        private const string NumericFormat = "0.#############################";
+
         private class ExpressionTypes
         {
             public List<DataTypes> Types { get; set; }
@@ -70,10 +74,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
                         foreach (var t in childResult.Types)
                             types.Add(t);
-                        
+
                         foreach (var nev in childResult.NonExistenceVariables)
                             nonExistenceVariables.Add(nev);
-                        
+
                         foreach (var opType in childResult.OperatorTypes)
                             operators.Add(opType);
 
@@ -87,42 +91,24 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             return result;
         }
 
-
-        private static ConstantValueStatement EvaluateConstantValues(ConstantValueStatement stt1, ConstantValueStatement stt2)
+        private static string GetConstantAsString(ConstantValueStatement constantValueStatement)
         {
-            if (stt1.DataType == DataTypes.String)
+            if (constantValueStatement.DataType == DataTypes.String)
             {
-                string result;
-                if (stt2.DataType == DataTypes.String)
-                {
-                    result = BashTranspilerHelpers.StandardizeString(stt1.Value, true) +
-                           BashTranspilerHelpers.StandardizeString(stt2.Value, true);
-                }
-                else
-                {
-                    result = BashTranspilerHelpers.StandardizeString(stt1.Value, true) + stt2.Value;
-                }
-
-                return new ConstantValueStatement(DataTypes.String, result, stt1.Info);
+                return BashTranspilerHelpers.StandardizeString(constantValueStatement.Value, true);
             }
-
-            if (stt2.DataType == DataTypes.String)
+            else
             {
-                return new ConstantValueStatement(DataTypes.String,
-                    stt1.Value + BashTranspilerHelpers.StandardizeString(stt2.Value, true),
-                    stt1.Info);
+                return constantValueStatement.Value;
             }
-            
         }
 
         private static string CreateArithmetic(Context context, Scope scope, TextWriter nonInlinePartWriter,
             IStatement statement)
         {
-
             return null;
         }
-        
-        
+
         private static string CreateStringConcatenation(Context context, Scope scope, TextWriter nonInlinePartWriter,
             IStatement statement)
         {
@@ -141,17 +127,19 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     {
                         sb.Append(constantValueStatement.Value);
                     }
+
                     break;
                 }
                 case VariableAccessStatement variableAccessStatement:
                 {
-                    sb.Append("$(");
+                    sb.Append("${");
                     sb.Append(variableAccessStatement.VariableName);
-                    sb.Append(')');
+                    sb.Append('}');
                     break;
                 }
                 case BitwiseEvaluationStatement bitwiseEvaluationStatement:
                 {
+                    
                     break;
                 }
                 case LogicalEvaluationStatement logicalEvaluationStatement:
@@ -160,6 +148,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 }
                 case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
                 {
+                    var left = arithmeticEvaluationStatement.Left;
+                    var right = arithmeticEvaluationStatement.Right;
+
+                    
                     break;
                 }
                 case FunctionCallStatement functionCallStatement:
@@ -171,10 +163,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     throw new InvalidStatementStructureCompilerException(statement, statement.Info);
                 }
             }
-            
+
             return sb.ToString();
         }
-        
+
 
         public override void WriteInline(Context context, Scope scope, TextWriter writer,
             TextWriter nonInlinePartWriter, IStatement statement)
@@ -192,15 +184,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 writer.Write(stringConcatenationExpression);
                 writer.Write('"');
             }
-            
-            
+
 
             //writer.Write(expression);
         }
 
         public override void WriteBlock(Context context, Scope scope, TextWriter writer, IStatement statement)
         {
-            
         }
 
         public override string PinEvaluationToInline(Context context, Scope scope, TextWriter pinCodeWriter,
