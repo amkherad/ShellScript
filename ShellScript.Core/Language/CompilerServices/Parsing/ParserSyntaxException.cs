@@ -1,3 +1,5 @@
+using System;
+
 namespace ShellScript.Core.Language.CompilerServices.Parsing
 {
     public class ParserSyntaxException : ParserException
@@ -9,6 +11,16 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         public ParserSyntaxException(string message,
             int lineNumber, int columnNumber, ParserInfo info)
             : base($"{message} in '{info?.File}' at {lineNumber}:{columnNumber}")
+        {
+            LineNumber = LineNumber;
+            ColumnNumber = columnNumber;
+            ParserInfo = info;
+        }
+        
+        public ParserSyntaxException(string message,
+            int lineNumber, int columnNumber, ParserInfo info,
+            Exception innerException)
+            : base($"{message} in '{info?.File}' at {lineNumber}:{columnNumber}", innerException)
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;
