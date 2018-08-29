@@ -7,12 +7,19 @@ namespace ShellScript.Core.Language.CompilerServices
     {
         public DataTypes DataType { get; }
         public string Name { get; }
+        public string Value { get; }
         
         
-        public ConstantInfo(DataTypes dataType, string name)
+        public ConstantInfo(DataTypes dataType, string name, string value)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
+            Value = value;
             DataType = dataType;
+        }
+        
+        public ConstantInfo(string name)
+        {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
         }
 
         public override int GetHashCode()

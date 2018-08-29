@@ -1,21 +1,33 @@
 using System;
+using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices
 {
-    public class VariableInfo : IEquatable<VariableInfo>
+    public class FunctionInfo : IEquatable<FunctionInfo>
     {
         public DataTypes DataType { get; }
         public string Name { get; }
 
+        public bool IsParams { get; }
+        public VariableInfo[] Parameters { get; }
+        public string ObjectName { get; }
 
-        public VariableInfo(DataTypes dataType, string name)
+        public IStatement InlinedStatement { get; }
+
+        
+        public FunctionInfo(DataTypes dataType, string name, bool isParams, VariableInfo[] parameters,
+            string objectName, IStatement inlinedStatement)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
+            IsParams = isParams;
+            Parameters = parameters;
+            ObjectName = objectName;
+            InlinedStatement = inlinedStatement;
             DataType = dataType;
         }
 
-        public VariableInfo(string name)
+        public FunctionInfo(string name)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
         }
@@ -30,10 +42,10 @@ namespace ShellScript.Core.Language.CompilerServices
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((VariableInfo) obj);
+            return Equals((FunctionInfo) obj);
         }
 
-        public bool Equals(VariableInfo other)
+        public bool Equals(FunctionInfo other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ShellScript.Core.Language.Sdk;
 
@@ -13,6 +14,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         private readonly HashSet<string> _identifiers;
         private readonly HashSet<ConstantInfo> _constants;
         private readonly HashSet<VariableInfo> _variables;
+        private readonly HashSet<FunctionInfo> _functions;
 
 
         public Scope(Context context)
@@ -22,6 +24,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             _identifiers = new HashSet<string>();
             _variables = new HashSet<VariableInfo>();
             _constants = new HashSet<ConstantInfo>();
+            _functions = new HashSet<FunctionInfo>();
         }
 
         public Scope(Context context, Scope parent)
@@ -32,6 +35,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             _identifiers = new HashSet<string>();
             _variables = new HashSet<VariableInfo>();
             _constants = new HashSet<ConstantInfo>();
+            _functions = new HashSet<FunctionInfo>();
         }
 
         public Scope Fork()
@@ -40,7 +44,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         }
 
 
-        public bool IsVariableExists(string name)
+        public bool IsIdentifierExists(string name)
         {
             var that = this;
             do
@@ -71,10 +75,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             _variables.Add(new VariableInfo(dataType, name));
         }
 
-        public void ReserveNewConstant(DataTypes dataType, string name)
+        public void ReserveNewConstant(DataTypes dataType, string name, string value)
         {
             _identifiers.Add(name);
-            _constants.Add(new ConstantInfo(dataType, name));
+            _constants.Add(new ConstantInfo(dataType, name, value));
         }
 
         public void ReserveNewFunction(DataTypes dataType, string name)
@@ -87,9 +91,39 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         {
             var counter = 1;
             var varName = nameHint;
-            while (IsVariableExists(varName))
+            while (IsIdentifierExists(varName))
             {
                 varName = nameHint + counter++;
+            }
+
+            _identifiers.Add(varName);
+            _variables.Add(new VariableInfo(dataType, varName));
+
+            return varName;
+        }
+
+        private static string _generateRandomString(int len)
+        {
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var stringChars = new char[len];
+            var random = new Random();
+
+            for (int i = 0; i < len; i++)
+            {
+                stringChars[i] = chars[random.Next(chars.Length)];
+            }
+
+            return new string(stringChars);
+        }
+        
+        public string NewVariable(DataTypes dataType)
+        {
+            var counter = 1;
+            var baseName = "helper" + _generateRandomString(12);
+            var varName = baseName;
+            while (IsVariableExists(varName))
+            {
+                varName = baseName + counter++;
             }
 
             _identifiers.Add(varName);
@@ -113,7 +147,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
 
         public bool TryGetVariableInfo(string variableName, out VariableInfo variableInfo)
         {
-            var varInfo = new VariableInfo(DataTypes.String, variableName);
+            var varInfo = new VariableInfo(variableName);
 
             var that = this;
             do
@@ -130,12 +164,29 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
 
         public bool TryGetConstantInfo(string constantName, out ConstantInfo constantInfo)
         {
-            var varInfo = new ConstantInfo(DataTypes.String, constantName);
+            var constInfo = new ConstantInfo(constantName);
 
             var that = this;
             do
             {
-                if (that._constants.TryGetValue(varInfo, out constantInfo))
+                if (that._constants.TryGetValue(constInfo, out constantInfo))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
+
+        public bool TryGetFunctionInfo(string functionName, out FunctionInfo functionInfo)
+        {
+            var funcInfo = new FunctionInfo(functionName);
+
+            var that = this;
+            do
+            {
+                if (that._functions.TryGetValue(funcInfo, out functionInfo))
                 {
                     return true;
                 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.Sdk;
@@ -14,6 +15,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         public IPlatformStatementTranspiler[] Transpilers { get; }
         public ISdk Sdk { get; }
 
+        public CultureInfo CultureInfo { get; }
+        public StringComparer StringComparer { get; }
+        
         private readonly Dictionary<Type, IPlatformStatementTranspiler> _typeTranspilers;
 
         private readonly Dictionary<Type, Type> _fallbackType = new Dictionary<Type, Type>
@@ -51,6 +55,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             Sdk = platform.Sdk;
 
             _typeTranspilers = Transpilers.ToDictionary(key => key.StatementType);
+            
+            CultureInfo = CultureInfo.CurrentCulture;
+            StringComparer = StringComparer.CurrentCulture;
         }
 
         public IPlatformMetaInfoTranspiler GetMetaInfoTranspiler()
