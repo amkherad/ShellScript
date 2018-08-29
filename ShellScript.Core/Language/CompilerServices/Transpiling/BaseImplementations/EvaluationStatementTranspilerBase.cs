@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.CompilerServices.Statements.Operators;
 using ShellScript.Core.Language.Sdk;
+using ShellScript.Unix.Bash.PlatformTranspiler;
 
 namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations
 {
@@ -39,7 +43,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                 if (stt is VariableAccessStatement varAccessStt)
                 {
                     variable = varAccessStt;
-                    return !scope.IsVariableExists(varAccessStt.VariableName);
+                    return !scope.IsIdentifierExists(varAccessStt.VariableName);
                 }
 
                 return false;
@@ -62,55 +66,672 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
             EvaluationStatement statement);
 
 
-        public static string _createExpression(Context context, Scope scope, EvaluationStatement statement,
-            string variableFormat, IDictionary<IStatement, string> replacements, StringWriter nonInlinePartWriter)
+        public static EvaluationStatement CalculateEvaluation(Context context, Scope scope,
+            EvaluationStatement statement)
         {
-            if (replacements != null && replacements.TryGetValue(statement, out var value))
+            if (statement == null)
             {
-                return value;
+                throw BashTranspilerHelpers.InvalidStatementStructure(scope, null);
             }
 
             switch (statement)
             {
-                case ConstantValueStatement constant:
+                case BitwiseEvaluationStatement bitwiseEvaluationStatement:
                 {
-                    if (constant.DataType == DataTypes.String)
+                    switch (bitwiseEvaluationStatement.Operator)
                     {
-                        //USE STRING CONCATENATION FOR ENTIRE EXPRESSION
-                        
-                        using (var strWriter = new StringWriter())
+                        case BitwiseNotOperator _:
                         {
-                            context.GetTranspiler<IPlatformStringTranspiler>()
-                                .WriteStringInline(context, scope, strWriter, nonInlinePartWriter, constant.Value);
+                            if (bitwiseEvaluationStatement.Left != null)
+                            {
+                                throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                    bitwiseEvaluationStatement);
+                            }
 
-                            return strWriter.ToString();
+                            if (bitwiseEvaluationStatement.Right is ConstantValueStatement constantValueStatement)
+                            {
+                                if (constantValueStatement.DataType == DataTypes.Decimal)
+                                {
+                                    if (!long.TryParse(constantValueStatement.Value, out var value))
+                                    {
+                                        throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                            bitwiseEvaluationStatement);
+                                    }
+
+                                    return new ConstantValueStatement(
+                                        constantValueStatement.DataType,
+                                        (~value).ToString(NumberFormatInfo.InvariantInfo),
+                                        constantValueStatement.Info
+                                    );
+                                }
+
+                                throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                    bitwiseEvaluationStatement);
+                            }
+
+                            throw BashTranspilerHelpers.InvalidStatementStructure(scope, bitwiseEvaluationStatement);
                         }
-                    }
+                        case BitwiseAndOperator _:
+                        case BitwiseOrOperator _:
+                        case XorOperator _:
+                        {
+                            var left = CalculateEvaluation(context, scope, bitwiseEvaluationStatement.Left);
+                            var right = CalculateEvaluation(context, scope, bitwiseEvaluationStatement.Right);
 
-                    return constant.Value;
+                            if (left is ConstantValueStatement leftConstantValue &&
+                                right is ConstantValueStatement rightConstantValue)
+                            {
+                                if (leftConstantValue.IsDecimal() &&
+                                    long.TryParse(leftConstantValue.Value, out var leftDecimal))
+                                {
+                                    if (rightConstantValue.IsDecimal() &&
+                                        long.TryParse(rightConstantValue.Value, out var rightDecimal))
+                                    {
+                                        long result;
+                                        switch (bitwiseEvaluationStatement.Operator)
+                                        {
+                                            case BitwiseAndOperator _:
+                                                result = leftDecimal & rightDecimal;
+                                                break;
+                                            case BitwiseOrOperator _:
+                                                result = leftDecimal | rightDecimal;
+                                                break;
+                                            case XorOperator _:
+                                                result = leftDecimal ^ rightDecimal;
+                                                break;
+                                            default:
+                                                throw new InvalidOperationException();
+                                        }
+
+                                        return new ConstantValueStatement(DataTypes.Decimal,
+                                            result.ToString(CultureInfo.InvariantCulture),
+                                            bitwiseEvaluationStatement.Info);
+                                    }
+
+                                    throw new InvalidOperatorForTypeCompilerException(
+                                        bitwiseEvaluationStatement.Operator.GetType(), rightConstantValue.DataType,
+                                        rightConstantValue.Info);
+                                }
+
+                                if (leftConstantValue.DataType == DataTypes.Boolean &&
+                                    rightConstantValue.DataType == DataTypes.Boolean &&
+                                    bool.TryParse(leftConstantValue.Value, out var leftBool) &&
+                                    bool.TryParse(rightConstantValue.Value, out var rightBool))
+                                {
+                                    bool result;
+                                    switch (bitwiseEvaluationStatement.Operator)
+                                    {
+                                        case BitwiseAndOperator _:
+                                            result = leftBool && rightBool;
+                                            break;
+                                        case BitwiseOrOperator _:
+                                            result = leftBool || rightBool;
+                                            break;
+                                        case XorOperator _:
+                                            result = leftBool ^ rightBool;
+                                            break;
+                                        default:
+                                            throw new InvalidOperationException();
+                                    }
+
+                                    return new ConstantValueStatement(DataTypes.Boolean,
+                                        result.ToString(CultureInfo.InvariantCulture),
+                                        bitwiseEvaluationStatement.Info);
+                                }
+
+                                throw new InvalidOperatorForTypeCompilerException(
+                                    bitwiseEvaluationStatement.Operator.GetType(), leftConstantValue.DataType,
+                                    leftConstantValue.Info);
+                            }
+
+                            return new BitwiseEvaluationStatement(
+                                left,
+                                bitwiseEvaluationStatement.Operator,
+                                right,
+                                bitwiseEvaluationStatement.Info);
+                        }
+
+                        default:
+                            throw new InvalidOperationException();
+                    }
                 }
-                case VariableAccessStatement variable:
+                case LogicalEvaluationStatement logicalEvaluationStatement:
                 {
-                    return string.Format(variableFormat, variable.VariableName);
+                    switch (logicalEvaluationStatement.Operator)
+                    {
+                        case LogicalAndOperator _:
+                        case LogicalOrOperator _:
+                        {
+                            var left = CalculateEvaluation(context, scope, logicalEvaluationStatement.Left);
+                            var right = CalculateEvaluation(context, scope, logicalEvaluationStatement.Right);
+
+                            if (left is ConstantValueStatement leftConstantValue &&
+                                right is ConstantValueStatement rightConstantValue)
+                            {
+                                if ((leftConstantValue.DataType == DataTypes.Boolean ||
+                                     leftConstantValue.IsDecimal()) &&
+                                    StatementHelpers.TryParseBooleanFromString(leftConstantValue.Value,
+                                        out var leftBool))
+                                {
+                                    if ((leftConstantValue.DataType == DataTypes.Boolean ||
+                                         rightConstantValue.IsDecimal()) &&
+                                        StatementHelpers.TryParseBooleanFromString(rightConstantValue.Value,
+                                            out var rightBool))
+                                    {
+                                        return new ConstantValueStatement(DataTypes.Boolean,
+                                            (logicalEvaluationStatement.Operator is LogicalAndOperator
+                                                ? leftBool && rightBool
+                                                : leftBool || rightBool).ToString(CultureInfo.InvariantCulture),
+                                            logicalEvaluationStatement.Info);
+                                    }
+
+                                    throw new InvalidOperatorForTypeCompilerException(
+                                        logicalEvaluationStatement.Operator.GetType(), rightConstantValue.DataType,
+                                        rightConstantValue.Info);
+                                }
+
+                                throw new InvalidOperatorForTypeCompilerException(
+                                    logicalEvaluationStatement.Operator.GetType(), leftConstantValue.DataType,
+                                    leftConstantValue.Info);
+                            }
+
+                            return new LogicalEvaluationStatement(
+                                left,
+                                logicalEvaluationStatement.Operator,
+                                right,
+                                logicalEvaluationStatement.Info);
+                        }
+                        case EqualOperator _:
+                        case NotEqualOperator _:
+                        {
+                            var left = CalculateEvaluation(context, scope, logicalEvaluationStatement.Left);
+                            var right = CalculateEvaluation(context, scope, logicalEvaluationStatement.Right);
+
+                            if (left is ConstantValueStatement leftConstant &&
+                                right is ConstantValueStatement rightConstant)
+                            {
+                                if (leftConstant.IsNumeric() && rightConstant.IsNumeric())
+                                {
+                                    if (leftConstant.IsDecimal() && rightConstant.IsDecimal() &&
+                                        long.TryParse(leftConstant.Value, out var leftDecimal) &&
+                                        long.TryParse(rightConstant.Value, out var rightDecimal)
+                                    )
+                                    {
+                                        return new ConstantValueStatement(
+                                            DataTypes.Boolean,
+                                            (logicalEvaluationStatement.Operator is EqualOperator
+                                                ? leftDecimal == rightDecimal
+                                                : leftDecimal != rightDecimal).ToString(CultureInfo.InvariantCulture),
+                                            logicalEvaluationStatement.Info
+                                        );
+                                    }
+
+                                    if (double.TryParse(leftConstant.Value, out var leftFloat) &&
+                                        double.TryParse(rightConstant.Value, out var rightFloat))
+                                    {
+                                        return new ConstantValueStatement(
+                                            DataTypes.Boolean,
+                                            (Math.Abs(leftFloat - rightFloat) < double.Epsilon).ToString(CultureInfo
+                                                .InvariantCulture),
+                                            logicalEvaluationStatement.Info
+                                        );
+                                    }
+                                }
+
+                                return new ConstantValueStatement(
+                                    DataTypes.Boolean,
+                                    (logicalEvaluationStatement.Operator is EqualOperator
+                                        ? leftConstant.Value == rightConstant.Value
+                                        : leftConstant.Value != rightConstant.Value)
+                                    .ToString(CultureInfo.InvariantCulture),
+                                    logicalEvaluationStatement.Info
+                                );
+                            }
+
+                            return new LogicalEvaluationStatement(
+                                left,
+                                logicalEvaluationStatement.Operator,
+                                right,
+                                logicalEvaluationStatement.Info);
+                        }
+                        case GreaterOperator _:
+                        case GreaterEqualOperator _:
+                        case LessOperator _:
+                        case LessEqualOperator _:
+                        {
+                            var left = CalculateEvaluation(context, scope, logicalEvaluationStatement.Left);
+                            var right = CalculateEvaluation(context, scope, logicalEvaluationStatement.Right);
+
+                            if (left is ConstantValueStatement leftConstantValue &&
+                                right is ConstantValueStatement rightConstantValue)
+                            {
+                                if (leftConstantValue.IsNumeric() && rightConstantValue.IsNumeric())
+                                {
+                                    if (leftConstantValue.IsDecimal() && rightConstantValue.IsDecimal() &&
+                                        long.TryParse(leftConstantValue.Value, out var leftDecimal) &&
+                                        long.TryParse(rightConstantValue.Value, out var rightDecimal))
+                                    {
+                                        bool result;
+                                        switch (logicalEvaluationStatement.Operator)
+                                        {
+                                            case GreaterOperator _:
+                                                result = leftDecimal > rightDecimal;
+                                                break;
+                                            case GreaterEqualOperator _:
+                                                result = leftDecimal >= rightDecimal;
+                                                break;
+                                            case LessOperator _:
+                                                result = leftDecimal < rightDecimal;
+                                                break;
+                                            case LessEqualOperator _:
+                                                result = leftDecimal <= rightDecimal;
+                                                break;
+                                            default:
+                                                throw new InvalidOperationException();
+                                        }
+
+                                        return new ConstantValueStatement(DataTypes.Boolean,
+                                            result.ToString(NumberFormatInfo.InvariantInfo),
+                                            logicalEvaluationStatement.Info);
+                                    }
+
+                                    if (double.TryParse(leftConstantValue.Value, out var leftFloat) &&
+                                        double.TryParse(rightConstantValue.Value, out var rightFloat))
+                                    {
+                                        bool result;
+                                        switch (logicalEvaluationStatement.Operator)
+                                        {
+                                            case GreaterOperator _:
+                                                result = leftFloat > rightFloat;
+                                                break;
+                                            case GreaterEqualOperator _:
+                                                result = leftFloat >= rightFloat;
+                                                break;
+                                            case LessOperator _:
+                                                result = leftFloat < rightFloat;
+                                                break;
+                                            case LessEqualOperator _:
+                                                result = leftFloat <= rightFloat;
+                                                break;
+                                            default:
+                                                throw new InvalidOperationException();
+                                        }
+
+                                        return new ConstantValueStatement(DataTypes.Boolean,
+                                            result.ToString(NumberFormatInfo.InvariantInfo),
+                                            logicalEvaluationStatement.Info);
+                                    }
+
+                                    throw new InvalidOperatorForTypeCompilerException(
+                                        logicalEvaluationStatement.Operator.GetType(), rightConstantValue.DataType,
+                                        rightConstantValue.Info);
+                                }
+
+                                if (leftConstantValue.IsString() && rightConstantValue.IsString())
+                                {
+                                    bool result;
+                                    var comp = context.StringComparer.Compare(leftConstantValue.Value,
+                                        rightConstantValue.Value);
+
+                                    switch (logicalEvaluationStatement.Operator)
+                                    {
+                                        case GreaterOperator _:
+                                            result = comp > 0;
+                                            break;
+                                        case GreaterEqualOperator _:
+                                            result = comp >= 0;
+                                            break;
+                                        case LessOperator _:
+                                            result = comp < 0;
+                                            break;
+                                        case LessEqualOperator _:
+                                            result = comp <= 0;
+                                            break;
+                                        default:
+                                            throw new InvalidOperationException();
+                                    }
+
+                                    return new ConstantValueStatement(DataTypes.Boolean,
+                                        result.ToString(NumberFormatInfo.InvariantInfo),
+                                        logicalEvaluationStatement.Info);
+                                }
+
+                                throw new InvalidOperatorForTypeCompilerException(
+                                    logicalEvaluationStatement.Operator.GetType(), leftConstantValue.DataType,
+                                    leftConstantValue.Info);
+                            }
+
+                            return new LogicalEvaluationStatement(
+                                left,
+                                logicalEvaluationStatement.Operator,
+                                right,
+                                logicalEvaluationStatement.Info);
+                        }
+                        case NotOperator _:
+                        {
+                            if (logicalEvaluationStatement.Left != null)
+                            {
+                                throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                    logicalEvaluationStatement);
+                            }
+
+                            if (logicalEvaluationStatement.Right is ConstantValueStatement constantValueStatement)
+                            {
+                                if (constantValueStatement.DataType == DataTypes.Boolean ||
+                                    constantValueStatement.IsNumeric())
+                                {
+                                    if (!StatementHelpers.TryParseBooleanFromString(constantValueStatement.Value,
+                                        out var value))
+                                    {
+                                        throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                            logicalEvaluationStatement);
+                                    }
+
+                                    return new ConstantValueStatement(
+                                        constantValueStatement.DataType,
+                                        (!value).ToString(NumberFormatInfo.InvariantInfo),
+                                        constantValueStatement.Info
+                                    );
+                                }
+
+                                throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                    logicalEvaluationStatement);
+                            }
+
+                            throw BashTranspilerHelpers.InvalidStatementStructure(scope, logicalEvaluationStatement);
+                        }
+                        default:
+                            throw new InvalidOperationException();
+                    }
                 }
                 case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
                 {
-                    //arithmeticEvaluationStatement.
+                    switch (arithmeticEvaluationStatement.Operator)
+                    {
+                        case IncrementOperator _:
+                        case DecrementOperator _:
+                        {
+                            var left = arithmeticEvaluationStatement.Left;
+                            var right = arithmeticEvaluationStatement.Right;
 
-                    break;
+                            if (left != null && right != null)
+                            {
+                                throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                    arithmeticEvaluationStatement);
+                            }
+
+                            var operand = left ?? right;
+                            operand = CalculateEvaluation(context, scope, operand);
+                            switch (operand)
+                            {
+                                case VariableAccessStatement variableAccessStatement:
+                                {
+                                    if (scope.TryGetVariableInfo(variableAccessStatement.VariableName, out _))
+                                    {
+                                        return variableAccessStatement;
+                                    }
+
+                                    if (scope.TryGetConstantInfo(variableAccessStatement.VariableName, out _))
+                                    {
+                                        throw new InvalidOperatorForTypeCompilerException(
+                                            InvalidOperatorForTypeCompilerException.CreateMessageForConstant(
+                                                arithmeticEvaluationStatement.Operator.GetType()),
+                                            arithmeticEvaluationStatement.Info);
+                                    }
+
+                                    throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
+                                        variableAccessStatement.Info);
+                                }
+                                default:
+                                    throw new InvalidOperatorForTypeCompilerException(
+                                        InvalidOperatorForTypeCompilerException.CreateMessageForConstant(
+                                            arithmeticEvaluationStatement.Operator.GetType()),
+                                        arithmeticEvaluationStatement.Info);
+                            }
+                        }
+                        case NegativeNumberOperator _:
+                        {
+                            var right = CalculateEvaluation(context, scope, arithmeticEvaluationStatement.Right);
+
+                            if (right == null || arithmeticEvaluationStatement.Left != null)
+                            {
+                                throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                    arithmeticEvaluationStatement);
+                            }
+
+                            if (right is ConstantValueStatement constantValueStatement)
+                            {
+                                if (constantValueStatement.IsNumeric())
+                                {
+                                    if (long.TryParse(constantValueStatement.Value, out var longResult))
+                                    {
+                                        return new ConstantValueStatement(
+                                            constantValueStatement.DataType,
+                                            (-longResult).ToString(NumberFormatInfo.InvariantInfo),
+                                            constantValueStatement.Info
+                                        );
+                                    }
+
+                                    if (double.TryParse(constantValueStatement.Value, out var doubleResult))
+                                    {
+                                        return new ConstantValueStatement(
+                                            constantValueStatement.DataType,
+                                            (-doubleResult).ToString(NumberFormatInfo.InvariantInfo),
+                                            constantValueStatement.Info
+                                        );
+                                    }
+                                }
+
+                                throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                    arithmeticEvaluationStatement);
+                            }
+
+                            return new ArithmeticEvaluationStatement(
+                                null,
+                                arithmeticEvaluationStatement.Operator,
+                                right,
+                                arithmeticEvaluationStatement.Info);
+                        }
+                        case AdditionOperator _:
+                        case SubtractionOperator _:
+                        case MultiplicationOperator _:
+                        case DivisionOperator _:
+                        case ModulusOperator _:
+                        case ReminderOperator _:
+                        {
+                            var left = CalculateEvaluation(context, scope, arithmeticEvaluationStatement.Left);
+                            var right = CalculateEvaluation(context, scope, arithmeticEvaluationStatement.Right);
+
+                            if (left is ConstantValueStatement leftConstant &&
+                                right is ConstantValueStatement rightConstant)
+                            {
+                                if (leftConstant.IsNumeric() && rightConstant.IsNumeric())
+                                {
+                                    if (leftConstant.IsDecimal() && rightConstant.IsDecimal() &&
+                                        long.TryParse(leftConstant.Value, out var leftDecimal) &&
+                                        long.TryParse(rightConstant.Value, out var rightDecimal))
+                                    {
+                                        long result;
+                                        switch (arithmeticEvaluationStatement.Operator)
+                                        {
+                                            case AdditionOperator _:
+                                                result = leftDecimal + rightDecimal;
+                                                break;
+                                            case SubtractionOperator _:
+                                                result = leftDecimal - rightDecimal;
+                                                break;
+                                            case MultiplicationOperator _:
+                                                result = leftDecimal * rightDecimal;
+                                                break;
+                                            case DivisionOperator _:
+                                                result = leftDecimal / rightDecimal;
+                                                break;
+                                            case ModulusOperator _:
+                                                result = leftDecimal / rightDecimal;
+                                                break;
+                                            case ReminderOperator _:
+                                                result = leftDecimal % rightDecimal;
+                                                break;
+                                            default:
+                                                throw new InvalidOperationException();
+                                        }
+
+                                        return new ConstantValueStatement(DataTypes.Decimal,
+                                            result.ToString(NumberFormatInfo.InvariantInfo),
+                                            arithmeticEvaluationStatement.Info
+                                        );
+                                    }
+
+                                    if (double.TryParse(leftConstant.Value, out var leftFloat) &&
+                                        double.TryParse(rightConstant.Value, out var rightFloat))
+                                    {
+                                        double result;
+                                        switch (arithmeticEvaluationStatement.Operator)
+                                        {
+                                            case AdditionOperator _:
+                                                result = leftFloat + rightFloat;
+                                                break;
+                                            case SubtractionOperator _:
+                                                result = leftFloat - rightFloat;
+                                                break;
+                                            case MultiplicationOperator _:
+                                                result = leftFloat * rightFloat;
+                                                break;
+                                            case DivisionOperator _:
+                                                result = leftFloat / rightFloat;
+                                                break;
+                                            case ModulusOperator _:
+                                                result = leftFloat / rightFloat;
+                                                break;
+                                            case ReminderOperator _:
+                                                result = leftFloat % rightFloat;
+                                                break;
+                                            default:
+                                                throw new InvalidOperationException();
+                                        }
+
+                                        return new ConstantValueStatement(DataTypes.Decimal,
+                                            result.ToString(NumberFormatInfo.InvariantInfo),
+                                            arithmeticEvaluationStatement.Info
+                                        );
+                                    }
+
+                                    throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                        arithmeticEvaluationStatement);
+                                }
+
+                                if (leftConstant.IsString() && rightConstant.IsString() &&
+                                    arithmeticEvaluationStatement.Operator is AdditionOperator)
+                                {
+                                    return new ConstantValueStatement(DataTypes.String,
+                                        BashTranspilerHelpers.StandardizeString(leftConstant.Value, true) +
+                                        BashTranspilerHelpers.StandardizeString(rightConstant.Value, true),
+                                        arithmeticEvaluationStatement.Info
+                                    );
+                                }
+
+                                if (leftConstant.IsDecimal() || rightConstant.IsString())
+                                {
+                                    if (!int.TryParse(leftConstant.Value, out var count))
+                                    {
+                                        throw BashTranspilerHelpers.InvalidStatementStructure(scope, leftConstant);
+                                    }
+
+                                    var str = BashTranspilerHelpers.StandardizeString(rightConstant.Value, true);
+                                    var sb = new StringBuilder(str.Length * count);
+                                    for (var i = 0; i < count; i++)
+                                    {
+                                        sb.Append(str);
+                                    }
+
+                                    return new ConstantValueStatement(DataTypes.String,
+                                        sb.ToString(),
+                                        arithmeticEvaluationStatement.Info
+                                    );
+                                }
+
+                                if (leftConstant.IsString() || rightConstant.IsDecimal())
+                                {
+                                    if (!int.TryParse(rightConstant.Value, out var count))
+                                    {
+                                        throw BashTranspilerHelpers.InvalidStatementStructure(scope, rightConstant);
+                                    }
+
+                                    var str = BashTranspilerHelpers.StandardizeString(leftConstant.Value, true);
+                                    var sb = new StringBuilder(str.Length * count);
+                                    for (var i = 0; i < count; i++)
+                                    {
+                                        sb.Append(str);
+                                    }
+
+                                    return new ConstantValueStatement(DataTypes.String,
+                                        sb.ToString(),
+                                        arithmeticEvaluationStatement.Info
+                                    );
+                                }
+                                
+                                throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                                    arithmeticEvaluationStatement);
+                            }
+
+                            return new ArithmeticEvaluationStatement(
+                                left,
+                                arithmeticEvaluationStatement.Operator,
+                                right,
+                                arithmeticEvaluationStatement.Info);
+                        }
+                        
+                        default:
+                            throw new InvalidOperationException();
+                    }
                 }
-            }
 
-            return null;
-        }
+                case FunctionCallStatement functionCallStatement:
+                {
+                    if (scope.TryGetFunctionInfo(functionCallStatement.FunctionName, out var functionInfo))
+                    {
+                        if (functionInfo.InlinedStatement != null)
+                        {
+                            if (functionInfo.InlinedStatement is EvaluationStatement evaluationStatement)
+                            {
+                                return CalculateEvaluation(context, scope, evaluationStatement);
+                            }
 
-        public static string CreateExpression(Context context, Scope scope, EvaluationStatement statement,
-            string variableFormat, IDictionary<IStatement, string> replacements, out StringBuilder nonInlinePart)
-        {
-            nonInlinePart = new StringBuilder(30);
-            using (var textWriter = new StringWriter(nonInlinePart))
-            {
-                return _createExpression(context, scope, statement, variableFormat, replacements, textWriter);
+                            if (functionInfo.InlinedStatement is FunctionCallStatement funcCallStt)
+                            {
+                                return CalculateEvaluation(context, scope, funcCallStt);
+                            }
+                        }
+                        
+                        return functionCallStatement;
+                    }
+                    
+                    throw new IdentifierNotFoundCompilerException(functionCallStatement.FunctionName,
+                        functionCallStatement.Info);
+                }
+
+                case ConstantValueStatement constantValueStatement:
+                    return constantValueStatement;
+
+                case VariableAccessStatement variableAccessStatement:
+                {
+                    if (scope.TryGetVariableInfo(variableAccessStatement.VariableName, out _))
+                    {
+                        return variableAccessStatement;
+                    }
+
+                    if (scope.TryGetConstantInfo(variableAccessStatement.VariableName, out var constInfo))
+                    {
+                        return new ConstantValueStatement(constInfo.DataType, constInfo.Value,
+                            variableAccessStatement.Info);
+                    }
+
+                    throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
+                        variableAccessStatement.Info);
+                }
+                
+                default:
+                    throw new InvalidOperationException();
             }
         }
     }
