@@ -153,6 +153,32 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNumericOrFloat(this DataTypes dataType)
+        {
+            return dataType == DataTypes.Numeric || dataType == DataTypes.Float;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNumericOrFloat(this ConstantValueStatement constantValueStatement)
+        {
+            var dataType = constantValueStatement.DataType;
+            return dataType == DataTypes.Numeric || dataType == DataTypes.Float;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsFloat(this DataTypes dataType)
+        {
+            return dataType == DataTypes.Float;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsFloat(this ConstantValueStatement constantValueStatement)
+        {
+            var dataType = constantValueStatement.DataType;
+            return dataType == DataTypes.Float;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsDecimal(this DataTypes dataType)
         {
             return dataType == DataTypes.Decimal;

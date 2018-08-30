@@ -20,7 +20,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
             var functionName = funcDefStt.Name;
             
-            if (scope.IsVariableExists(functionName))
+            if (scope.IsIdentifierExists(functionName))
             {
                 message = IdentifierNameExistsCompilerException.CreateMessage(functionName, funcDefStt.Info);
                 return false;

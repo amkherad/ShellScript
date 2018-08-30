@@ -62,11 +62,11 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
         public abstract void WriteBlock(Context context, Scope scope, TextWriter writer, IStatement statement);
 
-        public abstract string PinEvaluationToInline(Context context, Scope scope, TextWriter pinCodeWriter,
+        public abstract string PinEvaluationToVariable(Context context, Scope scope, TextWriter pinCodeWriter,
             EvaluationStatement statement);
 
 
-        public static EvaluationStatement CalculateEvaluation(Context context, Scope scope,
+        public static EvaluationStatement ProcessEvaluation(Context context, Scope scope,
             EvaluationStatement statement)
         {
             if (statement == null)
@@ -76,6 +76,45 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
             switch (statement)
             {
+                case ConstantValueStatement constantValueStatement:
+                {
+                    if (constantValueStatement.IsNumeric())
+                    {
+                        if (constantValueStatement.IsDecimal() &&
+                            long.TryParse(constantValueStatement.Value, out _))
+                        {
+                            return constantValueStatement;
+                        }
+                        
+                        if (double.TryParse(constantValueStatement.Value, out _))
+                        {
+                            return constantValueStatement;
+                        }
+                        
+                        throw BashTranspilerHelpers.InvalidStatementStructure(scope,
+                            constantValueStatement);
+                    }
+                    
+                    return constantValueStatement;
+                }
+
+                case VariableAccessStatement variableAccessStatement:
+                {
+                    if (scope.TryGetVariableInfo(variableAccessStatement.VariableName, out _))
+                    {
+                        return variableAccessStatement;
+                    }
+
+                    if (scope.TryGetConstantInfo(variableAccessStatement.VariableName, out var constInfo))
+                    {
+                        return new ConstantValueStatement(constInfo.DataType, constInfo.Value,
+                            variableAccessStatement.Info);
+                    }
+
+                    throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
+                        variableAccessStatement.Info);
+                }
+                
                 case BitwiseEvaluationStatement bitwiseEvaluationStatement:
                 {
                     switch (bitwiseEvaluationStatement.Operator)
@@ -115,8 +154,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         case BitwiseOrOperator _:
                         case XorOperator _:
                         {
-                            var left = CalculateEvaluation(context, scope, bitwiseEvaluationStatement.Left);
-                            var right = CalculateEvaluation(context, scope, bitwiseEvaluationStatement.Right);
+                            var left = ProcessEvaluation(context, scope, bitwiseEvaluationStatement.Left);
+                            var right = ProcessEvaluation(context, scope, bitwiseEvaluationStatement.Right);
 
                             if (left is ConstantValueStatement leftConstantValue &&
                                 right is ConstantValueStatement rightConstantValue)
@@ -202,8 +241,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         case LogicalAndOperator _:
                         case LogicalOrOperator _:
                         {
-                            var left = CalculateEvaluation(context, scope, logicalEvaluationStatement.Left);
-                            var right = CalculateEvaluation(context, scope, logicalEvaluationStatement.Right);
+                            var left = ProcessEvaluation(context, scope, logicalEvaluationStatement.Left);
+                            var right = ProcessEvaluation(context, scope, logicalEvaluationStatement.Right);
 
                             if (left is ConstantValueStatement leftConstantValue &&
                                 right is ConstantValueStatement rightConstantValue)
@@ -244,8 +283,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         case EqualOperator _:
                         case NotEqualOperator _:
                         {
-                            var left = CalculateEvaluation(context, scope, logicalEvaluationStatement.Left);
-                            var right = CalculateEvaluation(context, scope, logicalEvaluationStatement.Right);
+                            var left = ProcessEvaluation(context, scope, logicalEvaluationStatement.Left);
+                            var right = ProcessEvaluation(context, scope, logicalEvaluationStatement.Right);
 
                             if (left is ConstantValueStatement leftConstant &&
                                 right is ConstantValueStatement rightConstant)
@@ -299,8 +338,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         case LessOperator _:
                         case LessEqualOperator _:
                         {
-                            var left = CalculateEvaluation(context, scope, logicalEvaluationStatement.Left);
-                            var right = CalculateEvaluation(context, scope, logicalEvaluationStatement.Right);
+                            var left = ProcessEvaluation(context, scope, logicalEvaluationStatement.Left);
+                            var right = ProcessEvaluation(context, scope, logicalEvaluationStatement.Right);
 
                             if (left is ConstantValueStatement leftConstantValue &&
                                 right is ConstantValueStatement rightConstantValue)
@@ -461,7 +500,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             }
 
                             var operand = left ?? right;
-                            operand = CalculateEvaluation(context, scope, operand);
+                            operand = ProcessEvaluation(context, scope, operand);
                             switch (operand)
                             {
                                 case VariableAccessStatement variableAccessStatement:
@@ -491,7 +530,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         }
                         case NegativeNumberOperator _:
                         {
-                            var right = CalculateEvaluation(context, scope, arithmeticEvaluationStatement.Right);
+                            var right = ProcessEvaluation(context, scope, arithmeticEvaluationStatement.Right);
 
                             if (right == null || arithmeticEvaluationStatement.Left != null)
                             {
@@ -539,8 +578,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         case ModulusOperator _:
                         case ReminderOperator _:
                         {
-                            var left = CalculateEvaluation(context, scope, arithmeticEvaluationStatement.Left);
-                            var right = CalculateEvaluation(context, scope, arithmeticEvaluationStatement.Right);
+                            var left = ProcessEvaluation(context, scope, arithmeticEvaluationStatement.Left);
+                            var right = ProcessEvaluation(context, scope, arithmeticEvaluationStatement.Right);
 
                             if (left is ConstantValueStatement leftConstant &&
                                 right is ConstantValueStatement rightConstant)
@@ -694,12 +733,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         {
                             if (functionInfo.InlinedStatement is EvaluationStatement evaluationStatement)
                             {
-                                return CalculateEvaluation(context, scope, evaluationStatement);
+                                return ProcessEvaluation(context, scope, evaluationStatement);
                             }
 
                             if (functionInfo.InlinedStatement is FunctionCallStatement funcCallStt)
                             {
-                                return CalculateEvaluation(context, scope, funcCallStt);
+                                return ProcessEvaluation(context, scope, funcCallStt);
                             }
                         }
                         
@@ -708,26 +747,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                     
                     throw new IdentifierNotFoundCompilerException(functionCallStatement.FunctionName,
                         functionCallStatement.Info);
-                }
-
-                case ConstantValueStatement constantValueStatement:
-                    return constantValueStatement;
-
-                case VariableAccessStatement variableAccessStatement:
-                {
-                    if (scope.TryGetVariableInfo(variableAccessStatement.VariableName, out _))
-                    {
-                        return variableAccessStatement;
-                    }
-
-                    if (scope.TryGetConstantInfo(variableAccessStatement.VariableName, out var constInfo))
-                    {
-                        return new ConstantValueStatement(constInfo.DataType, constInfo.Value,
-                            variableAccessStatement.Info);
-                    }
-
-                    throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
-                        variableAccessStatement.Info);
                 }
                 
                 default:

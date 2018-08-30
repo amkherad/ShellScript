@@ -21,6 +21,22 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             return value.Replace(@"\r\n", @"\n");
         }
+        
+        public static string ToBashString(string value, bool deQuote)
+        {
+            value = StandardizeString(value, deQuote);
+
+            if (value.Contains('"'))
+            {
+                value = value.Replace("\"", "\\x22");
+            }
+            if (value.Contains('\''))
+            {
+                value = value.Replace("'", "\\x27");
+            }
+            
+            return value.Replace(@"\r\n", @"\n");
+        }
 
         public static InvalidStatementStructureCompilerException InvalidStatementStructure(Scope scope, EvaluationStatement statement)
         {

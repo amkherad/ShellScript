@@ -1,5 +1,6 @@
 using System;
 using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices
@@ -50,6 +51,24 @@ namespace ShellScript.Core.Language.CompilerServices
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return string.Equals(Name, other.Name);
+        }
+
+
+        public static IStatement UnWrapInlinedStatement(Context context, Scope scope, FunctionInfo functionInfo)
+        {
+            var inlined = functionInfo.InlinedStatement;
+            var result = inlined;
+            while(inlined != null && inlined is FunctionCallStatement funcCallStt)
+            {
+                if (!scope.TryGetFunctionInfo(funcCallStt.FunctionName, out functionInfo))
+                {
+                    return result;
+                }
+                
+                inlined = functionInfo.InlinedStatement;
+            }
+
+            return result;
         }
     }
 }

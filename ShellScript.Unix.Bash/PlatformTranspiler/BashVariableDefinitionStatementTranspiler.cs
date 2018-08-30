@@ -10,12 +10,21 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
     public class BashVariableDefinitionStatementTranspiler : VariableDefinitionStatementTranspilerBase
     {
+        public static void WriteVariableDefinition(Context context, Scope scope, TextWriter writer, string name, string expression)
+        {
+            if (scope.IsRootScope)
+                writer.WriteLine($"{name}={expression}");
+            else
+                writer.WriteLine($"local {name}={expression}");
+        }
+        
+        
         public override void WriteInline(Context context, Scope scope, TextWriter writer,
             TextWriter nonInlinePartWriter, IStatement statement)
         {
             throw new NotImplementedException();
         }
-
+        
         public override void WriteBlock(Context context, Scope scope, TextWriter writer, IStatement statement)
         {
             if (!(statement is VariableDefinitionStatement varDefStt)) throw new InvalidOperationException();
@@ -28,7 +37,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 }
 
                 var result =
-                    EvaluationStatementTranspilerBase.CalculateEvaluation(context, scope, varDefStt.DefaultValue);
+                    EvaluationStatementTranspilerBase.ProcessEvaluation(context, scope, varDefStt.DefaultValue);
 
                 if (!(result is ConstantValueStatement constantValueStatement))
                 {
@@ -63,10 +72,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                         defaultValue = textWriter.ToString();
                     }
 
-                    if (scope.IsRootScope)
-                        writer.WriteLine($"{varDefStt.Name}={defaultValue}");
-                    else
-                        writer.WriteLine($"local {varDefStt.Name}={defaultValue}");
+                    WriteVariableDefinition(context, scope, writer, varDefStt.Name, defaultValue);
                 }
                 else
                 {

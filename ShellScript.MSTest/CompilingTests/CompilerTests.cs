@@ -37,7 +37,7 @@ namespace ShellScript.MSTest.CompilingTests
                 var stt = parser.Parse(reader, new ParserInfo(true, "", "", ""));
                 var definitionStt = stt.First() as DefinitionStatement;
                 
-                var result = EvaluationStatementTranspilerBase.CalculateEvaluation(context, context.GeneralScope, definitionStt.DefaultValue);
+                var result = EvaluationStatementTranspilerBase.ProcessEvaluation(context, context.GeneralScope, definitionStt.DefaultValue);
 
                 Assert.IsNotNull(result);
             }

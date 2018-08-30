@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using ShellScript.Core.Language.CompilerServices.Lexing;
 
 namespace ShellScript.Core
 {
@@ -17,6 +18,12 @@ namespace ShellScript.Core
         public static bool IsMultiLineString(string input)
         {
             return input.Contains('\n') || input.Contains('\r');
+        }
+
+        public static bool IsValidIdentifierName(string name)
+        {
+            var match = Lexer.ValidIdentifierName.Match(name);
+            return match.Success;
         }
     }
 }

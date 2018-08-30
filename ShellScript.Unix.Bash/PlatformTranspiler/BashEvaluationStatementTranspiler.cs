@@ -66,10 +66,21 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     operators.Add(op.GetType());
                     break;
                 }
+                case FunctionCallStatement functionCallStatement:
+                {
+                    types.Add(functionCallStatement.DataType);
+                    break;
+                }
                 default:
                 {
                     foreach (var child in statement.TraversableChildren)
                     {
+                        if (child is IOperator)
+                        {
+                            operators.Add(child.GetType());
+                            continue;
+                        }
+
                         var childResult = TraverseTreeAndGetExpressionTypes(context, scope, child);
 
                         foreach (var t in childResult.Types)
@@ -103,68 +114,410 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
         }
 
-        private static string CreateArithmetic(Context context, Scope scope, TextWriter nonInlinePartWriter,
-            IStatement statement)
+        private static string PinExpressionToVariable(Context context, Scope scope, TextWriter writer,
+            DataTypes dataTypes, string nameHint, string expression)
         {
-            return null;
+            var variableName = scope.NewHelperVariable(dataTypes, nameHint);
+
+            BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(
+                context,
+                scope,
+                writer,
+                variableName,
+                expression
+            );
+
+            return $"${{{variableName}}}";
         }
 
-        private static string CreateStringConcatenation(Context context, Scope scope, TextWriter nonInlinePartWriter,
-            IStatement statement)
+        private static string PinFloatingPointExpressionToVariable(Context context, Scope scope, TextWriter writer,
+            DataTypes dataTypes, string nameHint, string expression)
         {
-            var sb = new StringBuilder();
+            var variableName = scope.NewHelperVariable(dataTypes, nameHint);
 
-            switch (statement)
+            expression = $"`awk \"BEGIN {{print {expression}}}\"`";
+
+            BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(
+                context,
+                scope,
+                writer,
+                variableName,
+                expression
+            );
+
+            return $"${{{variableName}}}";
+        }
+
+        private interface IExpressionBuilder
+        {
+            (DataTypes, string) CreateExpression(Context context, Scope scope, TextWriter nonInlinePartWriter,
+                IStatement statement);
+        }
+
+        private class ExpressionBuilder : IExpressionBuilder
+        {
+            public virtual (DataTypes, string) CreateExpression(Context context, Scope scope, TextWriter nonInlinePartWriter,
+                IStatement statement)
             {
-                case ConstantValueStatement constantValueStatement:
+                switch (statement)
                 {
-                    if (constantValueStatement.DataType == DataTypes.String)
+                    case ConstantValueStatement constantValueStatement:
                     {
-                        var str = BashTranspilerHelpers.StandardizeString(constantValueStatement.Value, true);
-                        sb.Append(str);
+                        if (constantValueStatement.IsNumeric())
+                        {
+                            return (constantValueStatement.DataType, constantValueStatement.Value);
+                        }
+
+                        if (constantValueStatement.IsString())
+                        {
+                            return (DataTypes.String,
+                                BashTranspilerHelpers.ToBashString(constantValueStatement.Value, true));
+                        }
+
+                        return (constantValueStatement.DataType, constantValueStatement.Value);
                     }
-                    else
+                    case VariableAccessStatement variableAccessStatement:
                     {
-                        sb.Append(constantValueStatement.Value);
+                        if (scope.TryGetVariableInfo(variableAccessStatement.VariableName, out var varInfo))
+                        {
+                            return (varInfo.DataType, $"${{{varInfo.Name}}}");
+                        }
+
+                        if (scope.TryGetConstantInfo(variableAccessStatement.VariableName, out var constInfo))
+                        {
+                            return (constInfo.DataType, $"${{{constInfo.Name}}}");
+                        }
+
+                        throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
+                            variableAccessStatement.Info);
+                    }
+                    case BitwiseEvaluationStatement bitwiseEvaluationStatement: //~ & |
+                    {
+                        if (bitwiseEvaluationStatement.Operator is BitwiseNotOperator)
+                        {
+                            var (dataType, exp) = CreateExpression(context, scope, nonInlinePartWriter,
+                                bitwiseEvaluationStatement.Right);
+
+                            if (!dataType.IsDecimal())
+                            {
+                                throw new InvalidStatementCompilerException(bitwiseEvaluationStatement,
+                                    bitwiseEvaluationStatement.Info);
+                            }
+
+                            //can't have constant as the operand.
+                            return (DataTypes.Decimal, $"~{exp}");
+                        }
+
+                        var left = bitwiseEvaluationStatement.Left;
+                        var (leftDataType, leftExp) = CreateExpression(context, scope, nonInlinePartWriter, left);
+
+                        if (!(leftDataType.IsDecimal() || leftDataType.IsBoolean()))
+                        {
+                            throw new InvalidStatementCompilerException(left, left.Info);
+                        }
+
+                        var right = bitwiseEvaluationStatement.Right;
+                        var (rightDataType, rightExp) = CreateExpression(context, scope, nonInlinePartWriter, right);
+
+                        if (!(rightDataType.IsDecimal() || rightDataType.IsBoolean()))
+                        {
+                            throw new InvalidStatementCompilerException(bitwiseEvaluationStatement,
+                                bitwiseEvaluationStatement.Info);
+                        }
+
+                        if (leftDataType != rightDataType)
+                        {
+                            throw new InvalidStatementCompilerException(bitwiseEvaluationStatement,
+                                bitwiseEvaluationStatement.Info);
+                        }
+
+                        if (leftDataType.IsNumericOrFloat() || rightDataType.IsNumericOrFloat())
+                        {
+                            return (leftDataType, PinFloatingPointExpressionToVariable(context, scope,
+                                nonInlinePartWriter, leftDataType, null,
+                                $"{leftExp}{bitwiseEvaluationStatement.Operator}{rightExp}"));
+                        }
+
+                        return (leftDataType, $"{leftExp}{bitwiseEvaluationStatement.Operator}{rightExp}");
+                    }
+                    case LogicalEvaluationStatement logicalEvaluationStatement:
+                    {
+                        if (logicalEvaluationStatement.Operator is NotOperator)
+                        {
+                            var operand = logicalEvaluationStatement.Right;
+                            var (dataType, exp) = CreateExpression(context, scope, nonInlinePartWriter, operand);
+
+                            if (dataType.IsString())
+                            {
+                                throw new InvalidStatementCompilerException(logicalEvaluationStatement,
+                                    logicalEvaluationStatement.Info);
+                            }
+
+                            if (dataType.IsNumericOrFloat())
+                            {
+                                return (dataType, PinFloatingPointExpressionToVariable(context, scope,
+                                    nonInlinePartWriter, dataType, null, $"!{exp}"));
+                            }
+
+                            return (DataTypes.Boolean, $"!{exp}");
+                        }
+
+                        var left = logicalEvaluationStatement.Left;
+                        var (leftDataType, leftExp) = CreateExpression(context, scope, nonInlinePartWriter, left);
+
+                        if (!(leftDataType.IsDecimal() || leftDataType.IsBoolean()))
+                        {
+                            throw new InvalidStatementCompilerException(left, left.Info);
+                        }
+
+                        var right = logicalEvaluationStatement.Right;
+                        var (rightDataType, rightExp) = CreateExpression(context, scope, nonInlinePartWriter, right);
+
+                        if (!(rightDataType.IsDecimal() || rightDataType.IsBoolean()))
+                        {
+                            throw new InvalidStatementCompilerException(logicalEvaluationStatement,
+                                logicalEvaluationStatement.Info);
+                        }
+
+                        if (leftDataType != rightDataType)
+                        {
+                            throw new InvalidStatementCompilerException(logicalEvaluationStatement,
+                                logicalEvaluationStatement.Info);
+                        }
+
+                        if (leftDataType.IsNumericOrFloat() || rightDataType.IsNumericOrFloat())
+                        {
+                            return (DataTypes.Boolean, PinFloatingPointExpressionToVariable(context, scope,
+                                nonInlinePartWriter, DataTypes.Boolean, null,
+                                $"{leftExp}{logicalEvaluationStatement.Operator}{rightExp}"));
+                        }
+
+                        return (DataTypes.Boolean, $"{leftExp}{logicalEvaluationStatement.Operator}{rightExp}");
+                    }
+                    case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
+                    {
+                        var op = arithmeticEvaluationStatement.Operator;
+                        if (op is IncrementOperator)
+                        {
+                            var operand = arithmeticEvaluationStatement.Left ?? arithmeticEvaluationStatement.Right;
+                            if (!(operand is VariableAccessStatement))
+                            {
+                                var isError = true;
+                                if (operand is FunctionCallStatement functionCallStatement)
+                                {
+                                    if (scope.TryGetFunctionInfo(functionCallStatement.FunctionName, out var funcInfo))
+                                    {
+                                        var inline = FunctionInfo.UnWrapInlinedStatement(context, scope, funcInfo);
+                                        if (inline is EvaluationStatement evalStatement)
+                                        {
+                                            operand = evalStatement;
+                                            isError = false;
+                                        }
+                                    }
+                                }
+
+                                if (isError)
+                                {
+                                    throw new InvalidStatementCompilerException(arithmeticEvaluationStatement,
+                                        arithmeticEvaluationStatement.Info);
+                                }
+                            }
+
+                            var (dt, exp) = CreateExpression(context, scope, nonInlinePartWriter, operand);
+
+                            if (!dt.IsNumeric())
+                            {
+                                throw new InvalidStatementCompilerException(arithmeticEvaluationStatement,
+                                    arithmeticEvaluationStatement.Info);
+                            }
+
+                            exp = arithmeticEvaluationStatement.Left == null
+                                ? $"++{exp}"
+                                : $"{exp}++";
+                            
+                            if (dt.IsNumericOrFloat())
+                            {
+                                return (dt, PinFloatingPointExpressionToVariable(context, scope,
+                                    nonInlinePartWriter, dt, null, exp));
+                            }
+                            
+                            return (dt, exp);
+                        }
+
+                        if (op is DecrementOperator)
+                        {
+                            var operand = arithmeticEvaluationStatement.Left ?? arithmeticEvaluationStatement.Right;
+                            if (!(operand is VariableAccessStatement))
+                            {
+                                var isError = true;
+                                if (operand is FunctionCallStatement functionCallStatement)
+                                {
+                                    if (scope.TryGetFunctionInfo(functionCallStatement.FunctionName, out var funcInfo))
+                                    {
+                                        var inline = FunctionInfo.UnWrapInlinedStatement(context, scope, funcInfo);
+                                        if (inline is EvaluationStatement evalStatement)
+                                        {
+                                            operand = evalStatement;
+                                            isError = false;
+                                        }
+                                    }
+                                }
+
+                                if (isError)
+                                {
+                                    throw new InvalidStatementCompilerException(arithmeticEvaluationStatement,
+                                        arithmeticEvaluationStatement.Info);
+                                }
+                            }
+
+                            var (dt, exp) = CreateExpression(context, scope, nonInlinePartWriter, operand);
+
+                            if (!dt.IsNumeric())
+                            {
+                                throw new InvalidStatementCompilerException(arithmeticEvaluationStatement,
+                                    arithmeticEvaluationStatement.Info);
+                            }
+
+                            exp = arithmeticEvaluationStatement.Left == null
+                                ? $"--{exp}"
+                                : $"{exp}--";
+                            
+                            if (dt.IsNumericOrFloat())
+                            {
+                                return (dt, PinFloatingPointExpressionToVariable(context, scope,
+                                    nonInlinePartWriter, dt, null, exp));
+                            }
+
+                            return (dt, exp);
+                        }
+
+                        if (op is NegativeNumberOperator)
+                        {
+                            var operand = arithmeticEvaluationStatement.Right;
+
+                            var (dt, exp) = CreateExpression(context, scope, nonInlinePartWriter, operand);
+
+                            if (!dt.IsNumeric())
+                            {
+                                throw new InvalidStatementCompilerException(arithmeticEvaluationStatement,
+                                    arithmeticEvaluationStatement.Info);
+                            }
+
+                            exp = $"-{exp}";
+                            
+                            if (dt.IsNumericOrFloat())
+                            {
+                                return (dt, PinFloatingPointExpressionToVariable(context, scope,
+                                    nonInlinePartWriter, dt, null, exp));
+                            }
+                            
+                            return (dt, exp);
+                        }
+
+                        var left = arithmeticEvaluationStatement.Left;
+                        var (leftDataType, leftExp) = CreateExpression(context, scope, nonInlinePartWriter, left);
+
+                        var right = arithmeticEvaluationStatement.Right;
+                        var (rightDataType, rightExp) = CreateExpression(context, scope, nonInlinePartWriter, right);
+
+                        DataTypes dataType;
+                        if (!(leftDataType.IsNumeric() && rightDataType.IsNumeric()))
+                        {
+                            /*var oneString = leftDataType.IsString() || rightDataType.IsString();
+                            var oneDecimal = leftDataType.IsDecimal() || rightDataType.IsDecimal();
+                            if (oneString && oneDecimal)
+                            {
+                                
+                            }
+                            else*/
+                            if (leftDataType != rightDataType)
+                            {
+                                throw new InvalidStatementCompilerException(arithmeticEvaluationStatement,
+                                    arithmeticEvaluationStatement.Info);
+                            }
+
+                            if (leftDataType.IsString())
+                            {
+                                if (!(arithmeticEvaluationStatement.Operator is AdditionOperator))
+                                {
+                                    throw new InvalidOperatorForTypeCompilerException(
+                                        arithmeticEvaluationStatement.Operator.GetType(),
+                                        DataTypes.String,
+                                        arithmeticEvaluationStatement.Info);
+                                }
+                            }
+
+                            dataType = leftDataType;
+                        }
+                        else if (leftDataType.IsDecimal() && rightDataType.IsDecimal())
+                        {
+                            dataType = DataTypes.Decimal;
+                        }
+                        else
+                        {
+                            dataType = DataTypes.Numeric;
+                        }
+
+                        if (leftDataType.IsNumericOrFloat() || rightDataType.IsNumericOrFloat())
+                        {
+                            return (dataType, PinFloatingPointExpressionToVariable(context, scope,
+                                nonInlinePartWriter, dataType, null,
+                                $"{leftExp}{arithmeticEvaluationStatement.Operator}{rightExp}"));
+                        }
+                        
+                        return (dataType, $"{leftExp}{arithmeticEvaluationStatement.Operator}{rightExp}");
+                    }
+                    case FunctionCallStatement functionCallStatement: //functions are always not-inlined.
+                    {
+                        var call = new StringBuilder(20); //`myfunc 0 "test"`
+                        call.Append('`');
+                        call.Append(functionCallStatement.FunctionName);
+
+                        foreach (var param in functionCallStatement.Parameters)
+                        {
+                            var (dataType, exp) = CreateExpression(context, scope, nonInlinePartWriter, param);
+
+                            call.Append(' ');
+                            call.Append(exp);
+                        }
+
+                        call.Append('`');
+
+                        var varName = PinExpressionToVariable(context, scope, nonInlinePartWriter,
+                            functionCallStatement.DataType,
+                            $"{functionCallStatement.ObjectName}_{functionCallStatement.FunctionName}",
+                            call.ToString());
+
+                        return (functionCallStatement.DataType, varName);
                     }
 
-                    break;
-                }
-                case VariableAccessStatement variableAccessStatement:
-                {
-                    sb.Append("${");
-                    sb.Append(variableAccessStatement.VariableName);
-                    sb.Append('}');
-                    break;
-                }
-                case BitwiseEvaluationStatement bitwiseEvaluationStatement:
-                {
-                    
-                    break;
-                }
-                case LogicalEvaluationStatement logicalEvaluationStatement:
-                {
-                    break;
-                }
-                case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
-                {
-                    var left = arithmeticEvaluationStatement.Left;
-                    var right = arithmeticEvaluationStatement.Right;
-
-                    
-                    break;
-                }
-                case FunctionCallStatement functionCallStatement:
-                {
-                    break;
-                }
-                default:
-                {
-                    throw new InvalidStatementStructureCompilerException(statement, statement.Info);
+                    default:
+                        throw new InvalidOperationException();
                 }
             }
+        }
 
-            return sb.ToString();
+        private class StringConcatenationExpressionBuilder : ExpressionBuilder
+        {
+            public override (DataTypes, string) CreateExpression(Context context, Scope scope, TextWriter nonInlinePartWriter,
+                IStatement statement)
+            {
+                switch (statement)
+                {
+                    case ConstantValueStatement constantValueStatement:
+                    {
+                        if (constantValueStatement.DataType == DataTypes.String)
+                        {
+                            return (DataTypes.String, BashTranspilerHelpers.StandardizeString(constantValueStatement.Value, true));
+                        }
+
+                        return (DataTypes.String, constantValueStatement.Value);
+                    }
+                    
+                    default:
+                        return base.CreateExpression(context, scope, nonInlinePartWriter, statement);
+                }
+            }
         }
 
 
@@ -173,30 +526,41 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is EvaluationStatement evalStt)) throw new InvalidOperationException();
 
-            var structure = TraverseTreeAndGetExpressionTypes(context, scope, statement);
+            evalStt = ProcessEvaluation(context, scope, evalStt);
 
-            if (structure.Types.Contains(DataTypes.String))
+            var structure = TraverseTreeAndGetExpressionTypes(context, scope, evalStt);
+
+            var stringConcatenation = structure.Types.Contains(DataTypes.String);
+            
+            if (stringConcatenation)
             {
-                var stringConcatenationExpression =
-                    CreateStringConcatenation(context, scope, nonInlinePartWriter, statement);
+                var expressionBuilder = new StringConcatenationExpressionBuilder();
 
+                var (dataType, expression) =
+                    expressionBuilder.CreateExpression(context, scope, nonInlinePartWriter, statement);
+                
                 writer.Write('"');
-                writer.Write(stringConcatenationExpression);
+                writer.Write(expression);
                 writer.Write('"');
             }
-
-
-            //writer.Write(expression);
+            else
+            {
+                var expressionBuilder = new ExpressionBuilder();
+                
+                var (dataType, expression) =
+                    expressionBuilder.CreateExpression(context, scope, nonInlinePartWriter, statement);
+                
+                writer.Write(expression);
+            }
         }
 
         public override void WriteBlock(Context context, Scope scope, TextWriter writer, IStatement statement)
         {
         }
 
-        public override string PinEvaluationToInline(Context context, Scope scope, TextWriter pinCodeWriter,
-            EvaluationStatement statement)
+        public override string PinEvaluationToVariable(Context context, Scope scope, TextWriter pinCodeWriter, EvaluationStatement statement)
         {
-            return null;
+            throw new NotImplementedException();
         }
     }
 }

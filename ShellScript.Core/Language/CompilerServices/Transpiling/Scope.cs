@@ -6,6 +6,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
 {
     public class Scope
     {
+        private static readonly Random Random = new Random();
+        
         public Context Context { get; }
         public Scope Parent { get; }
 
@@ -54,12 +56,17 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
                     return true;
                 }
                 
-                if (that._variables.Contains(new VariableInfo(DataTypes.Void, name)))
+                if (that._variables.Contains(new VariableInfo(name)))
                 {
                     return true;
                 }
                 
-                if (that._constants.Contains(new ConstantInfo(DataTypes.Void, name)))
+                if (that._constants.Contains(new ConstantInfo(name)))
+                {
+                    return true;
+                }
+                
+                if (that._functions.Contains(new FunctionInfo(name)))
                 {
                     return true;
                 }
@@ -87,30 +94,14 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             //_functions.Add(new FunctionInfo(dataType, name));
         }
 
-        public string NewVariable(DataTypes dataType, string nameHint)
-        {
-            var counter = 1;
-            var varName = nameHint;
-            while (IsIdentifierExists(varName))
-            {
-                varName = nameHint + counter++;
-            }
-
-            _identifiers.Add(varName);
-            _variables.Add(new VariableInfo(dataType, varName));
-
-            return varName;
-        }
-
         private static string _generateRandomString(int len)
         {
             var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             var stringChars = new char[len];
-            var random = new Random();
 
             for (int i = 0; i < len; i++)
             {
-                stringChars[i] = chars[random.Next(chars.Length)];
+                stringChars[i] = chars[Random.Next(chars.Length)];
             }
 
             return new string(stringChars);
@@ -119,9 +110,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         public string NewVariable(DataTypes dataType)
         {
             var counter = 1;
-            var baseName = "helper" + _generateRandomString(12);
+            var baseName = "v_" + _generateRandomString(12);
             var varName = baseName;
-            while (IsVariableExists(varName))
+            while (IsIdentifierExists(varName))
             {
                 varName = baseName + counter++;
             }
@@ -132,17 +123,23 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             return varName;
         }
 
-        public string NewVariableIfNotExists(DataTypes dataType, string nameHint)
+        public string NewHelperVariable(DataTypes dataType, string nameHint)
         {
-            if (IsVariableExists(nameHint))
+            if (string.IsNullOrWhiteSpace(nameHint) || !StringHelpers.IsValidIdentifierName(nameHint))
             {
-                return nameHint;
+                nameHint = "h_" + _generateRandomString(12);
+            }
+            
+            var varName = nameHint;
+            while (IsIdentifierExists(varName))
+            {
+                varName = "h_" + _generateRandomString(12);
             }
 
-            _identifiers.Add(nameHint);
-            _variables.Add(new VariableInfo(dataType, nameHint));
+            _identifiers.Add(varName);
+            _variables.Add(new VariableInfo(dataType, varName));
 
-            return nameHint;
+            return varName;
         }
 
         public bool TryGetVariableInfo(string variableName, out VariableInfo variableInfo)

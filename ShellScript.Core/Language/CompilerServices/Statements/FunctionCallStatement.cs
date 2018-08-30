@@ -1,4 +1,5 @@
 using System.Linq;
+using ShellScript.Core.Language.Sdk;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
@@ -12,15 +13,17 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         /// </summary>
         public string ObjectName { get; }
         public string FunctionName { get; }
+        public DataTypes DataType { get; }
         public EvaluationStatement[] Parameters { get; }
+
         
-        
-        public FunctionCallStatement(string objectName, string functionName, EvaluationStatement[] parameters, StatementInfo info)
+        public FunctionCallStatement(string objectName, string functionName, DataTypes dataType, EvaluationStatement[] parameters, StatementInfo info)
         {
             ObjectName = objectName;
             FunctionName = functionName;
             Parameters = parameters;
             Info = info;
+            DataType = dataType;
 
             TraversableChildren = StatementHelpers.CreateChildren(parameters.Cast<IStatement>().ToArray());
         }

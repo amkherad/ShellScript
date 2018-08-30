@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using ShellScript.Core.Helpers;
 using ShellScript.Core.Language.CompilerServices.Lexing;
@@ -184,6 +185,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     return new FunctionCallStatement(
                         className?.Value,
                         functionName.Value,
+                        DataTypes.Void,
                         parameters.Where(p => !(p is NopStatement)).ToArray(),
                         CreateStatementInfo(info, token)
                     );
@@ -445,8 +447,21 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     }
                     case TokenType.Number:
                     {
-                        statements.AddLast(new ConstantValueStatement(DataTypes.Numeric, token.Value,
-                            CreateStatementInfo(info, token)));
+                        if (long.TryParse(token.Value, out var decimalResult))
+                        {
+                            statements.AddLast(new ConstantValueStatement(DataTypes.Decimal, decimalResult.ToString(NumberFormatInfo.InvariantInfo),
+                                CreateStatementInfo(info, token)));
+                        }
+                        else if (double.TryParse(token.Value, out var floatResult))
+                        {
+                            statements.AddLast(new ConstantValueStatement(DataTypes.Float, floatResult.ToString(NumberFormatInfo.InvariantInfo),
+                                CreateStatementInfo(info, token)));
+                        }
+                        else
+                        {
+                            throw UnexpectedSyntax(token, info);
+                        }
+                        
                         break;
                     }
                     case TokenType.Null:
@@ -1190,7 +1205,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             IStatement variable = dataType == null
                 ? (IStatement) new VariableAccessStatement(token.Value, CreateStatementInfo(info, token))
-                : new VariableDefinitionStatement(dataType.Value, token.Value, null, CreateStatementInfo(info, token));
+                : new VariableDefinitionStatement(dataType.Value, token.Value, false, null, CreateStatementInfo(info, token));
 
             if (!enumerator.MoveNext()) //in
                 throw EndOfFile(token, info);
@@ -1245,7 +1260,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             var statement = ReadEvaluationStatement(token, enumerator, info);
 
-            return new SdkFunctionCallStatement("echo", new[] {statement}, CreateStatementInfo(info, token));
+            return new SdkFunctionCallStatement("echo", DataTypes.Void, new[] {statement}, CreateStatementInfo(info, token));
         }
 
         public ReturnStatement ReadReturn(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
