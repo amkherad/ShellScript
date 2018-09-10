@@ -14,7 +14,9 @@ namespace ShellScript
         static int Main(string[] args)
         {
             var outputWriter = Console.Out; //new StreamWriter(Console.OpenStandardError());
-            var errorWriter = new ErrorWriter(Console.Out); //new StreamWriter(Console.OpenStandardError());
+            var errorWriter = new ColoredWriter(Console.Out, ConsoleColor.Red); //new StreamWriter(Console.OpenStandardError());
+            var warningWriter = new ColoredWriter(Console.Out, ConsoleColor.Yellow);
+            var logWriter = new ColoredWriter(Console.Out, ConsoleColor.White);
 
             try
             {
@@ -26,7 +28,7 @@ namespace ShellScript
                 {
                     if (command.CanHandle(commandContext))
                     {
-                        return command.Execute(outputWriter, errorWriter, commandContext);
+                        return command.Execute(outputWriter, errorWriter, warningWriter, logWriter, commandContext);
                     }
                 }
             }

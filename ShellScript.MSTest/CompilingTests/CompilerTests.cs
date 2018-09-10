@@ -21,8 +21,15 @@ namespace ShellScript.MSTest.CompilingTests
             Platforms.AddPlatform(new UnixBashPlatform());
 
             var compiler = new Compiler();
-            var result = compiler.CompileFromSource("/home/amk/Temp/ShellScript/variables.shellscript", "/home/amk/Temp/ShellScript/variables.sh", "unix-bash", true);
-            
+            var result = compiler.CompileFromSource(
+                Console.Out,
+                Console.Out,
+                "/home/amk/Temp/ShellScript/variables.shellscript",
+                "/home/amk/Temp/ShellScript/variables.sh",
+                "unix-bash",
+                CompilerFlags.CreateDefault()
+            );
+
             Assert.IsTrue(result.Successful);
         }
 
@@ -33,11 +40,12 @@ namespace ShellScript.MSTest.CompilingTests
 
             using (var reader = new StringReader("int x = 2 + 2"))
             {
-                var context = new Context(new UnixBashPlatform());
-                var stt = parser.Parse(reader, new ParserInfo(true, "", "", ""));
+                var context = new Context(new UnixBashPlatform(), new CompilerFlags());
+                var stt = parser.Parse(reader, new ParserInfo(Console.Out, Console.Out, true, "", "", ""));
                 var definitionStt = stt.First() as DefinitionStatement;
-                
-                var result = EvaluationStatementTranspilerBase.ProcessEvaluation(context, context.GeneralScope, definitionStt.DefaultValue);
+
+                var result = EvaluationStatementTranspilerBase.ProcessEvaluation(context, context.GeneralScope,
+                    definitionStt.DefaultValue);
 
                 Assert.IsNotNull(result);
             }

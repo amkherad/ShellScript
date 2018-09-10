@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ShellScript.Core;
@@ -8,6 +9,8 @@ namespace ShellScript.CommandLine
     public class HelpCommand : ICommand
     {
         public string Name => "Help";
+        
+        public Dictionary<string, string> SwitchesHelp { get; }
         
         public bool CanHandle(CommandContext command)
         {
@@ -19,7 +22,8 @@ namespace ShellScript.CommandLine
             return command.IsEmpty;
         }
 
-        public int Execute(TextWriter writer, TextWriter errorWriter, CommandContext context)
+        public int Execute(TextWriter writer, TextWriter errorWriter, TextWriter warningWriter,
+            TextWriter logWriter, CommandContext context)
         {
             writer.WriteLine($"ShellScript ({ApplicationContext.Version}) by Ali Mousavi Kherad");
 

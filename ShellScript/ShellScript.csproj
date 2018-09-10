@@ -6,9 +6,9 @@
         <LangVersion>7.2</LangVersion>
     </PropertyGroup>
 
-    <Import Project="..\ShellScript.Core\ShellScript.Core.projitems" Label="Shared" />
-
-    <Import Project="..\ShellScript.Unix.Bash\ShellScript.Unix.Bash.projitems" Label="Shared" />
+    <ItemGroup>
+      <Folder Include="Windows.Batch" />
+    </ItemGroup>
 
     <Import Project="..\ShellScript.Luncher\ShellScript.Luncher.projitems" Label="Shared" />
 

@@ -17,7 +17,8 @@ namespace ShellScript.MSTest.ParsingTests
             var code = "function test(int x) { echo; }";
             var parser = new Parser();
 
-            var statements = parser.Parse(new StringReader(code), new ParserInfo(true, "", "", "")).ToList();
+            var statements = parser
+                .Parse(new StringReader(code), new ParserInfo(Console.Out, Console.Out, true, "", "", "")).ToList();
 
             GC.KeepAlive(statements);
 
@@ -30,7 +31,8 @@ namespace ShellScript.MSTest.ParsingTests
             var code = "var x = (46 * 34) - 23 / 4 * myFunc()";
             var parser = new Parser();
 
-            var statements = parser.Parse(new StringReader(code), new ParserInfo(true, "", "", "")).ToList();
+            var statements = parser
+                .Parse(new StringReader(code), new ParserInfo(Console.Out, Console.Out, true, "", "", "")).ToList();
 
             GC.KeepAlive(statements);
 
@@ -49,7 +51,8 @@ namespace ShellScript.MSTest.ParsingTests
                 ;
             var parser = new Parser();
 
-            var statements = parser.Parse(new StringReader(code.ToString()), new ParserInfo(true, "", "", "")).ToList();
+            var statements = parser.Parse(new StringReader(code.ToString()),
+                new ParserInfo(Console.Out, Console.Out, true, "", "", "")).ToList();
 
             GC.KeepAlive(statements);
 

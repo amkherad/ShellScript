@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using System.IO;
-using ShellScript.Core;
 using ShellScript.Core.Language;
 
 namespace ShellScript.CommandLine
@@ -8,12 +8,15 @@ namespace ShellScript.CommandLine
     {
         public string Name => "Platforms";
         
+        public Dictionary<string, string> SwitchesHelp { get; }
+        
         public bool CanHandle(CommandContext command)
         {
             return command.IsCommand("--platforms");
         }
 
-        public int Execute(TextWriter outputWriter, TextWriter errorWriter, CommandContext context)
+        public int Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
+            TextWriter logWriter, CommandContext context)
         {
             foreach (var platform in Platforms.AvailablePlatforms)
             {

@@ -71,11 +71,16 @@ namespace ShellScript.CommandLine
             return names.Any(name => Switches.Any(s => _switchNameComparer.Equals(s.Name, name)));
         }
 
+        public Switch GetSwitch(string name)
+        {
+            return Switches.FirstOrDefault(s => _switchNameComparer.Equals(s.Name, name));
+        }
+
 
         public static CommandContext Parse(string[] commands)
         {
             return new CommandContext(commands,
-                commands.Where(c => c.StartsWith("-") || c.StartsWith("-")).Select(Switch.Parse).ToArray(),
+                commands.Where(c => c.StartsWith("-")).Select(Switch.Parse).ToArray(),
                 commands.Length > 0 ? commands[0] : null);
         }
 
