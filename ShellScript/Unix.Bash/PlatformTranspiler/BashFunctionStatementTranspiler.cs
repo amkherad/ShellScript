@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using ShellScript.Core.Language.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
@@ -21,35 +22,57 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is FunctionStatement funcDefStt)) throw new InvalidOperationException();
 
-            if (scope.IsIdentifierExists(funcDefStt.Name))
+            var functionName = funcDefStt.Name;
+
+            if (scope.IsIdentifierExists(functionName))
             {
-                throw new IdentifierNameExistsCompilerException(funcDefStt.Name, funcDefStt.Info);
+                throw new IdentifierNameExistsCompilerException(functionName, funcDefStt.Info);
             }
-            
-            writer.WriteLine($"function {funcDefStt.Name}() {{");
 
             var funcScope = scope.BeginNewScope();
             IStatement inlinedStatement = null;
 
             funcScope.SetConfig(c => c.ExplicitEchoStream, context.Flags.DefaultExplicitEchoStream);
 
-            if (IsEmptyBody(funcDefStt.Block))
+            if (context.Flags.UseComments && context.Flags.CommentParameterInfos)
+            {
+                BashTranspilerHelpers.WriteComment(writer, $"! {funcDefStt.DataType} {functionName}");
+            }
+            
+            if (funcDefStt.Parameters != null && funcDefStt.Parameters.Length > 0)
+            {
+                for (var i = 0; i < funcDefStt.Parameters.Length; i++)
+                {
+                    var param = funcDefStt.Parameters[i];
+                    var paramMappedName = (i + 1).ToString(CultureInfo.InvariantCulture);
+                    funcScope.ReserveNewParameter(param.DataType, param.Name, paramMappedName);
+
+                    if (context.Flags.UseComments && context.Flags.CommentParameterInfos)
+                    {
+                        BashTranspilerHelpers.WriteComment(writer, $"\\param ${paramMappedName} {param.DataType} - {param.Name}");
+                    }
+                }
+            }
+
+            writer.WriteLine($"function {functionName}() {{");
+
+            if (IsEmptyBody(funcDefStt.Statement))
             {
                 writer.WriteLine(':');
             }
             else
             {
-                var transpiler = context.GetTranspilerForStatement(funcDefStt.Block);
-                
-                transpiler.WriteBlock(context, funcScope, writer, metaWriter, funcDefStt.Block);
+                var transpiler = context.GetTranspilerForStatement(funcDefStt.Statement);
+
+                transpiler.WriteBlock(context, funcScope, writer, metaWriter, funcDefStt.Statement);
 
                 TryGetInlinedStatement(context, funcScope, funcDefStt, out inlinedStatement);
             }
 
-            var func = new FunctionInfo(funcDefStt.DataType, funcDefStt.Name, funcDefStt.IsParams,
+            var func = new FunctionInfo(funcDefStt.DataType, functionName, null, funcDefStt.IsParams,
                 funcDefStt.Parameters, null, inlinedStatement);
-            
-            scope.ReserveNewFunction(funcDefStt.Name, func);
+
+            scope.ReserveNewFunction(functionName, func);
 
             writer.WriteLine("}");
         }

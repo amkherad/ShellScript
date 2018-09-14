@@ -10,6 +10,7 @@ namespace ShellScript.Core.Helpers
 
         private TElement _next;
         private TElement _current;
+        private bool _isNextAvailable;
 
         public PeekingEnumerator(IEnumerator<TElement> enumerator)
         {
@@ -19,7 +20,7 @@ namespace ShellScript.Core.Helpers
 
         public bool MoveNext()
         {
-            if (ReferenceEquals(_next, default))
+            if (!_isNextAvailable)
             {
                 var result = _enumerator.MoveNext();
                 if (result)
@@ -30,6 +31,7 @@ namespace ShellScript.Core.Helpers
                 return result;
             }
 
+            _isNextAvailable = false;
             _current = _next;
             _next = default;
             return true;
@@ -37,13 +39,14 @@ namespace ShellScript.Core.Helpers
 
         public bool TryPeek(out TElement peek)
         {
-            if (ReferenceEquals(_next, default))
+            if (!_isNextAvailable)
             {
                 var result = _enumerator.MoveNext();
                 if (result)
                 {
                     _next = _enumerator.Current;
                     peek = _next;
+                    _isNextAvailable = true;
                 }
                 else
                 {
@@ -62,6 +65,7 @@ namespace ShellScript.Core.Helpers
         {
             _enumerator.Reset();
 
+            _isNextAvailable = false;
             _next = null;
             _current = null;
         }

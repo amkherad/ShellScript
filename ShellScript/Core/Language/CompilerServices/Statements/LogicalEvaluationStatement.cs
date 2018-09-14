@@ -4,7 +4,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class LogicalEvaluationStatement : EvaluationStatement
     {
-        public override bool IsBlockStatement => false;
+        public override bool CanBeEmbedded => false;
         public override StatementInfo Info { get; }
 
         public EvaluationStatement Left { get; }

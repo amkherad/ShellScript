@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using ShellScript.Core.Language;
 using ShellScript.Core.Language.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
@@ -23,9 +24,11 @@ namespace ShellScript.Unix.Bash
 
         public IPlatformStatementTranspiler[] Transpilers { get; } =
         {
+            new BashAssignmentStatementTranspiler(),
             new BashBlockStatementTranspiler(),
             new BashFunctionCallStatementTranspiler(),
             new BashEchoStatementTranspiler(),
+            new BashReturnStatementTranspiler(),
             new BashIfElseStatementTranspiler(),
             new BashSwitchCaseStatementTranspiler(),
             new BashVariableDefinitionStatementTranspiler(),
@@ -33,9 +36,9 @@ namespace ShellScript.Unix.Bash
             new BashFunctionStatementTranspiler(),
         };
         
-        public void ReviseFlags(CompilerFlags flags)
+        public CompilerFlags ReviseFlags(CompilerFlags flags)
         {
-            
+            return flags;
         }
     }
 }

@@ -33,15 +33,16 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 throw new IdentifierNotFoundCompilerException(functionCallStatement.FunctionName,
                     functionCallStatement.Info);
             }
-
+            
             CheckParameters(context, scope, functionCallStatement, funcInfo);
 
             var resultVar = context.GetLastFunctionCallStorageVariable(metaWriter);
 
             if (funcInfo.InlinedStatement != null && context.Flags.UseInlining)
             {
-                var transpiler = context.GetTranspilerForStatement(funcInfo.InlinedStatement);
-                transpiler.WriteBlock(context, scope, writer, metaWriter, funcInfo.InlinedStatement);
+                var inlined = FunctionInfo.UnWrapInlinedStatement(context, scope, funcInfo);
+                var transpiler = context.GetTranspilerForStatement(inlined);
+                transpiler.WriteBlock(context, scope, writer, metaWriter, inlined);
             }
             else
             {
@@ -52,7 +53,6 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                         inlineWriter.Write(' ');
 
                         var transpiler = context.GetEvaluationTranspilerForStatement(stt);
-
                         transpiler.WriteInline(context, scope, inlineWriter, metaWriter, writer, stt);
                     }
 
@@ -91,43 +91,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 var passed = functionCallStatement.Parameters[i];
                 var schema = funcInfo.Parameters[i];
 
-                DataTypes dataType;
-                switch (passed)
-                {
-                    case ConstantValueStatement constantValueStatement:
-                    {
-                        dataType = constantValueStatement.DataType;
-                        break;
-                    }
-                    case VariableAccessStatement variableAccessStatement:
-                    {
-                        if (!scope.TryGetVariableInfo(variableAccessStatement.VariableName, out var varInfo))
-                        {
-                            throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
-                                variableAccessStatement.Info);
-                        }
-
-                        dataType = varInfo.DataType;
-                        break;
-                    }
-                    case FunctionCallStatement funcCallStt:
-                    {
-                        if (!scope.TryGetFunctionInfo(funcCallStt, out var paramFuncInfo))
-                        {
-                            throw new IdentifierNotFoundCompilerException(funcCallStt.FunctionName, funcCallStt.Info);
-                        }
-
-                        dataType = paramFuncInfo.DataType;
-                        break;
-                    }
-                    case EvaluationStatement evaluationStatement:
-                    {
-                        dataType = evaluationStatement.GetDataType();
-                        break;
-                    }
-                    default:
-                        continue;
-                }
+                var dataType = passed.GetDataType(context, scope);
 
                 if (dataType != schema.DataType)
                 {

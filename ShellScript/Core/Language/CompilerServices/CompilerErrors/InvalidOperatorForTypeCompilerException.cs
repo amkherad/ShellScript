@@ -10,6 +10,10 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
             : base(CreateMessage(operatorType, dataType), statementInfo)
         {
         }
+        public InvalidOperatorForTypeCompilerException(Type operatorType, DataTypes a, DataTypes b, StatementInfo statementInfo)
+            : base(CreateMessage(operatorType, a, b), statementInfo)
+        {
+        }
 
         public InvalidOperatorForTypeCompilerException(string message, StatementInfo statementInfo)
             : base(message, statementInfo)
@@ -28,6 +32,11 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
 //        public InvalidOperatorForTypeCompilerException(Exception innerException) : base(innerException)
 //        {
 //        }
+
+        public static string CreateMessage(Type operatorType, DataTypes a, DataTypes b)
+        {
+            return $"Invalid operator '{operatorType.Name}' on variables of type '{a}' and '{b}'.";
+        }
 
         public static string CreateMessage(Type operatorType, DataTypes dataType)
         {

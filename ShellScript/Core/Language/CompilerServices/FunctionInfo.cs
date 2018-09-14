@@ -9,18 +9,23 @@ namespace ShellScript.Core.Language.CompilerServices
     {
         public DataTypes DataType { get; }
         public string Name { get; }
+        public string ReName { get; }
 
+        public string AccessName => ReName ?? Name;
+        
         public bool IsParams { get; }
         public FunctionParameterDefinitionStatement[] Parameters { get; }
         public string ObjectName { get; }
 
         public IStatement InlinedStatement { get; }
 
-        
-        public FunctionInfo(DataTypes dataType, string name, bool isParams, FunctionParameterDefinitionStatement[] parameters,
+
+        public FunctionInfo(DataTypes dataType, string name, string reName, bool isParams,
+            FunctionParameterDefinitionStatement[] parameters,
             string objectName, IStatement inlinedStatement)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
+            ReName = reName;
             IsParams = isParams;
             Parameters = parameters;
             ObjectName = objectName;
@@ -35,7 +40,7 @@ namespace ShellScript.Core.Language.CompilerServices
 
         public override int GetHashCode()
         {
-            return (Name != null ? Name.GetHashCode() : 0);
+            return Name != null ? Name.GetHashCode() : 0;
         }
 
         public override bool Equals(object obj)
@@ -58,17 +63,17 @@ namespace ShellScript.Core.Language.CompilerServices
         {
             var inlined = functionInfo.InlinedStatement;
             var result = inlined;
-            while(inlined != null && inlined is FunctionCallStatement funcCallStt)
+            while (inlined != null && inlined is FunctionCallStatement funcCallStt)
             {
                 if (!scope.TryGetFunctionInfo(funcCallStt.FunctionName, out functionInfo))
                 {
-                    return result;
+                    return inlined;
                 }
-                
+
                 inlined = functionInfo.InlinedStatement;
             }
 
-            return result;
+            return inlined ?? result;
         }
     }
 }

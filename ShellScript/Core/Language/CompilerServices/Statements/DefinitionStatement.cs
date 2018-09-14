@@ -4,7 +4,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public abstract class DefinitionStatement : IStatement
     {
-        public virtual bool IsBlockStatement => false;
+        public virtual bool CanBeEmbedded => false;
         public StatementInfo Info { get; }
 
         public DataTypes DataType { get; }

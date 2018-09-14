@@ -7,12 +7,20 @@ namespace ShellScript.Core.Language.CompilerServices
     {
         public DataTypes DataType { get; }
         public string Name { get; }
+        public string ReName { get; }
 
-
-        public VariableInfo(DataTypes dataType, string name)
+        public string AccessName => ReName ?? Name;
+        
+        
+        public bool IsOriginal { get; set; }
+        
+        
+        public VariableInfo(DataTypes dataType, string name, string reName)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             DataType = dataType;
+            ReName = reName;
+            IsOriginal = true;
         }
 
         public VariableInfo(string name)
@@ -22,7 +30,7 @@ namespace ShellScript.Core.Language.CompilerServices
 
         public override int GetHashCode()
         {
-            return (Name != null ? Name.GetHashCode() : 0);
+            return Name != null ? Name.GetHashCode() : 0;
         }
 
         public override bool Equals(object obj)

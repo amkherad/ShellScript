@@ -2,7 +2,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class DecrementStatement : EvaluationStatement
     {
-        public override bool IsBlockStatement { get; }
+        public override bool CanBeEmbedded { get; }
         public override StatementInfo Info { get; }
 
         public VariableAccessStatement Variable { get; }

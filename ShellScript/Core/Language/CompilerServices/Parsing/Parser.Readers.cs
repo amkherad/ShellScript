@@ -171,6 +171,8 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                                     }
                                     case TokenType.CloseParenthesis:
                                     {
+                                        enumerator.MoveNext();
+                                        
                                         continueRead = false;
                                         break;
                                     }
@@ -398,6 +400,10 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 }
             }
 
+            if (statements.Count == 0)
+            {
+                return null;
+            }
             return (EvaluationStatement) statements.First.Value;
         }
 
@@ -876,31 +882,11 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     if (!enumerator.MoveNext()) //value
                         throw EndOfFile(token, info);
 
-                    EvaluationStatement value;
 
                     token = enumerator.Current;
-                    if (token.Type == TokenType.IdentifierName)
-                    {
-                        value = new VariableAccessStatement(token.Value, CreateStatementInfo(info, token));
-                    }
-                    else if (token.Type == TokenType.Number)
-                    {
-                        value = new ConstantValueStatement(DataTypes.Numeric, token.Value,
-                            CreateStatementInfo(info, token));
-                    }
-                    else if (token.Type == TokenType.StringValue1 || token.Type == TokenType.StringValue2)
-                    {
-                        value = new ConstantValueStatement(DataTypes.String, token.Value, CreateStatementInfo(info, token));
-                    }
-                    else if (token.Type == TokenType.Null)
-                    {
-                        value = new ConstantValueStatement(DataTypes.String, token.Value, CreateStatementInfo(info, token));
-                    }
-                    else
-                    {
-                        throw UnexpectedSyntax(token, info);
-                    }
 
+                    var value = ReadEvaluationStatement(token, enumerator, info);
+                    
                     return new VariableDefinitionStatement(dataType, definitionName.Value, isConstant, value,
                         CreateStatementInfo(info, token));
                 }
@@ -953,7 +939,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     //    throw UnexpectedSyntax(token, info);
                     //}
 
-                    return new FunctionStatement(DataTypes.Void, definitionName.Value, parameters, block,
+                    return new FunctionStatement(dataType, definitionName.Value, parameters, block,
                         CreateStatementInfo(info, token));
                 }
             }
@@ -1043,6 +1029,10 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     if (!enumerator.MoveNext()) //skip parenthesis to read evaluation
                         throw EndOfFile(token, info);
 
+                    token = enumerator.Current;
+                    if (token.Type == TokenType.CloseParenthesis)
+                        throw UnexpectedSyntax(token, info);
+
                     var elifCondition = ReadEvaluationStatement(token, enumerator, info);
 
                     if (!enumerator.MoveNext()) //close parenthesis
@@ -1080,6 +1070,11 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         elseIfBlocks.ToArray(), sttInfo);
                 }
             }
+        }
+
+        public SwitchCaseStatement ReadSwitchCase(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        {
+            return null;
         }
 
         public WhileStatement ReadWhile(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
@@ -1372,6 +1367,13 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
             token = enumerator.Current;
 
+            if (token.Type == TokenType.SequenceTerminator ||
+                token.Type == TokenType.SequenceTerminatorNewLine ||
+                token.Type == TokenType.CloseBrace)
+            {
+                return new ReturnStatement(null, CreateStatementInfo(info, token));
+            }
+            
             var statement = ReadEvaluationStatement(token, enumerator, info);
 
             return new ReturnStatement(statement, CreateStatementInfo(info, token));

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.PlatformTranspiler;
@@ -21,6 +22,15 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         public StringComparer StringComparer { get; }
 
         public CompilerFlags Flags { get; }
+        
+        
+        public TextWriter ErrorWriter { get; }
+        public TextWriter WarningWriter { get; }
+        public TextWriter LogWriter { get; }
+        
+        
+        private int _lastFunctionCallReferenceCount = 0;
+        
         
         private readonly Dictionary<Type, IPlatformStatementTranspiler> _typeTranspilers;
 
@@ -50,7 +60,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         public string WikiUrl { get; set; }
 
 
-        public Context(IPlatform platform, CompilerFlags flags)
+        public Context(IPlatform platform, CompilerFlags flags,
+            TextWriter errorWriter, TextWriter warningWriter, TextWriter logWriter)
         {
             GeneralScope = new Scope(this);
 
@@ -58,6 +69,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             Transpilers = platform.Transpilers;
             Api = platform.Api;
             Flags = flags;
+            ErrorWriter = errorWriter;
+            WarningWriter = warningWriter;
+            LogWriter = logWriter;
 
             _typeTranspilers = Transpilers.ToDictionary(key => key.StatementType);
 
@@ -65,11 +79,13 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             StringComparer = StringComparer.CurrentCulture;
         }
 
+        
         public IPlatformMetaInfoTranspiler GetMetaInfoTranspiler()
         {
             return Platform.MetaInfoWriter;
         }
 
+        
         public IPlatformStatementTranspiler GetTranspilerForStatement(IStatement statement)
         {
             var sttType = statement.GetType();
@@ -89,6 +105,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             throw new InvalidOperationException();
         }
 
+        
         public IPlatformEvaluationStatementTranspiler GetEvaluationTranspilerForStatement(EvaluationStatement statement)
         {
             var sttType = statement.GetType();
@@ -129,6 +146,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             throw new InvalidOperationException();
         }
 
+        
         public TTranspiler GetTranspiler<TTranspiler>()
             where TTranspiler : IPlatformStatementTranspiler
         {
@@ -139,6 +157,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         public bool IsSdkFunctionExists(string objectName, string functionName)
             => IsSdkFunctionExists(objectName, functionName, -1);
 
+        
         public bool IsSdkFunctionExists(string objectName, string functionName, int numberOfParameters)
         {
             if (!Api.TryGetClass(objectName, out var sdkClass))
@@ -179,11 +198,17 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             return true;
         }
 
+        
         public string GetLastFunctionCallStorageVariable(TextWriter metaTextWriter)
         {
             const string VariableName = "LastFunctionCall";
-            BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(this, GeneralScope, metaTextWriter,
-                VariableName, "0");
+            
+            if (Interlocked.Increment(ref _lastFunctionCallReferenceCount) == 1)
+            {
+                BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(this, GeneralScope, metaTextWriter,
+                    VariableName, "0");
+            }
+
             return VariableName;
         }
     }

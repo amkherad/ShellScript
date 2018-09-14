@@ -21,7 +21,11 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         
         Dot, //.
         Comma, //,
+        Colon, //:
         //DateTimeValue, //
+        
+        QuestionMark, //?
+        NullCoalesce, //??
         
         Equals, //==
         NotEquals, //!=
@@ -51,6 +55,10 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         
         If, //if
         Else, //else
+        
+        Switch, //switch
+        Case, //case
+        Default, //default
         
         PreprocessorIf, //#if
         PreprocessorElseIf, //#elseif

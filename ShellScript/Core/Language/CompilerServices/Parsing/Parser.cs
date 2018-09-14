@@ -16,6 +16,9 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         {
             "if",
             "else",
+            "switch",
+            "case",
+            "default",
             "while",
             "do",
             "switch",
@@ -50,6 +53,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             "return",
             "async",
             "await",
+            "throw",
             "in",
             "notin",
             "like",
@@ -185,6 +189,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     case TokenType.OpenBrace:
                         return ReadBlockStatement(token, enumerator, info);
                     
+                    
                     case TokenType.OpenParenthesis:
                         break;
                     case TokenType.Throw:
@@ -197,7 +202,6 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         break;
                     
                     
-                    
                     case TokenType.SequenceTerminator:
                     case TokenType.SequenceTerminatorNewLine:
                         continue;
@@ -205,6 +209,10 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     case TokenType.Comment:
                     case TokenType.MultiLineCommentOpen:
                     case TokenType.MultiLineCommentClose:
+                    case TokenType.PreprocessorIf:
+                    case TokenType.PreprocessorElse:
+                    case TokenType.PreprocessorElseIf:
+                    case TokenType.PreprocessorEndIf:
                         throw UnexpectedSyntax(token, info);
 
 
@@ -226,6 +234,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     case TokenType.Division:
                     case TokenType.BackSlash:
                     case TokenType.Dot:
+                    case TokenType.Case:
                     case TokenType.Comma:
                     case TokenType.In:
                     case TokenType.NotIn:
@@ -242,7 +251,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         throw IllegalSyntax(token, info);
                     
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw UnexpectedSyntax(token, info);
                 }
             }
 

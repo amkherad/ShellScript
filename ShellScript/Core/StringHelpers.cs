@@ -25,5 +25,15 @@ namespace ShellScript.Core
             var match = Lexer.ValidIdentifierName.Match(name);
             return match.Success;
         }
+        
+        public static string Dequote(string value)
+        {
+            if (value[0] == '"' && value[value.Length - 1] == '"')
+            {
+                value = value.Substring(1, value.Length - 2);
+            }
+
+            return value;
+        }
     }
 }

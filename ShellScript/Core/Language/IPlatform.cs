@@ -14,6 +14,6 @@ namespace ShellScript.Core.Language
         
         string[] CompilerConstants { get; }
 
-        void ReviseFlags(CompilerFlags flags);
+        CompilerFlags ReviseFlags(CompilerFlags flags);
     }
 }

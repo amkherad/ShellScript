@@ -32,6 +32,11 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
 
             {TokenType.Dot, @"^\."},
             {TokenType.Comma, "^,"},
+            {TokenType.Colon, "^:"},
+            
+            {TokenType.QuestionMark, @"^\?(?!\?)"},
+            {TokenType.NullCoalesce, @"^\?\?"},
+            
             {TokenType.Assignment, "^=(?!=)"},
             {TokenType.Equals, "^=="},
             {TokenType.NotEquals, "^!="},
@@ -54,6 +59,10 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
 
             {TokenType.If, @"^if(?!\w)"},
             {TokenType.Else, @"^else(?!\w)"},
+            
+            {TokenType.Switch, @"^switch(?!\w)"},
+            {TokenType.Case, @"^case(?!\w)"},
+            {TokenType.Default, @"^default(?!\w)"},
             
             {TokenType.PreprocessorIf, @"^#if(?!\w)"},
             {TokenType.PreprocessorElseIf, @"^#elseif(?!\w)"},
@@ -278,14 +287,6 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
                 matchString = match.Value;
                 return true;
             }
-
-            match = Number.Match(text);
-            if (match.Success)
-            {
-                matchType = TokenType.Number;
-                matchString = match.Value;
-                return true;
-            }
             
             foreach (var token in TokenRegexes)
             {
@@ -296,6 +297,14 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
                     matchString = match.Value;
                     return true;
                 }
+            }
+
+            match = Number.Match(text);
+            if (match.Success)
+            {
+                matchType = TokenType.Number;
+                matchString = match.Value;
+                return true;
             }
 
             match = ValidIdentifierName.Match(text);

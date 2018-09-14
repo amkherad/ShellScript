@@ -48,8 +48,6 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
             else
             {
-                scope.ReserveNewVariable(varDefStt.DataType, varDefStt.Name);
-
                 if (varDefStt.HasDefaultValue)
                 {
                     var def = varDefStt.DefaultValue;
@@ -78,6 +76,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 {
                     WriteVariableDefinition(context, scope, writer, varDefStt.Name, DesignGuidelines.GetDefaultValue(varDefStt.DataType));
                 }
+                
+                scope.ReserveNewVariable(varDefStt.DataType, varDefStt.Name);
             }
         }
     }

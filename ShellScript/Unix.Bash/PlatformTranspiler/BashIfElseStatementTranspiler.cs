@@ -1,8 +1,11 @@
 using System;
 using System.IO;
+using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations;
+using ShellScript.Core.Language.Library;
+using ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
@@ -19,24 +22,44 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is IfElseStatement ifElseStatement)) throw new InvalidOperationException();
 
+            using (var ifWriter = new StringWriter())
+            {
+                WriteIf(context, scope, ifWriter, writer, metaWriter, ifElseStatement);
+
+                writer.Write(ifWriter);
+            }
+        }
+
+        public static void WriteIf(Context context, Scope scope, TextWriter writer, TextWriter nonInlinePartWriter,
+            TextWriter metaWriter, IfElseStatement ifElseStatement)
+        {
+            var ifEscaped = false;
+            var skipElse = false;
+
             var condition =
                 EvaluationStatementTranspilerBase.ProcessEvaluation(context, scope, ifElseStatement.MainIf.Condition);
 
             if (StatementHelpers.IsAbsoluteValue(condition, out var isTrue))
             {
-                var stt = ifElseStatement.MainIf.Statement;
-                var transpiler = context.GetTranspilerForStatement(stt);
-                transpiler.WriteBlock(context, scope, writer, metaWriter, stt);
+                if (isTrue)
+                {
+                    BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                        ifElseStatement.MainIf.Statement);
 
-                return;
+                    return;
+                }
+
+                ifEscaped = true;
             }
-            
-            writer.Write("if ");
-            WriteCondition(context, scope, writer, metaWriter, writer, condition);
-            writer.WriteLine();
-            writer.WriteLine("then");
-            BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
-                ifElseStatement.MainIf.Statement);
+            else
+            {
+                writer.Write("if ");
+                WriteCondition(context, scope, writer, metaWriter, nonInlinePartWriter, condition);
+                writer.WriteLine();
+                writer.WriteLine("then");
+                BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                    ifElseStatement.MainIf.Statement);
+            }
 
             if (ifElseStatement.ElseIfs != null)
             {
@@ -44,30 +67,77 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 {
                     condition = EvaluationStatementTranspilerBase.ProcessEvaluation(context, scope, elseIf.Condition);
 
-                    writer.Write("elif ");
-                    WriteCondition(context, scope, writer, metaWriter, writer, elseIf.Condition);
-                    writer.WriteLine();
-                    writer.WriteLine("then");
-                    BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
-                        elseIf.Statement);
+                    if (StatementHelpers.IsAbsoluteValue(condition, out isTrue))
+                    {
+                        if (isTrue)
+                        {
+                            if (!ifEscaped)
+                            {
+                                writer.WriteLine("else");
+                            }
+
+                            BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                                elseIf.Statement);
+
+                            skipElse = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (ifEscaped)
+                        {
+                            writer.Write("if ");
+                            ifEscaped = false;
+                        }
+                        else
+                        {
+                            writer.Write("elif ");
+                        }
+
+                        WriteCondition(context, scope, writer, metaWriter, nonInlinePartWriter, condition);
+                        writer.WriteLine();
+                        writer.WriteLine("then");
+                        BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                            elseIf.Statement);
+                    }
                 }
             }
 
-            if (ifElseStatement.Else != null)
+            if (!skipElse && ifElseStatement.Else != null)
             {
-                writer.WriteLine("else");
-                BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
-                    ifElseStatement.Else);
+                if (ifEscaped)
+                {
+                    BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                        ifElseStatement.Else);
+                }
+                else
+                {
+                    writer.WriteLine("else");
+                    BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                        ifElseStatement.Else);
+                }
             }
 
-            writer.WriteLine("fi");
+            if (!ifEscaped)
+            {
+                writer.WriteLine("fi");
+            }
         }
-
 
         public static void WriteCondition(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement statement)
         {
-            writer.WriteLine(statement.ToString());
+            var expression =
+                BashConditionalExpressionBuilder.Instance
+                    .CreateExpression(context, scope, nonInlinePartWriter, statement);
+
+            if (expression.Item1 != DataTypes.Boolean)
+            {
+                throw new InvalidStatementStructureCompilerException(statement, statement.Info);
+            }
+
+            writer.Write(expression.Item2);
         }
     }
 }

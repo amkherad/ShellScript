@@ -54,6 +54,7 @@ namespace ShellScript.CommandLine
             _fillCompilerFlags(context, flags);
 
             var result = compiler.CompileFromSource(
+                errorWriter,
                 warningWriter,
                 logWriter,
                 inputFile,

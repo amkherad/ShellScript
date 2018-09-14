@@ -21,24 +21,33 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             return value.Replace(@"\r\n", @"\n");
         }
-        
-        public static string ToBashString(string value, bool deQuote)
+
+        public static string ToBashString(string value, bool dequote, bool enquote)
         {
-            value = StandardizeString(value, deQuote);
+            value = StandardizeString(value, dequote);
 
             if (value.Contains('"'))
             {
                 value = value.Replace("\"", "\\x22");
             }
+
             if (value.Contains('\''))
             {
                 value = value.Replace("'", "\\x27");
             }
-            
-            return value.Replace(@"\r\n", @"\n");
+
+            if (value.Contains(@"\r\n"))
+            {
+                value = value.Replace(@"\r\n", @"\n");
+            }
+
+            return enquote
+                ? $"\"{value}\""
+                : value;
         }
 
-        public static InvalidStatementStructureCompilerException InvalidStatementStructure(Scope scope, EvaluationStatement statement)
+        public static InvalidStatementStructureCompilerException InvalidStatementStructure(Scope scope,
+            EvaluationStatement statement)
         {
             return new InvalidStatementStructureCompilerException(statement, statement?.Info);
         }

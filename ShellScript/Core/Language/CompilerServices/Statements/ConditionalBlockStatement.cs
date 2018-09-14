@@ -1,8 +1,8 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class ConditionalBlockStatement : IStatement
+    public class ConditionalBlockStatement : IStatement, IBlockWrapperStatement
     {
-        public bool IsBlockStatement => true;
+        public bool CanBeEmbedded => true;
         public StatementInfo Info { get; }
 
         public EvaluationStatement Condition { get; }

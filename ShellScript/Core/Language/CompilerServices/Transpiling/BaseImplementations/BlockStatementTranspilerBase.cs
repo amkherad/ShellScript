@@ -14,7 +14,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
         private static bool _isBlockStatement(IStatement statement)
         {
-            if (statement.IsBlockStatement && !(statement is BlockStatement)) return true;
+            if (statement.CanBeEmbedded && !(statement is BlockStatement)) return true;
 
             foreach (var child in statement.TraversableChildren)
             {
@@ -25,7 +25,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
             return false;
         }
 
-        public static bool IsEmptyBody(BlockStatement statement)
+        public static bool IsEmptyBody(IStatement statement)
         {
             return !_isBlockStatement(statement);
         }

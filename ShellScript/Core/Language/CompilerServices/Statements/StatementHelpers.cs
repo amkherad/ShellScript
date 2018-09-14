@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
+using ShellScript.Core.Language.CompilerServices.Statements.Operators;
+using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
@@ -19,6 +21,27 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
             return result.ToArray();
         }
+
+        private static void _traverseTreeForEach<TStatement>(IStatement statement, Action<TStatement> action)
+            where TStatement : IStatement
+        {
+            foreach (var child in statement.TraversableChildren)
+            {
+                if (child is TStatement castChild)
+                {
+                    action(castChild);
+                }
+
+                _traverseTreeForEach<TStatement>(child, action);
+            }
+        }
+
+        public static void TreeForEach<TStatement>(this IStatement statement, Action<TStatement> action)
+            where TStatement : IStatement
+        {
+            _traverseTreeForEach<TStatement>(statement, action);
+        }
+
 
         private static bool _traverseTreeContains<TStatement>(IStatement statement)
             where TStatement : IStatement
@@ -121,37 +144,238 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             return _traverseTreeAll(statement, predicate);
         }
-
-//        public static IStatement[] CreateChildren(IStatement firstChild, IStatement[] children)
-//        {
-//            var result = new List<IStatement>(children.Length + 1);
-//            
-//            if (firstChild != null)
-//                result.Add(firstChild);
-//            
-//            foreach (var child in children)
-//            {
-//                if (child != null)
-//                    result.Add(child);
-//            }
-//
-//            return result.ToArray();
-//        }
-
-        public static DataTypes GetDataType(this EvaluationStatement evaluationStatement)
-        {
-            return DataTypes.Numeric;
-        }
         
+        
+        public class ExpressionTypes
+        {
+            public List<DataTypes> Types { get; set; }
+            public bool ContainsFunctionCall { get; set; }
+            public List<VariableAccessStatement> NonExistenceVariables { get; set; }
+
+            public HashSet<Type> OperatorTypes { get; set; }
+        }
+
+        public static ExpressionTypes TraverseTreeAndGetExpressionTypes(Context context, Scope scope,
+            IStatement statement)
+        {
+            var result = new ExpressionTypes();
+            var types = new List<DataTypes>();
+            var nonExistenceVariables = new List<VariableAccessStatement>();
+            var operators = new HashSet<Type>();
+
+            result.Types = types;
+            result.NonExistenceVariables = nonExistenceVariables;
+            result.OperatorTypes = operators;
+
+            switch (statement)
+            {
+                case ConstantValueStatement constantValueStatement:
+                {
+                    types.Add(constantValueStatement.DataType);
+                    break;
+                }
+                case VariableAccessStatement variableAccessStatement:
+                {
+                    if (scope.TryGetVariableInfo(variableAccessStatement.VariableName, out VariableInfo varInfo))
+                    {
+                        types.Add(varInfo.DataType);
+                    }
+                    else
+                    {
+                        nonExistenceVariables.Add(variableAccessStatement);
+                    }
+
+                    break;
+                }
+                case IOperator op:
+                {
+                    operators.Add(op.GetType());
+                    break;
+                }
+                case FunctionCallStatement functionCallStatement:
+                {
+                    types.Add(functionCallStatement.DataType);
+                    break;
+                }
+                default:
+                {
+                    foreach (var child in statement.TraversableChildren)
+                    {
+                        if (child is IOperator)
+                        {
+                            operators.Add(child.GetType());
+                            continue;
+                        }
+
+                        var childResult = TraverseTreeAndGetExpressionTypes(context, scope, child);
+
+                        foreach (var t in childResult.Types)
+                            types.Add(t);
+
+                        foreach (var nev in childResult.NonExistenceVariables)
+                            nonExistenceVariables.Add(nev);
+
+                        foreach (var opType in childResult.OperatorTypes)
+                            operators.Add(opType);
+
+                        result.ContainsFunctionCall = result.ContainsFunctionCall || childResult.ContainsFunctionCall;
+                    }
+
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        public static DataTypes OperateDataTypes(IOperator op, DataTypes a, DataTypes b)
+        {
+            if (a == b)
+            {
+                return a;
+            }
+
+            if (a.IsNumber())
+            {
+                if (b.IsNumber())
+                {
+                    return DataTypes.Numeric;
+                }
+
+                if (b == DataTypes.String && op is AdditionOperator)
+                {
+                    return DataTypes.String;
+                }
+                
+                throw new InvalidOperatorForTypeCompilerException(op.GetType(), a, b, op.Info);
+            }
+            if (a == DataTypes.String)
+            {
+                if (b == DataTypes.Decimal || b == DataTypes.Float || b == DataTypes.Numeric)
+                {
+                    return DataTypes.String;
+                }
+                
+                throw new InvalidOperatorForTypeCompilerException(op.GetType(), a, b, op.Info);
+            }
+
+            throw new InvalidOperatorForTypeCompilerException(op.GetType(), a, b, op.Info);
+        }
+
+        public static DataTypes GetDataType(this EvaluationStatement evaluationStatement, Context context, Scope scope)
+        {
+            switch (evaluationStatement)
+            {
+                case ConstantValueStatement constantValueStatement:
+                {
+                    return constantValueStatement.DataType;
+                }
+                case VariableAccessStatement variableAccessStatement:
+                {
+                    if (!scope.TryGetVariableInfo(variableAccessStatement.VariableName, out var variableInfo))
+                    {
+                        throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
+                            variableAccessStatement.Info);
+                    }
+
+                    return variableInfo.DataType;
+                }
+                case FunctionCallStatement functionCallStatement:
+                {
+                    if (!scope.TryGetFunctionInfo(functionCallStatement, out var functionInfo))
+                    {
+                        throw new IdentifierNotFoundCompilerException(functionCallStatement.FunctionName,
+                            functionCallStatement.Info);
+                    }
+
+                    return functionInfo.DataType;
+                }
+                case BitwiseEvaluationStatement bitwiseEvaluationStatement:
+                {
+                    switch (bitwiseEvaluationStatement.Operator)
+                    {
+                        case BitwiseNotOperator _:
+                        {
+                            return bitwiseEvaluationStatement.Right.GetDataType(context, scope);
+                        }
+                        case BitwiseAndOperator _:
+                        case BitwiseOrOperator _:
+                        case XorOperator _:
+                        {
+                            return OperateDataTypes(
+                                bitwiseEvaluationStatement.Operator,
+                                bitwiseEvaluationStatement.Left.GetDataType(context, scope),
+                                bitwiseEvaluationStatement.Right.GetDataType(context, scope)
+                            );
+                        }
+                    }
+
+                    return DataTypes.Numeric;
+                }
+                case LogicalEvaluationStatement _: //logicalEvaluationStatement
+                {
+                    return DataTypes.Boolean;
+                }
+                case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
+                {
+                    switch (arithmeticEvaluationStatement.Operator)
+                    {
+                        case IncrementOperator _:
+                        case DecrementOperator _:
+                        case NegativeNumberOperator _:
+                        {
+                            return (arithmeticEvaluationStatement.Right ?? arithmeticEvaluationStatement.Left)
+                                .GetDataType(context, scope);
+                        }
+                        case AdditionOperator _:
+                        case SubtractionOperator _:
+                        case MultiplicationOperator _:
+                        case DivisionOperator _:
+                        case ReminderOperator _:
+                        case ModulusOperator _:
+                        {
+                            return OperateDataTypes(
+                                arithmeticEvaluationStatement.Operator,
+                                arithmeticEvaluationStatement.Left.GetDataType(context, scope),
+                                arithmeticEvaluationStatement.Right.GetDataType(context, scope)
+                            );
+                        }
+                    }
+                    
+                    return DataTypes.Numeric;
+                }
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        public static bool IsAssignableFrom(DataTypes destination, DataTypes source)
+        {
+            if (destination == source)
+            {
+                return true;
+            }
+
+            if (destination == DataTypes.Numeric || destination == DataTypes.Float)
+            {
+                if (source == DataTypes.Decimal)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNumeric(this DataTypes dataType)
+        public static bool IsNumber(this DataTypes dataType)
         {
             return dataType == DataTypes.Decimal || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNumeric(this ConstantValueStatement constantValueStatement)
+        public static bool IsNumber(this ConstantValueStatement constantValueStatement)
         {
             var dataType = constantValueStatement.DataType;
             return dataType == DataTypes.Decimal || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
@@ -260,7 +484,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             var dataType = constantValueStatement.DataType;
             return dataType == DataTypes.Delegate;
         }
-        
+
         public static bool IsAbsoluteValue(IStatement statement, out bool isTrue)
         {
             if (statement is ConstantValueStatement constantValueStatement)

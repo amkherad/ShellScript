@@ -2,7 +2,7 @@ using System.IO;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.Library;
-using ShellScript.Unix.Bash.PlatformTranspiler;
+using ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders;
 
 namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO
 {
@@ -33,7 +33,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO
             {
                 AssertParameters(parameters);
 
-                var expBuilder = new BashEvaluationStatementTranspiler.StringConcatenationExpressionBuilder();
+                var expBuilder = BashStringConcatenationExpressionBuilder.Instance;
 
                 var exp = expBuilder.CreateExpression(context, scope, nonInlinePartWriter, parameters[0]);
 

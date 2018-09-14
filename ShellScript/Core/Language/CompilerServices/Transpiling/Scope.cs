@@ -154,7 +154,13 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         public void ReserveNewVariable(DataTypes dataType, string name)
         {
             _identifiers.Add(name);
-            _variables.Add(new VariableInfo(dataType, name));
+            _variables.Add(new VariableInfo(dataType, name, null));
+        }
+
+        public void ReserveNewParameter(DataTypes dataType, string name, string rename)
+        {
+            _identifiers.Add(name);
+            _variables.Add(new VariableInfo(dataType, name, rename));
         }
 
         public void ReserveNewConstant(DataTypes dataType, string name, string value)
@@ -193,7 +199,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             }
 
             _identifiers.Add(varName);
-            _variables.Add(new VariableInfo(dataType, varName));
+            _variables.Add(new VariableInfo(dataType, varName, null));
 
             return varName;
         }
@@ -212,7 +218,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             }
 
             _identifiers.Add(varName);
-            _variables.Add(new VariableInfo(dataType, varName));
+            _variables.Add(new VariableInfo(dataType, varName, null));
 
             return varName;
         }

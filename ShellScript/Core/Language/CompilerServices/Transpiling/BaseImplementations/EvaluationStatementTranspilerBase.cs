@@ -72,7 +72,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
             {
                 case ConstantValueStatement constantValueStatement:
                 {
-                    if (constantValueStatement.IsNumeric())
+                    if (constantValueStatement.IsNumber())
                     {
                         if (constantValueStatement.IsDecimal() &&
                             long.TryParse(constantValueStatement.Value, out _))
@@ -283,7 +283,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             if (left is ConstantValueStatement leftConstant &&
                                 right is ConstantValueStatement rightConstant)
                             {
-                                if (leftConstant.IsNumeric() && rightConstant.IsNumeric())
+                                if (leftConstant.IsNumber() && rightConstant.IsNumber())
                                 {
                                     if (leftConstant.IsDecimal() && rightConstant.IsDecimal() &&
                                         long.TryParse(leftConstant.Value, out var leftDecimal) &&
@@ -338,7 +338,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             if (left is ConstantValueStatement leftConstantValue &&
                                 right is ConstantValueStatement rightConstantValue)
                             {
-                                if (leftConstantValue.IsNumeric() && rightConstantValue.IsNumeric())
+                                if (leftConstantValue.IsNumber() && rightConstantValue.IsNumber())
                                 {
                                     if (leftConstantValue.IsDecimal() && rightConstantValue.IsDecimal() &&
                                         long.TryParse(leftConstantValue.Value, out var leftDecimal) &&
@@ -451,7 +451,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             if (logicalEvaluationStatement.Right is ConstantValueStatement constantValueStatement)
                             {
                                 if (constantValueStatement.DataType == DataTypes.Boolean ||
-                                    constantValueStatement.IsNumeric())
+                                    constantValueStatement.IsNumber())
                                 {
                                     if (!StatementHelpers.TryParseBooleanFromString(constantValueStatement.Value,
                                         out var value))
@@ -534,7 +534,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
                             if (right is ConstantValueStatement constantValueStatement)
                             {
-                                if (constantValueStatement.IsNumeric())
+                                if (constantValueStatement.IsNumber())
                                 {
                                     if (long.TryParse(constantValueStatement.Value, out var longResult))
                                     {
@@ -578,7 +578,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             if (left is ConstantValueStatement leftConstant &&
                                 right is ConstantValueStatement rightConstant)
                             {
-                                if (leftConstant.IsNumeric() && rightConstant.IsNumeric())
+                                if (leftConstant.IsNumber() && rightConstant.IsNumber())
                                 {
                                     if (leftConstant.IsDecimal() && rightConstant.IsDecimal() &&
                                         long.TryParse(leftConstant.Value, out var leftDecimal) &&

@@ -19,6 +19,9 @@ namespace ShellScript.Core.Language.CompilerServices
         //==========================
         public bool UseLastFunctionCallStorageVariable { get; set; }
         
+        public int SuccessStatusCode { get; set; }
+        public int FailureStatusCode { get; set; }
+        
         /// <summary>
         /// only on linux.
         /// </summary>
@@ -32,7 +35,14 @@ namespace ShellScript.Core.Language.CompilerServices
 
         public const string DefaultExplicitEchoStreamSwitch = "default-explicit-echo-dev";
         
+        //==========================
+        // Readability
+        //==========================
+        public bool UseComments { get; set; }
+        
+        public bool CommentParameterInfos { get; set; }
 
+        
         public static CompilerFlags CreateDefault()
         {
             return new CompilerFlags
@@ -43,8 +53,14 @@ namespace ShellScript.Core.Language.CompilerServices
                 InlineCascadingFunctionCalls = true,
                 InlineNonEvaluations = true,
                 
+                SuccessStatusCode = 0,
+                FailureStatusCode = 1,
+                
                 ExplicitEchoStream = null,
-                DefaultExplicitEchoStream = "/dev/tty"
+                DefaultExplicitEchoStream = "/dev/tty",
+                
+                UseComments = true,
+                CommentParameterInfos = true,
             };
         }
     }

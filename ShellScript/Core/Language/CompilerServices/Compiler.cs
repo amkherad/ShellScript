@@ -22,6 +22,7 @@ namespace ShellScript.Core.Language.CompilerServices
 
 
         public CompilationResult CompileFromSource(
+            TextWriter errorWriter,
             TextWriter warningWriter,
             TextWriter logWriter,
             string sourceCodePath,
@@ -44,7 +45,7 @@ namespace ShellScript.Core.Language.CompilerServices
                     throw new Exception("Invalid platform name.");
                 }
 
-                platform.ReviseFlags(flags);
+                flags = platform.ReviseFlags(flags);
 
                 var outputPath = Path.Combine(Path.GetDirectoryName(outputFilePath), "obj");
 
@@ -76,7 +77,7 @@ namespace ShellScript.Core.Language.CompilerServices
                     codeOutputFile.SetLength(0);
                     metaOutputFile.SetLength(0);
 
-                    var context = new Context(platform, flags);
+                    var context = new Context(platform, flags, errorWriter, warningWriter, logWriter);
                     var scope = context.GeneralScope;
 
                     var metaInfo = context.GetMetaInfoTranspiler();
@@ -145,7 +146,7 @@ namespace ShellScript.Core.Language.CompilerServices
 
             if (!transpiler.Validate(context, scope, statement, out var message))
             {
-                throw new CompilerException(message, statement.Info);
+                throw new CompilerException($"{message} {statement.Info}", statement.Info);
             }
 
             transpiler.WriteBlock(context, scope, outputWriter, metaWriter, statement);

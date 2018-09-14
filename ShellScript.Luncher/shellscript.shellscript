@@ -2,11 +2,8 @@
 //#option("rename-args", "Arguments") //renaming the args[] to Arguments to clearness.
 
 
-function getShellScriptRuntimeCommand() {
-    if (!ClrHelpers.IsAny()) {
-        throw "No CLR runtime found.";
-    }
-    
+command getRuntimeCommand() {
+
     if (ClrHelpers.IsDotNetCoreAvailable()) {
         return ClrHelpers.GetRuntime("dotnet").Command();
     } else if (ClrHelpers.IsDotNetFxAvailable()) {
@@ -16,18 +13,21 @@ function getShellScriptRuntimeCommand() {
     }
 //#if Unix
     else {
-        var lookup = ServiceLocator.Lookup("wine");
+        var lookup = CommandLocator.Lookup("wine");
         if (lookup != null) { //trying to run on wine.
             return lookup.Command();
+        } else {
+            throw "Cannot find the required runtime.";
         }
     }
 //#elseif
     else {
-        throw "Cannot find the required runtime.";
+        throw "No CLR runtime found.";
     }
 //#endif
+
 }
 
-var clrRuntime = getShellScriptRuntimeCommand();
+var clrRuntime = getRuntimeCommand();
 
-clrRuntime.Pipe(SaveToFileAndPrint("./log.txt")).Invoke("./ShellScript.dll", ...Arguments);
+clrRuntime.Pipe(IO.SaveToFileAndPrint("./log.txt")).Invoke("./ShellScript.dll", ...Arguments);

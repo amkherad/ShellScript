@@ -5,7 +5,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class FunctionCallStatement : EvaluationStatement
     {
-        public override bool IsBlockStatement => true;
+        public override bool CanBeEmbedded => true;
         public override StatementInfo Info { get; }
 
         /// <summary>

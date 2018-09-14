@@ -9,7 +9,7 @@ namespace ShellScript
     class Program
     {
         public const int Successful = 0;
-        public const int Failure = -1;
+        public const int Failure = 1;
 
         static int Main(string[] args)
         {

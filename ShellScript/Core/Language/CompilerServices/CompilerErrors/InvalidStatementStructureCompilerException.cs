@@ -1,4 +1,3 @@
-using System;
 using ShellScript.Core.Language.CompilerServices.Statements;
 
 namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
@@ -7,6 +6,11 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
     {
         public InvalidStatementStructureCompilerException(IStatement statement, StatementInfo info)
             : base(CreateMessage(statement, info), info)
+        {
+        }
+        
+        public InvalidStatementStructureCompilerException(string message, StatementInfo info)
+            : base(message, info)
         {
         }
 //        

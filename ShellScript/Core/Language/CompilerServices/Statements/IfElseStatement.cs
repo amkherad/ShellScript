@@ -2,9 +2,9 @@ using System.Collections.Generic;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class IfElseStatement : IStatement
+    public class IfElseStatement : IStatement, IBranchWrapperStatement
     {
-        public bool IsBlockStatement => true;
+        public bool CanBeEmbedded => true;
         public StatementInfo Info { get; }
 
         public ConditionalBlockStatement MainIf { get; }
@@ -13,6 +13,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
         public IStatement[] TraversableChildren { get; protected set; }
 
+        public IStatement[] Branches { get; }
+
 
         public IfElseStatement(ConditionalBlockStatement mainIf, StatementInfo info)
         {
@@ -20,6 +22,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Info = info;
 
             TraversableChildren = StatementHelpers.CreateChildren(mainIf);
+            Branches = new[] {mainIf.Statement};
         }
 
         public IfElseStatement(ConditionalBlockStatement mainIf, ConditionalBlockStatement[] elseIfs, IStatement @else,
@@ -30,19 +33,31 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Else = @else;
             Info = info;
 
-            var result = new List<IStatement>(elseIfs.Length + 2);
+            var children = new List<IStatement>(elseIfs.Length + 2);
+            var branches = new List<IStatement>(elseIfs.Length + 2);
             if (mainIf != null)
-                result.Add(mainIf);
+            {
+                children.Add(mainIf);
+                branches.Add(mainIf.Statement);
+            }
+
             foreach (var child in elseIfs)
             {
                 if (child != null)
-                    result.Add(child);
+                {
+                    children.Add(child);
+                    branches.Add(child.Statement);
+                }
             }
 
             if (@else != null)
-                result.Add(@else);
+            {
+                children.Add(@else);
+                branches.Add(@else);
+            }
 
-            TraversableChildren = result.ToArray();
+            TraversableChildren = children.ToArray();
+            Branches = branches.ToArray();
         }
 
         public IfElseStatement(ConditionalBlockStatement mainIf, ConditionalBlockStatement[] elseIfs,
@@ -51,17 +66,26 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             MainIf = mainIf;
             ElseIfs = elseIfs;
             Info = info;
-            
-            var result = new List<IStatement>(elseIfs.Length + 2);
+
+            var children = new List<IStatement>(elseIfs.Length + 2);
+            var branches = new List<IStatement>(elseIfs.Length + 2);
             if (mainIf != null)
-                result.Add(mainIf);
+            {
+                children.Add(mainIf);
+                branches.Add(mainIf.Statement);
+            }
+
             foreach (var child in elseIfs)
             {
                 if (child != null)
-                    result.Add(child);
+                {
+                    children.Add(child);
+                    branches.Add(child.Statement);
+                }
             }
-            
-            TraversableChildren = result.ToArray();
+
+            TraversableChildren = children.ToArray();
+            Branches = branches.ToArray();
         }
 
         public IfElseStatement(ConditionalBlockStatement mainIf, IStatement @else, StatementInfo info)
@@ -69,8 +93,11 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             MainIf = mainIf;
             Else = @else;
             Info = info;
-            
+
             TraversableChildren = StatementHelpers.CreateChildren(mainIf, @else);
+            Branches = mainIf?.Statement != null
+                ? new[] {mainIf.Statement, @else}
+                : new[] {@else};
         }
     }
 }

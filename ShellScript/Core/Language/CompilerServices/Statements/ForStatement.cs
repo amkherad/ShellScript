@@ -1,6 +1,6 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class ForStatement : ConditionalBlockStatement
+    public class ForStatement : ConditionalBlockStatement, IBlockWrapperStatement
     {
         public IStatement PreLoopAssignment { get; }
         public IStatement AfterLoopEvaluations { get; }

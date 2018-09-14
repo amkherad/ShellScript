@@ -5,13 +5,13 @@ using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class FunctionStatement : IStatement
+    public class FunctionStatement : IStatement, IBlockWrapperStatement
     {
-        public bool IsBlockStatement => true;
+        public bool CanBeEmbedded => true;
         public StatementInfo Info { get; }
 
         public string Name { get; }
-        public BlockStatement Block { get; }
+        public IStatement Statement { get; }
         public FunctionParameterDefinitionStatement[] Parameters { get; }
 
         public bool IsParams { get; }
@@ -21,30 +21,30 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public IStatement[] TraversableChildren { get; protected set; }
 
 
-        public FunctionStatement(DataTypes dataType, string name, FunctionParameterDefinitionStatement[] parameters, BlockStatement block, StatementInfo info)
+        public FunctionStatement(DataTypes dataType, string name, FunctionParameterDefinitionStatement[] parameters, IStatement statement, StatementInfo info)
         {
             DataType = dataType;
             Name = name;
-            Block = block;
+            Statement = statement;
             Info = info;
             Parameters = parameters;
 
             if (parameters != null)
             {
                 TraversableChildren =
-                    StatementHelpers.CreateChildren(new IStatement[] {block}.Union(parameters).ToArray());
+                    StatementHelpers.CreateChildren(new IStatement[] {statement}.Union(parameters).ToArray());
             }
             else
             {
                 TraversableChildren =
-                    StatementHelpers.CreateChildren(block);
+                    StatementHelpers.CreateChildren(statement);
             }
         }
 
         public override string ToString()
         {
             return
-                $"function {Name}({string.Join(',', (IEnumerable<FunctionParameterDefinitionStatement>) Parameters)}) {{{Environment.NewLine}{Block}{Environment.NewLine}}}";
+                $"function {Name}({string.Join(',', (IEnumerable<FunctionParameterDefinitionStatement>) Parameters)}) {{{Environment.NewLine}{Statement}{Environment.NewLine}}}";
         }
     }
 }

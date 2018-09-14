@@ -2,7 +2,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class ReturnStatement : IStatement
     {
-        public bool IsBlockStatement => false;
+        public bool CanBeEmbedded => false;
         public StatementInfo Info { get; }
 
         public EvaluationStatement Result { get; }

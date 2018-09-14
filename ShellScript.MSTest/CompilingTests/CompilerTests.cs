@@ -24,6 +24,7 @@ namespace ShellScript.MSTest.CompilingTests
             var result = compiler.CompileFromSource(
                 Console.Out,
                 Console.Out,
+                Console.Out,
                 "/home/amk/Temp/ShellScript/variables.shellscript",
                 "/home/amk/Temp/ShellScript/variables.sh",
                 "unix-bash",
@@ -40,7 +41,8 @@ namespace ShellScript.MSTest.CompilingTests
 
             using (var reader = new StringReader("int x = 2 + 2"))
             {
-                var context = new Context(new UnixBashPlatform(), new CompilerFlags());
+                var context = new Context(new UnixBashPlatform(), new CompilerFlags(), Console.Out, Console.Out,
+                    Console.Out);
                 var stt = parser.Parse(reader, new ParserInfo(Console.Out, Console.Out, true, "", "", ""));
                 var definitionStt = stt.First() as DefinitionStatement;
 

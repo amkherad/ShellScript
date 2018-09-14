@@ -1,8 +1,8 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class ForEachStatement : IStatement
+    public class ForEachStatement : IStatement, IBlockWrapperStatement
     {
-        public bool IsBlockStatement => true;
+        public bool CanBeEmbedded => true;
         public StatementInfo Info { get; }
 
         public IStatement Variable { get; }

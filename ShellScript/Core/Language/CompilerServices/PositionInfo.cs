@@ -18,5 +18,10 @@ namespace ShellScript.Core.Language.CompilerServices
         {
             return $"in {FilePath} at {LineNumber}:{ColumnNumber}";
         }
+
+        public string GetPositionString()
+        {
+            return $"{LineNumber}:{ColumnNumber}";
+        }
     }
 }

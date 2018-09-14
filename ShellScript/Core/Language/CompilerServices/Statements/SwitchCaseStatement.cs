@@ -2,15 +2,17 @@ using System.Linq;
 
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
-    public class SwitchCaseStatement : IStatement
+    public class SwitchCaseStatement : IStatement, IBranchWrapperStatement
     {
-        public bool IsBlockStatement => true;
+        public bool CanBeEmbedded => true;
         public StatementInfo Info { get; }
         
         public EvaluationStatement SwitchTarget { get; }
         public ConditionalBlockStatement[] Cases { get; }
         
         public IStatement[] TraversableChildren { get; }
+        
+        public IStatement[] Branches { get; }
         
         public SwitchCaseStatement(EvaluationStatement switchTarget, ConditionalBlockStatement[] cases, StatementInfo info)
         {
@@ -19,6 +21,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Info = info;
 
             TraversableChildren = StatementHelpers.CreateChildren(new IStatement[] {switchTarget}.Union(cases).ToArray());
+            Branches = cases.Select(x => x.Statement).ToArray();
         }
         
         public SwitchCaseStatement(EvaluationStatement switchTarget, ConditionalBlockStatement[] cases, IStatement defaultCase, StatementInfo info)
@@ -28,6 +31,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Info = info;
 
             TraversableChildren = StatementHelpers.CreateChildren(new IStatement[] {switchTarget}.Union(cases).Union(new []{defaultCase}).ToArray());
+            Branches = cases.Select(x => x.Statement).ToArray();
         }
     }
 }
