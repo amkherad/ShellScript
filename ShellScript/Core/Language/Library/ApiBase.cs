@@ -1,4 +1,6 @@
 using System.Linq;
+using ShellScript.Core.Language.CompilerServices;
+using ShellScript.Core.Language.CompilerServices.Transpiling;
 
 namespace ShellScript.Core.Language.Library
 {
@@ -7,10 +9,23 @@ namespace ShellScript.Core.Language.Library
         public abstract IApiVariable[] Variables { get; }
         public abstract IApiFunc[] Functions { get; }
         public abstract IApiClass[] Classes { get; }
-        
+
         public abstract string Name { get; }
-        public abstract string OutputFileExtension { get; }
-        
+
+
+        public virtual void InitializeContext(Context context)
+        {
+            var scope = context.GeneralScope;
+
+            foreach (var cls in Classes)
+            foreach (var function in cls.Functions)
+            {
+                var funcInfo = new ApiFunctionInfo(function.DataType, function.Name, null, cls.Name, function,
+                    function.AllowDynamicParams, function.Parameters);
+                
+                scope.ReserveNewFunction(funcInfo);
+            }
+        }
 
         public bool TryGetClass(string className, out IApiClass result)
         {

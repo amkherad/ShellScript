@@ -80,6 +80,8 @@ namespace ShellScript.Core.Language.CompilerServices
                     var context = new Context(platform, flags, errorWriter, warningWriter, logWriter);
                     var scope = context.GeneralScope;
 
+                    platform.Api.InitializeContext(context);
+                    
                     var metaInfo = context.GetMetaInfoTranspiler();
                     metaInfo.WritePrologue(context, metaWriter);
 
@@ -116,6 +118,11 @@ namespace ShellScript.Core.Language.CompilerServices
                         outputWriter.WriteLine(line);
                     }
 
+                    if (context.Flags.UseSegments)
+                    {
+                        context.GetMetaInfoTranspiler().WriteSeparator(context, outputWriter);
+                    }
+                    
                     while ((line = codeReader.ReadLine()) != null)
                     {
                         outputWriter.WriteLine(line);

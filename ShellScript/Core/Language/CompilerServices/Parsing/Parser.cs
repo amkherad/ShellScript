@@ -291,7 +291,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         protected ParserException UnexpectedSyntax(Token token, ParserInfo info)
         {
             return new ParserSyntaxException(
-                $"Unexpected token '{token.Value}' found",
+                $"Unexpected token of type {token.Type}({token.Value}) found",
                 token?.LineNumber ?? 0, token?.ColumnStart ?? 0, info);
         }
 

@@ -25,7 +25,7 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
 
         public static string CreateMessage(string identifierName, StatementInfo info)
         {
-            return $"Identifier '{identifierName}' does not found in {info}";
+            return $"Identifier '{identifierName}' does not found {info}";
         }
 //        public static string CreateMessage(string identifierName)
 //        {

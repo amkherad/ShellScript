@@ -131,20 +131,20 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
                     return true;
                 }
                 
-                if (that._variables.Contains(new VariableInfo(name)))
-                {
-                    return true;
-                }
+//                if (that._variables.Contains(new VariableInfo(name)))
+//                {
+//                    return true;
+//                }
+//                
+//                if (that._constants.Contains(new ConstantInfo(name)))
+//                {
+//                    return true;
+//                }
                 
-                if (that._constants.Contains(new ConstantInfo(name)))
-                {
-                    return true;
-                }
-                
-                if (that._functions.Contains(new FunctionInfo(name)))
-                {
-                    return true;
-                }
+//                if (that._functions.Contains(new FunctionInfo(null, name)))
+//                {
+//                    return true;
+//                }
                 
             } while ((that = that.Parent) != null);
 
@@ -169,9 +169,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             _constants.Add(new ConstantInfo(dataType, name, value));
         }
 
-        public void ReserveNewFunction(string name, FunctionInfo function)
+        public void ReserveNewFunction(FunctionInfo function)
         {
-            _identifiers.Add(name);
+            _identifiers.Add(function.Fqn);
             _functions.Add(function);
         }
 
@@ -257,26 +257,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             return false;
         }
 
-        public bool TryGetFunctionInfo(string functionName, out FunctionInfo functionInfo)
-        {
-            var funcInfo = new FunctionInfo(functionName);
-
-            var that = this;
-            do
-            {
-                if (that._functions.TryGetValue(funcInfo, out functionInfo))
-                {
-                    return true;
-                }
-                
-            } while ((that = that.Parent) != null);
-
-            return false;
-        }
-
         public bool TryGetFunctionInfo(FunctionCallStatement functionCallStatement, out FunctionInfo functionInfo)
         {
-            var funcInfo = new FunctionInfo(functionCallStatement.FunctionName);
+            var funcInfo = new FunctionInfo(functionCallStatement.ObjectName, functionCallStatement.FunctionName);
 
             var that = this;
             do
@@ -293,7 +276,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
 
         public bool TryGetFunctionInfo(string className, string functionName, out FunctionInfo functionInfo)
         {
-            var funcInfo = new FunctionInfo(functionName);
+            var funcInfo = new FunctionInfo(className, functionName);
 
             var that = this;
             do

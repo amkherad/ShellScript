@@ -1,17 +1,15 @@
 using System.IO;
-using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Statements.Operators;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 {
-    public class BashStringConcatenationExpressionBuilder : BashDefaultExpressionBuilder
+    public class BashConditionalStringConcatenationExpressionBuilder : BashConditionalExpressionBuilder
     {
-        public new static BashStringConcatenationExpressionBuilder Instance { get; } =
-            new BashStringConcatenationExpressionBuilder();
+        public new static BashConditionalStringConcatenationExpressionBuilder Instance { get; } =
+            new BashConditionalStringConcatenationExpressionBuilder();
 
         public override string FormatVariableAccessExpression(ExpressionBuilderParams p, string expression,
             IStatement template)

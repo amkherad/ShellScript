@@ -11,7 +11,8 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
         {
         }
 
-        public TypeMismatchCompilerException(DataTypes specifiedType, DataTypes expectedType, StatementInfo info, Exception innerException)
+        public TypeMismatchCompilerException(DataTypes specifiedType, DataTypes expectedType, StatementInfo info,
+            Exception innerException)
             : base(CreateMessage(specifiedType, expectedType, info), info, innerException)
         {
         }
@@ -24,14 +25,8 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
         public static string CreateMessage(DataTypes specifiedType, DataTypes expectedType, StatementInfo info)
         {
             // ReSharper disable once UseStringInterpolation
-            return string.Format(
-                "A type mismatch exception has been thrown, expectation was: '{0}' but a type of '{1}' is specified in '{2}' at {3}:{4}.",
-                expectedType,
-                specifiedType,
-                info?.FilePath,
-                info?.LineNumber,
-                info?.ColumnNumber
-            );
+            return
+                $"A type mismatch exception has been thrown, expectation was: '{expectedType}' but a type of '{specifiedType}' is specified {info}";
         }
 
 //        public static string CreateMessage(DataTypes specifiedType, DataTypes expectedType)

@@ -56,8 +56,14 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
             return base.Validate(context, scope, statement, out message);
         }
 
-        public abstract string PinEvaluationToVariable(Context context, Scope scope, TextWriter pinCodeWriter,
-            EvaluationStatement statement);
+        public abstract string PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter,
+            TextWriter pinCodeWriter, EvaluationStatement statement);
+
+        public abstract (DataTypes, string) GetInline(Context context, Scope scope, TextWriter metaWriter,
+            TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
+
+        public abstract (DataTypes, string) GetInlineConditional(Context context, Scope scope, TextWriter metaWriter,
+            TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
 
 
         public static EvaluationStatement ProcessEvaluation(Context context, Scope scope,
@@ -471,7 +477,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     logicalEvaluationStatement);
                             }
 
-                            throw BashTranspilerHelpers.InvalidStatementStructure(scope, logicalEvaluationStatement);
+                            return logicalEvaluationStatement;
+                            //throw BashTranspilerHelpers.InvalidStatementStructure(scope, logicalEvaluationStatement);
                         }
                         default:
                             throw new InvalidOperationException();
@@ -721,7 +728,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
                 case FunctionCallStatement functionCallStatement:
                 {
-                    if (scope.TryGetFunctionInfo(functionCallStatement.FunctionName, out var functionInfo))
+                    if (scope.TryGetFunctionInfo(functionCallStatement, out var functionInfo))
                     {
                         if (functionInfo.InlinedStatement != null)
                         {

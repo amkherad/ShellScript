@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using ShellScript.Core.Language.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
@@ -18,9 +19,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         }
 
         public override void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
-            TextWriter nonInlinePartWriter,
-            IStatement statement)
+            TextWriter nonInlinePartWriter, IStatement statement)
         {
+            if (!(statement is FunctionCallStatement functionCallStatement)) throw new InvalidOperationException();
+
+            var (dataType, exp) = CreateBashExpression(context, scope, metaWriter, nonInlinePartWriter, statement,
+                functionCallStatement);
+
+            writer.Write(exp);
         }
 
         public override void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
@@ -33,7 +39,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 throw new IdentifierNotFoundCompilerException(functionCallStatement.FunctionName,
                     functionCallStatement.Info);
             }
-            
+
             CheckParameters(context, scope, functionCallStatement, funcInfo);
 
             var resultVar = context.GetLastFunctionCallStorageVariable(metaWriter);
@@ -46,20 +52,22 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
             else
             {
-                using (var inlineWriter = new StringWriter())
+                var paramExp = new StringBuilder();
+
+                foreach (var stt in functionCallStatement.Parameters)
                 {
-                    foreach (var stt in functionCallStatement.Parameters)
-                    {
-                        inlineWriter.Write(' ');
+                    paramExp.Append(' ');
 
-                        var transpiler = context.GetEvaluationTranspilerForStatement(stt);
-                        transpiler.WriteInline(context, scope, inlineWriter, metaWriter, writer, stt);
-                    }
+                    var transpiler = context.GetEvaluationTranspilerForStatement(stt);
+                    var (dataType, expression) =
+                        transpiler.GetInline(context, scope, metaWriter, writer, functionCallStatement, stt);
 
-                    writer.Write($"{resultVar}=`{funcInfo.Name}");
-                    writer.Write(inlineWriter.ToString());
-                    writer.WriteLine('`');
+                    paramExp.Append(expression);
                 }
+
+                writer.Write($"{resultVar}=`{funcInfo.Name}");
+                writer.Write(paramExp);
+                writer.WriteLine('`');
             }
         }
 

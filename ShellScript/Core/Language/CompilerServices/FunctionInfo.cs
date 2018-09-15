@@ -8,39 +8,84 @@ namespace ShellScript.Core.Language.CompilerServices
     public class FunctionInfo : IEquatable<FunctionInfo>
     {
         public DataTypes DataType { get; }
-        public string Name { get; }
-        public string ReName { get; }
+        public virtual string ObjectName { get; }
+        public virtual string Name { get; }
+        public virtual string ReName { get; }
 
-        public string AccessName => ReName ?? Name;
-        
+        public virtual string AccessName
+        {
+            get
+            {
+                if (ObjectName != null)
+                {
+                    return $"{ObjectName}.{ReName ?? Name}";
+                }
+
+                return ReName ?? Name;
+            }
+        }
+
+        public virtual string Fqn
+        {
+            get
+            {
+                if (ObjectName != null)
+                {
+                    return $"{ObjectName}_{Name}";
+                }
+
+                return Name;
+            }
+        }
+
         public bool IsParams { get; }
         public FunctionParameterDefinitionStatement[] Parameters { get; }
-        public string ObjectName { get; }
 
         public IStatement InlinedStatement { get; }
 
 
-        public FunctionInfo(DataTypes dataType, string name, string reName, bool isParams,
+        public FunctionInfo(DataTypes dataType, string name, string reName, string objectName, bool isParams,
             FunctionParameterDefinitionStatement[] parameters,
-            string objectName, IStatement inlinedStatement)
+            IStatement inlinedStatement)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
+            ObjectName = objectName;
             ReName = reName;
             IsParams = isParams;
             Parameters = parameters;
-            ObjectName = objectName;
             InlinedStatement = inlinedStatement;
             DataType = dataType;
         }
 
-        public FunctionInfo(string name)
+        public FunctionInfo(string objectName, string name)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
+            ObjectName = objectName;
         }
 
-        public override int GetHashCode()
+
+        public static IStatement UnWrapInlinedStatement(Context context, Scope scope, FunctionInfo functionInfo)
         {
-            return Name != null ? Name.GetHashCode() : 0;
+            var inlined = functionInfo.InlinedStatement;
+            var result = inlined;
+            while (inlined != null && inlined is FunctionCallStatement funcCallStt)
+            {
+                if (!scope.TryGetFunctionInfo(funcCallStt, out functionInfo))
+                {
+                    return inlined;
+                }
+
+                inlined = functionInfo.InlinedStatement;
+            }
+
+            return inlined ?? result;
+        }
+
+        public virtual bool Equals(FunctionInfo other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return string.Equals(Name, other.Name) && string.Equals(ObjectName, other.ObjectName);
         }
 
         public override bool Equals(object obj)
@@ -51,29 +96,13 @@ namespace ShellScript.Core.Language.CompilerServices
             return Equals((FunctionInfo) obj);
         }
 
-        public bool Equals(FunctionInfo other)
+        public override int GetHashCode()
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return string.Equals(Name, other.Name);
-        }
-
-
-        public static IStatement UnWrapInlinedStatement(Context context, Scope scope, FunctionInfo functionInfo)
-        {
-            var inlined = functionInfo.InlinedStatement;
-            var result = inlined;
-            while (inlined != null && inlined is FunctionCallStatement funcCallStt)
+            unchecked
             {
-                if (!scope.TryGetFunctionInfo(funcCallStt.FunctionName, out functionInfo))
-                {
-                    return inlined;
-                }
-
-                inlined = functionInfo.InlinedStatement;
+                return ((Name != null ? Name.GetHashCode() : 0) * 397) ^
+                       (ObjectName != null ? ObjectName.GetHashCode() : 0);
             }
-
-            return inlined ?? result;
         }
     }
 }

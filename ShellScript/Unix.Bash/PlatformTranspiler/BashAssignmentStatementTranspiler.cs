@@ -25,7 +25,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             WriteAssignment(context, scope, writer, metaWriter, nonInlinePartWriter, assignmentStatement);
         }
 
-        public override void WriteBlock(Context context, Scope scope, TextWriter nonInlinePartWriter, TextWriter metaWriter,
+        public override void WriteBlock(Context context, Scope scope, TextWriter nonInlinePartWriter,
+            TextWriter metaWriter,
             IStatement statement)
         {
             if (!(statement is AssignmentStatement assignmentStatement)) throw new InvalidOperationException();
@@ -33,7 +34,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             using (var writer = new StringWriter())
             {
                 WriteAssignment(context, scope, writer, metaWriter, nonInlinePartWriter, assignmentStatement);
-                
+
                 writer.WriteLine();
 
                 nonInlinePartWriter.Write(writer);
@@ -52,7 +53,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 }
 
                 throw new InvalidStatementStructureCompilerException(
-                    "Only variables can be presented in the left side of an assignment", assignmentStatement.LeftSide.Info);
+                    "Only variables can be presented in the left side of an assignment",
+                    assignmentStatement.LeftSide.Info);
             }
 
             var evaluation = assignmentStatement.RightSide as EvaluationStatement;
@@ -66,12 +68,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             {
                 throw new IdentifierNotFoundCompilerException(target.VariableName, target.Info);
             }
-            
-            writer.Write($"{varInfo.AccessName}=");
 
             var transpiler = context.GetEvaluationTranspilerForStatement(evaluation);
 
-            transpiler.WriteInline(context, scope, writer, metaWriter, nonInlinePartWriter, evaluation);
+            var (dataType, expression) =
+                transpiler.GetInline(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
+
+            writer.Write($"{varInfo.AccessName}=");
+            writer.Write(expression);
         }
     }
 }

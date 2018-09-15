@@ -1,3 +1,5 @@
+using ShellScript.Core.Language.CompilerServices.Transpiling;
+
 namespace ShellScript.Core.Language.Library
 {
     public interface IApi
@@ -8,7 +10,8 @@ namespace ShellScript.Core.Language.Library
         
         string Name { get; }
         
-        string OutputFileExtension { get; }
+
+        void InitializeContext(Context context);
         
         
         bool TryGetClass(string className, out IApiClass result);

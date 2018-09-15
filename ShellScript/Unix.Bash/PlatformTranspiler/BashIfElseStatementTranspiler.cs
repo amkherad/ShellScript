@@ -54,7 +54,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             else
             {
                 writer.Write("if ");
-                WriteCondition(context, scope, writer, metaWriter, nonInlinePartWriter, condition);
+                WriteCondition(context, scope, writer, metaWriter, nonInlinePartWriter, ifElseStatement, condition);
                 writer.WriteLine();
                 writer.WriteLine("then");
                 BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
@@ -95,7 +95,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                             writer.Write("elif ");
                         }
 
-                        WriteCondition(context, scope, writer, metaWriter, nonInlinePartWriter, condition);
+                        WriteCondition(context, scope, writer, metaWriter, nonInlinePartWriter, ifElseStatement,
+                            condition);
                         writer.WriteLine();
                         writer.WriteLine("then");
                         BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
@@ -126,18 +127,19 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         }
 
         public static void WriteCondition(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
-            TextWriter nonInlinePartWriter, IStatement statement)
+            TextWriter nonInlinePartWriter, IfElseStatement ifElseStatement, EvaluationStatement statement)
         {
-            var expression =
-                BashConditionalExpressionBuilder.Instance
-                    .CreateExpression(context, scope, nonInlinePartWriter, statement);
+            var expressionBuilder = context.GetEvaluationTranspilerForStatement(statement);
 
-            if (expression.Item1 != DataTypes.Boolean)
+            var (dataType, expression) = expressionBuilder.GetInlineConditional(context, scope, metaWriter,
+                nonInlinePartWriter, ifElseStatement, statement);
+
+            if (dataType != DataTypes.Boolean)
             {
                 throw new InvalidStatementStructureCompilerException(statement, statement.Info);
             }
 
-            writer.Write(expression.Item2);
+            writer.Write(expression);
         }
     }
 }

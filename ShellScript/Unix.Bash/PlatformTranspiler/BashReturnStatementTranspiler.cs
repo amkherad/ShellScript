@@ -36,14 +36,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
             else
             {
-                using (var inlineWriter = new StringWriter())
-                {
-                    var transpiler = context.GetEvaluationTranspilerForStatement(result);
-                    transpiler.WriteInline(context, scope, inlineWriter, metaWriter, writer, result);
+                var transpiler = context.GetEvaluationTranspilerForStatement(result);
+                var (dataType, expression) = transpiler.GetInline(context, scope, metaWriter, writer, null, result);
 
-                    writer.Write("echo ");
-                    writer.Write(inlineWriter);
-                }
+                writer.Write("echo ");
+                writer.Write(expression);
             }
 
             writer.WriteLine();

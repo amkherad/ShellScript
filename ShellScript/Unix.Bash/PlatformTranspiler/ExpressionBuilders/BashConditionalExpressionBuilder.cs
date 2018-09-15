@@ -12,7 +12,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
     {
         public new static BashConditionalExpressionBuilder Instance { get; } = new BashConditionalExpressionBuilder();
         
-        public override bool ShouldBePinnedToFloatingPointVariable(Context context, Scope scope,
+        public override bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p,
             DataTypes dataType, IStatement template)
         {
             if (template is ConstantValueStatement)
@@ -25,7 +25,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return dataType.IsNumericOrFloat();
         }
 
-        public override bool ShouldBePinnedToFloatingPointVariable(Context context, Scope scope,
+        public override bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p,
             DataTypes left, IStatement leftTemplate, DataTypes right, IStatement rightTemplate)
         {
             if (leftTemplate is ConstantValueStatement)
@@ -37,8 +37,46 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
             return left.IsNumericOrFloat();
         }
-        
-        public override string FormatLogicalExpression(Context context, Scope scope, DataTypes leftDataType, string left, IOperator op,
+
+        public override string FormatExpression(ExpressionBuilderParams p, string expression, IStatement template)
+        {
+            if (template is LogicalEvaluationStatement)
+            {
+                if (expression[0] != '[' && expression[expression.Length - 1] != ']')
+                {
+                    return $"[ {expression} ]";
+                }
+            }
+
+            return base.FormatExpression(p, expression, template);
+        }
+
+        public override string FormatExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
+            IStatement template)
+        {
+            if (dataType.IsBoolean() || template is LogicalEvaluationStatement)
+            {
+                if (expression[0] != '[' && expression[expression.Length - 1] != ']')
+                {
+                    return $"[ {expression} ]";
+                }
+            }
+
+            return base.FormatExpression(p, expression, template);
+        }
+
+        public override string FormatSubExpression(ExpressionBuilderParams p, string expression, IStatement template)
+        {
+            if (template is LogicalEvaluationStatement)
+            {
+                return expression;
+            }
+            
+            return base.FormatSubExpression(p, expression, template);
+        }
+
+
+        public override string FormatLogicalExpression(ExpressionBuilderParams p, DataTypes leftDataType, string left, IOperator op,
             DataTypes rightDataType, string right, IStatement template)
         {
             if (!(template is LogicalEvaluationStatement logicalEvaluationStatement))
@@ -93,7 +131,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             left = _createStringExpression(left, logicalEvaluationStatement.Left);
             right = _createStringExpression(right, logicalEvaluationStatement.Right);
             
-            return $"[ {left} {opStr} {right} ]";
+            return $"{left} {opStr} {right}";
         }
 
         private string _createStringExpression(string exp, IStatement statement)
@@ -106,6 +144,18 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             if (statement is VariableAccessStatement _)
             {
                 return exp;
+            }
+
+            if (statement is LogicalEvaluationStatement)
+            {
+                if (exp[0] != '[' && exp[exp.Length - 1] != ']')
+                {
+                    return $"[ {exp} ]";
+                }
+                else
+                {
+                    return exp;
+                }
             }
 
             return $"$(({exp}))";

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations;
@@ -27,34 +28,33 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is EchoStatement echoStatement)) throw new InvalidOperationException();
 
-            using (var inlineWriter = new StringWriter())
+            var paramExp = new StringBuilder();
+            var isFirst = true;
+            foreach (var stt in echoStatement.Parameters)
             {
-                var isFirst = true;
-                foreach (var stt in echoStatement.Parameters)
+                if (!isFirst)
                 {
-                    if (!isFirst)
-                    {
-                        inlineWriter.Write(' ');
-                    }
-
-                    isFirst = false;
-
-                    var transpiler = context.GetEvaluationTranspilerForStatement(stt);
-
-                    transpiler.WriteInline(context, scope, inlineWriter, metaWriter, writer, stt);
+                    paramExp.Append(' ');
                 }
 
-                writer.Write("echo ");
-                writer.Write(inlineWriter.ToString());
+                isFirst = false;
 
-                var device = scope.GetConfig(c => c.ExplicitEchoStream, context.Flags.ExplicitEchoStream);
-                if (!string.IsNullOrWhiteSpace(device))
-                {
-                    writer.Write($" > {device}");
-                }
+                var transpiler = context.GetEvaluationTranspilerForStatement(stt);
 
-                writer.WriteLine();
+                var (dataType, expression) = transpiler.GetInline(context, scope, metaWriter, writer, null, stt);
+                paramExp.Append(expression);
             }
+
+            writer.Write("echo ");
+            writer.Write(paramExp.ToString());
+
+            var device = scope.GetConfig(c => c.ExplicitEchoStream, context.Flags.ExplicitEchoStream);
+            if (!string.IsNullOrWhiteSpace(device))
+            {
+                writer.Write($" > {device}");
+            }
+
+            writer.WriteLine();
         }
     }
 }

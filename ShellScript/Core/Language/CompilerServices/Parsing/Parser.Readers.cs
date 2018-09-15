@@ -66,138 +66,6 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             return new BlockStatement(statements.ToArray(), CreateStatementInfo(info, token));
         }
 
-        public EvaluationStatement ReadAssignmentOrFunctionCall(Token token, PeekingEnumerator<Token> enumerator,
-            ParserInfo info)
-        {
-            if (token.Type != TokenType.IdentifierName)
-                throw UnexpectedSyntax(token, info);
-
-            var firstToken = token;
-
-            if (enumerator.TryPeek(out var peek))
-            {
-                switch (peek.Type)
-                {
-                    case TokenType.Assignment:
-                    {
-                        enumerator.MoveNext(); //read the assignment operator
-
-                        if (!enumerator.MoveNext()) //read the next token for ReadEvaluationStatement
-                            throw EndOfFile(token, info);
-
-                        token = enumerator.Current;
-                        var result = ReadEvaluationStatement(token, enumerator, info);
-
-                        var sttInfo = CreateStatementInfo(info, token);
-                        return new AssignmentStatement(new VariableAccessStatement(firstToken.Value, sttInfo), result,
-                            sttInfo);
-                    }
-                    case TokenType.OpenParenthesis:
-                    case TokenType.Dot:
-                    {
-                        return ReadVariableOrFunctionCall(token, enumerator, info);
-                    }
-                    default:
-                        throw UnexpectedSyntax(peek, info);
-                }
-            }
-
-            throw UnexpectedSyntax(token, info);
-        }
-
-        public EvaluationStatement ReadVariableOrFunctionCall(Token token, PeekingEnumerator<Token> enumerator,
-            ParserInfo info)
-        {
-            if (token.Type != TokenType.IdentifierName)
-                throw UnexpectedSyntax(token, info);
-
-            var functionName = token;
-            Token className = null;
-
-            if (enumerator.TryPeek(out var peek))
-            {
-                var isMemberFunction = peek.Type == TokenType.Dot;
-                if (peek.Type == TokenType.OpenParenthesis || isMemberFunction)
-                {
-                    enumerator.MoveNext(); //read the open parenthesis or dot
-                    var parameters = new List<EvaluationStatement>();
-
-                    if (!enumerator.MoveNext())
-                        throw EndOfFile(token, info);
-
-                    token = enumerator.Current;
-
-                    if (isMemberFunction)
-                    {
-                        className = token;
-
-                        if (!enumerator.MoveNext())
-                            throw EndOfFile(token, info);
-
-                        token = enumerator.Current;
-                        if (token.Type != TokenType.OpenParenthesis)
-                            throw UnexpectedSyntax(token, info);
-
-                        if (!enumerator.MoveNext()) //read the next token for ReadEvaluationStatement
-                            throw EndOfFile(token, info);
-
-                        token = enumerator.Current;
-                    }
-
-                    if (token.Type != TokenType.CloseParenthesis)
-                    {
-                        var continueRead = true;
-                        for (; continueRead;)
-                        {
-                            var statement = ReadEvaluationStatement(token, enumerator, info);
-                            parameters.Add(statement);
-
-                            if (enumerator.TryPeek(out var nextPeek))
-                            {
-                                switch (nextPeek.Type)
-                                {
-                                    case TokenType.Comma:
-                                    {
-                                        if (statement is NopStatement)
-                                            throw UnexpectedSyntax(token, info);
-
-                                        enumerator.MoveNext(); //skip the comma
-
-                                        if (!enumerator.MoveNext())
-                                            throw EndOfFile(token, info);
-                                        token = enumerator.Current;
-
-                                        break;
-                                    }
-                                    case TokenType.CloseParenthesis:
-                                    {
-                                        enumerator.MoveNext();
-                                        
-                                        continueRead = false;
-                                        break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                    }
-
-                    return new FunctionCallStatement(
-                        className?.Value,
-                        functionName.Value,
-                        DataTypes.Void,
-                        parameters.Where(p => !(p is NopStatement)).ToArray(),
-                        CreateStatementInfo(info, token)
-                    );
-                }
-            }
-
-            return new VariableAccessStatement(token.Value, CreateStatementInfo(info, token));
-        }
-
 
         private EvaluationStatement _createEvaluation(LinkedList<IStatement> statements, Token token, ParserInfo info)
         {
@@ -248,7 +116,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         continue;
                     }
 
-                    throw new InvalidOperationException();
+                    //throw new InvalidOperationException();
                 }
 
                 //digit sign (negative/positive operator)
@@ -536,12 +404,18 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         statements.AddLast(new ReminderOperator(CreateStatementInfo(info, token)));
                         break;
                     }
+                    
                     case TokenType.Not:
                     {
-                        statements.AddLast(new ReminderOperator(CreateStatementInfo(info, token)));
+                        statements.AddLast(new NotOperator(CreateStatementInfo(info, token)));
                         break;
                     }
-
+                    case TokenType.BitwiseNot:
+                    {
+                        statements.AddLast(new BitwiseNotOperator(CreateStatementInfo(info, token)));
+                        break;
+                    }
+                    
                     case TokenType.Equals:
                     {
                         statements.AddLast(new EqualOperator(CreateStatementInfo(info, token)));
@@ -570,6 +444,26 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     case TokenType.Less:
                     {
                         statements.AddLast(new LessOperator(CreateStatementInfo(info, token)));
+                        break;
+                    }
+                    case TokenType.And:
+                    {
+                        statements.AddLast(new BitwiseAndOperator(CreateStatementInfo(info, token)));
+                        break;
+                    }
+                    case TokenType.AndLogical:
+                    {
+                        statements.AddLast(new LogicalAndOperator(CreateStatementInfo(info, token)));
+                        break;
+                    }
+                    case TokenType.Or:
+                    {
+                        statements.AddLast(new BitwiseOrOperator(CreateStatementInfo(info, token)));
+                        break;
+                    }
+                    case TokenType.OrLogical:
+                    {
+                        statements.AddLast(new LogicalOrOperator(CreateStatementInfo(info, token)));
                         break;
                     }
 
@@ -673,6 +567,139 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             }
 
             return new ConstantValueStatement(dataTypeHint, token.Value, CreateStatementInfo(info, token));
+        }
+
+        public EvaluationStatement ReadAssignmentOrFunctionCall(Token token, PeekingEnumerator<Token> enumerator,
+            ParserInfo info)
+        {
+            if (token.Type != TokenType.IdentifierName)
+                throw UnexpectedSyntax(token, info);
+
+            var firstToken = token;
+
+            if (enumerator.TryPeek(out var peek))
+            {
+                switch (peek.Type)
+                {
+                    case TokenType.Assignment:
+                    {
+                        enumerator.MoveNext(); //read the assignment operator
+
+                        if (!enumerator.MoveNext()) //read the next token for ReadEvaluationStatement
+                            throw EndOfFile(token, info);
+
+                        token = enumerator.Current;
+                        var result = ReadEvaluationStatement(token, enumerator, info);
+
+                        var sttInfo = CreateStatementInfo(info, token);
+                        return new AssignmentStatement(new VariableAccessStatement(firstToken.Value, sttInfo), result,
+                            sttInfo);
+                    }
+                    case TokenType.OpenParenthesis:
+                    case TokenType.Dot:
+                    {
+                        return ReadVariableOrFunctionCall(token, enumerator, info);
+                    }
+                    default:
+                        throw UnexpectedSyntax(peek, info);
+                }
+            }
+
+            throw UnexpectedSyntax(token, info);
+        }
+
+        public EvaluationStatement ReadVariableOrFunctionCall(Token token, PeekingEnumerator<Token> enumerator,
+            ParserInfo info)
+        {
+            if (token.Type != TokenType.IdentifierName)
+                throw UnexpectedSyntax(token, info);
+
+            var functionName = token;
+            Token className = null;
+
+            if (enumerator.TryPeek(out var peek))
+            {
+                var isMemberFunction = peek.Type == TokenType.Dot;
+                if (peek.Type == TokenType.OpenParenthesis || isMemberFunction)
+                {
+                    enumerator.MoveNext(); //read the open parenthesis or dot
+                    var parameters = new List<EvaluationStatement>();
+
+                    if (!enumerator.MoveNext())
+                        throw EndOfFile(token, info);
+
+                    token = enumerator.Current;
+
+                    if (isMemberFunction)
+                    {
+                        className = functionName;
+                        functionName = token;
+
+                        if (!enumerator.MoveNext())
+                            throw EndOfFile(token, info);
+
+                        token = enumerator.Current;
+                        if (token.Type != TokenType.OpenParenthesis)
+                            throw UnexpectedSyntax(token, info);
+
+                        if (!enumerator.MoveNext()) //read the next token for ReadEvaluationStatement
+                            throw EndOfFile(token, info);
+
+                        token = enumerator.Current;
+                    }
+
+                    if (token.Type != TokenType.CloseParenthesis)
+                    {
+                        var continueRead = true;
+                        for (; continueRead;)
+                        {
+                            var statement = ReadEvaluationStatement(token, enumerator, info);
+                            parameters.Add(statement);
+
+                            if (enumerator.TryPeek(out var nextPeek))
+                            {
+                                switch (nextPeek.Type)
+                                {
+                                    case TokenType.Comma:
+                                    {
+                                        if (statement is NopStatement)
+                                            throw UnexpectedSyntax(token, info);
+
+                                        enumerator.MoveNext(); //skip the comma
+
+                                        if (!enumerator.MoveNext())
+                                            throw EndOfFile(token, info);
+                                        token = enumerator.Current;
+
+                                        break;
+                                    }
+                                    case TokenType.CloseParenthesis:
+                                    {
+                                        enumerator.MoveNext();
+                                        
+                                        continueRead = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    return new FunctionCallStatement(
+                        className?.Value,
+                        functionName.Value,
+                        DataTypes.Void,
+                        parameters.Where(p => !(p is NopStatement)).ToArray(),
+                        CreateStatementInfo(info, token)
+                    );
+                }
+            }
+
+            return new VariableAccessStatement(token.Value, CreateStatementInfo(info, token));
         }
 
 

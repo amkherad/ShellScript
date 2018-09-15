@@ -41,6 +41,8 @@ namespace ShellScript.Core.Language.CompilerServices
         public bool UseComments { get; set; }
         
         public bool CommentParameterInfos { get; set; }
+        
+        public bool UseSegments { get; set; }
 
         
         public static CompilerFlags CreateDefault()
@@ -61,6 +63,8 @@ namespace ShellScript.Core.Language.CompilerServices
                 
                 UseComments = true,
                 CommentParameterInfos = true,
+                
+                UseSegments = true,
             };
         }
     }

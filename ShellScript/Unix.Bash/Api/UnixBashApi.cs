@@ -13,6 +13,5 @@ namespace ShellScript.Unix.Bash.Api
         };
         
         public override string Name => "Unix-Bash";
-        public override string OutputFileExtension => "sh";
     }
 }

@@ -11,6 +11,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             writer.WriteLine("#{0}", comment);
         }
+        
+        public static void WriteSeparator(TextWriter writer)
+        {
+            writer.WriteLine("#{0}", new string('-', 79));
+        }
 
         public static string StandardizeString(string value, bool deQuote)
         {

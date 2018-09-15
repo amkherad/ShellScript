@@ -42,10 +42,26 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 writer.Write("Wiki: ");
                 writer.WriteLine(context.WikiUrl);
             }
+
+            if (context.Flags.UseSegments)
+            {
+                BashTranspilerHelpers.WriteSeparator(writer);
+            }
         }
 
         public void WriteEpilogue(Context context, TextWriter writer)
         {
+        }
+
+        
+        public void WriteComment(Context context, TextWriter writer, string comment)
+        {
+            BashTranspilerHelpers.WriteComment(writer, comment);
+        }
+
+        public void WriteSeparator(Context context, TextWriter writer)
+        {
+            BashTranspilerHelpers.WriteSeparator(writer);
         }
     }
 }

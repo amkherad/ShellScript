@@ -69,10 +69,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 TryGetInlinedStatement(context, funcScope, funcDefStt, out inlinedStatement);
             }
 
-            var func = new FunctionInfo(funcDefStt.DataType, functionName, null, funcDefStt.IsParams,
-                funcDefStt.Parameters, null, inlinedStatement);
+            var func = new FunctionInfo(funcDefStt.DataType, functionName, null, null, funcDefStt.IsParams,
+                funcDefStt.Parameters, inlinedStatement);
 
-            scope.ReserveNewFunction(functionName, func);
+            scope.ReserveNewFunction(func);
 
             writer.WriteLine("}");
         }
