@@ -22,7 +22,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             return result.ToArray();
         }
 
-        private static void _traverseTreeForEach<TStatement>(IStatement statement, Action<TStatement> action)
+        public static void TreeForEach<TStatement>(this IStatement statement, Action<TStatement> action)
             where TStatement : IStatement
         {
             foreach (var child in statement.TraversableChildren)
@@ -32,18 +32,12 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                     action(castChild);
                 }
 
-                _traverseTreeForEach<TStatement>(child, action);
+                TreeForEach<TStatement>(child, action);
             }
         }
 
-        public static void TreeForEach<TStatement>(this IStatement statement, Action<TStatement> action)
-            where TStatement : IStatement
-        {
-            _traverseTreeForEach<TStatement>(statement, action);
-        }
 
-
-        private static bool _traverseTreeContains<TStatement>(IStatement statement)
+        public static bool TreeContains<TStatement>(this IStatement statement)
             where TStatement : IStatement
         {
             foreach (var child in statement.TraversableChildren)
@@ -53,7 +47,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                     return true;
                 }
 
-                if (_traverseTreeContains<TStatement>(child))
+                if (TreeContains<TStatement>(child))
                 {
                     return true;
                 }
@@ -62,7 +56,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             return false;
         }
 
-        private static bool _traverseTreeContains(IStatement statement, Type[] types)
+        public static bool TreeContains(this IStatement statement, params Type[] types)
         {
             foreach (var child in statement.TraversableChildren)
             {
@@ -75,7 +69,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                     }
                 }
 
-                if (_traverseTreeContains(child, types))
+                if (TreeContains(child, types))
                 {
                     return true;
                 }
@@ -84,19 +78,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             return false;
         }
 
-        public static bool TreeContains<TStatement>(this IStatement statement)
-            where TStatement : IStatement
-        {
-            return _traverseTreeContains<TStatement>(statement);
-        }
 
-        public static bool TreeContains(this IStatement statement, params Type[] types)
-        {
-            return _traverseTreeContains(statement, types);
-        }
-
-
-        private static bool _traverseTreeAny(IStatement statement, Predicate<IStatement> predicate)
+        public static bool TreeAny(this IStatement statement, Predicate<IStatement> predicate)
         {
             foreach (var child in statement.TraversableChildren)
             {
@@ -105,7 +88,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                     return true;
                 }
 
-                if (_traverseTreeAny(child, predicate))
+                if (TreeAny(child, predicate))
                 {
                     return true;
                 }
@@ -114,12 +97,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             return false;
         }
 
-        public static bool TreeAny(this IStatement statement, Predicate<IStatement> predicate)
-        {
-            return _traverseTreeAny(statement, predicate);
-        }
-
-        private static bool _traverseTreeAll(IStatement statement, Predicate<IStatement> predicate)
+        public static bool TreeAll(this IStatement statement, Predicate<IStatement> predicate)
         {
             var atLeastOneExecuted = false;
             foreach (var child in statement.TraversableChildren)
@@ -129,7 +107,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                     return false;
                 }
 
-                if (_traverseTreeAny(child, predicate))
+                if (TreeAll(child, predicate))
                 {
                     return false;
                 }
@@ -140,12 +118,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             return atLeastOneExecuted;
         }
 
-        public static bool TreeAll(this IStatement statement, Predicate<IStatement> predicate)
-        {
-            return _traverseTreeAll(statement, predicate);
-        }
-        
-        
+
         public class ExpressionTypes
         {
             public List<DataTypes> Types { get; set; }
@@ -246,16 +219,17 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                 {
                     return DataTypes.String;
                 }
-                
+
                 throw new InvalidOperatorForTypeCompilerException(op.GetType(), a, b, op.Info);
             }
+
             if (a == DataTypes.String)
             {
                 if (b == DataTypes.Decimal || b == DataTypes.Float || b == DataTypes.Numeric)
                 {
                     return DataTypes.String;
                 }
-                
+
                 throw new InvalidOperatorForTypeCompilerException(op.GetType(), a, b, op.Info);
             }
 
@@ -341,7 +315,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                             );
                         }
                     }
-                    
+
                     return DataTypes.Numeric;
                 }
                 default:
