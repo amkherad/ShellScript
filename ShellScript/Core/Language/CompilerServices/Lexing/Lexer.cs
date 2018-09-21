@@ -316,7 +316,7 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             }
 
             matchType = TokenType.NotDefined;
-            matchString = default;
+            matchString = text.Length > 0 ? text[0].ToString() : string.Empty;
             return false;
         }
     }
