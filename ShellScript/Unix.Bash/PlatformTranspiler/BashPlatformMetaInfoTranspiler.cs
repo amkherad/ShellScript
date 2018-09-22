@@ -9,7 +9,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         public void WritePrologue(Context context, TextWriter writer)
         {
             //https://stackoverflow.com/questions/10376206/what-is-the-preferred-bash-shebang
-            writer.WriteLine("#!/usr/bin/env bash"); 
+            writer.WriteLine("#!/usr/bin/env bash");
 
             writer.Write("#ShellScript v");
             writer.Write(ApplicationContext.Version);

@@ -12,7 +12,8 @@ using ShellScript.Unix.Bash.PlatformTranspiler;
 
 namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations
 {
-    public abstract class EvaluationStatementTranspilerBase : StatementTranspilerBase, IPlatformEvaluationStatementTranspiler
+    public abstract class EvaluationStatementTranspilerBase : StatementTranspilerBase,
+        IPlatformEvaluationStatementTranspiler
     {
         public override Type StatementType => typeof(EvaluationStatement);
 
@@ -35,21 +36,30 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
         {
             if (!(statement is EvaluationStatement evalStt)) throw new InvalidOperationException();
 
-            VariableAccessStatement variable = null;
+            StatementInfo info = null;
+            string identifierName = null;
 
             //check for all variables defined.
             if (evalStt.TreeAny(stt =>
             {
                 if (stt is VariableAccessStatement varAccessStt)
                 {
-                    variable = varAccessStt;
+                    identifierName = varAccessStt.VariableName;
+                    info = varAccessStt.Info;
                     return !scope.IsIdentifierExists(varAccessStt.VariableName);
+                }
+
+                if (stt is FunctionCallStatement functionCallStatement)
+                {
+                    identifierName = functionCallStatement.Fqn;
+                    info = functionCallStatement.Info;
+                    return !scope.IsIdentifierExists(functionCallStatement);
                 }
 
                 return false;
             }))
             {
-                message = IdentifierNotFoundCompilerException.CreateMessage(variable.VariableName, variable.Info);
+                message = IdentifierNotFoundCompilerException.CreateMessage(identifierName, info);
                 return false;
             }
 
@@ -80,21 +90,28 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                 {
                     if (constantValueStatement.IsNumber())
                     {
-                        if (constantValueStatement.IsDecimal() &&
-                            long.TryParse(constantValueStatement.Value, out _))
+                        if (constantValueStatement.IsDecimal())
                         {
-                            return constantValueStatement;
+                            if (long.TryParse(constantValueStatement.Value, out _))
+                            {
+                                return constantValueStatement;
+                            }
                         }
-                        
+                        else if (long.TryParse(constantValueStatement.Value, out _))
+                        {
+                            return new ConstantValueStatement(DataTypes.Decimal, constantValueStatement.Value,
+                                constantValueStatement.Info);
+                        }
+
                         if (double.TryParse(constantValueStatement.Value, out _))
                         {
                             return constantValueStatement;
                         }
-                        
+
                         throw BashTranspilerHelpers.InvalidStatementStructure(scope,
                             constantValueStatement);
                     }
-                    
+
                     return constantValueStatement;
                 }
 
@@ -114,7 +131,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                     throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
                         variableAccessStatement.Info);
                 }
-                
+
                 case BitwiseEvaluationStatement bitwiseEvaluationStatement:
                 {
                     switch (bitwiseEvaluationStatement.Operator)
@@ -709,7 +726,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         arithmeticEvaluationStatement.Info
                                     );
                                 }
-                                
+
                                 throw BashTranspilerHelpers.InvalidStatementStructure(scope,
                                     arithmeticEvaluationStatement);
                             }
@@ -720,7 +737,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                 right,
                                 arithmeticEvaluationStatement.Info);
                         }
-                        
+
                         default:
                             throw new InvalidOperationException();
                     }
@@ -742,13 +759,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                 return ProcessEvaluation(context, scope, funcCallStt);
                             }
                         }
-                        
+
                         return functionCallStatement;
                     }
 
                     if (string.IsNullOrWhiteSpace(functionCallStatement.ObjectName))
                     {
-                        
                     }
                     else if (context.Platform.Api.TryGetClass(functionCallStatement.ObjectName, out var sdkClass))
                     {
@@ -757,11 +773,11 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             //sdkFunc.
                         }
                     }
-                    
+
                     throw new IdentifierNotFoundCompilerException(functionCallStatement.FunctionName,
                         functionCallStatement.Info);
                 }
-                
+
                 default:
                     throw new InvalidOperationException();
             }

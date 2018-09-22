@@ -29,20 +29,18 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             var result = returnStatement.Result;
 
-            if (result == null)
-            {
-                writer.Write("return ");
-                writer.Write(context.Flags.SuccessStatusCode);
-            }
-            else
+            if (result != null)
             {
                 var transpiler = context.GetEvaluationTranspilerForStatement(result);
                 var (dataType, expression) = transpiler.GetInline(context, scope, metaWriter, writer, null, result);
 
                 writer.Write("echo ");
                 writer.Write(expression);
+                writer.WriteLine();
             }
 
+            writer.Write("return ");
+            writer.Write(context.Flags.SuccessStatusCode);
             writer.WriteLine();
         }
     }

@@ -29,15 +29,9 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             if (!(statement is EchoStatement echoStatement)) throw new InvalidOperationException();
 
             var paramExp = new StringBuilder();
-            var isFirst = true;
             foreach (var stt in echoStatement.Parameters)
             {
-                if (!isFirst)
-                {
-                    paramExp.Append(' ');
-                }
-
-                isFirst = false;
+                paramExp.Append(' ');
 
                 var transpiler = context.GetEvaluationTranspilerForStatement(stt);
 
@@ -45,7 +39,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 paramExp.Append(expression);
             }
 
-            writer.Write("echo ");
+            writer.Write("echo");
             writer.Write(paramExp.ToString());
 
             var device = scope.GetConfig(c => c.ExplicitEchoStream, context.Flags.ExplicitEchoStream);

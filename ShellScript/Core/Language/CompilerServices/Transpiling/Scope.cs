@@ -121,6 +121,21 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             }
         }
 
+        public bool IsIdentifierExists(FunctionCallStatement functionCallStatement)
+        {
+            var that = this;
+            do
+            {
+                if (that._identifiers.Contains(functionCallStatement.Fqn))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
+        
         public bool IsIdentifierExists(string name)
         {
             var that = this;
@@ -130,21 +145,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
                 {
                     return true;
                 }
-                
-//                if (that._variables.Contains(new VariableInfo(name)))
-//                {
-//                    return true;
-//                }
-//                
-//                if (that._constants.Contains(new ConstantInfo(name)))
-//                {
-//                    return true;
-//                }
-                
-//                if (that._functions.Contains(new FunctionInfo(null, name)))
-//                {
-//                    return true;
-//                }
                 
             } while ((that = that.Parent) != null);
 
