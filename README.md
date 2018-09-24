@@ -46,7 +46,7 @@ dotnet build ShellScript.sln
 ## Getting Started
 
 ShellScript is a C# like language with less features from C# and with some additional features to allow coding for shell scripting environments.  
-As of today ShellScript support transpiling to Unix-Bash and Windows-Batch shell languages.
+As of today ShellScript supports transpiling to Unix-Bash and Windows-Batch shell languages.
 
 ### Data Types
 ShellScript is a strong-typed/static-typed language, all data types are listed below:  
@@ -78,7 +78,7 @@ string s = "Hello World";
 ```
 
 ### Variable Definition
-Variable definitions are similar to C# except there is no var keyword for auto typing.  
+Variable definitions are similar to C#, except there is no var keyword for auto typing.  
 There are four places for variable definitions:  
 * Defining a variable inside a block of code:
 
@@ -139,7 +139,7 @@ There are four places for assignements:
   while ((that = that.Parent) != null) { }
   ```
 
-[^footnote1]: foreach variables is immutable inside foreach block.
+[^footnote1]: foreach variable is immutable inside foreach block (and inaccessible outside of the block, if it's defined in the foreach statement).
 
 ### Function Definition
 ShellScript use same syntax for function definition as C#.  
@@ -150,7 +150,7 @@ int myFunction (int parameter1) {
 }
 ```
 
-Same as C# all code paths must return a value, so this is a compiler error:
+Same as the C#, all code paths must return a value, so this is a compiler error:
 
 ```csharp
 double myDouble (decimal parameter1) {
@@ -167,7 +167,7 @@ double myDouble (decimal parameter1) {
 ### Conditional Blocks
 
 **If** block:  
-If block implemented exactly as C#.
+If block is implemented exactly as C#.
 
 ```csharp
 if (condition) {
@@ -180,7 +180,7 @@ if (condition) {
 ```
 
 **Switch Case** block:  
-Switch case block implemented exactly as C#.
+Switch case block is implemented exactly as C#.
 
 ```csharp
 switch (value1) {
@@ -287,7 +287,7 @@ The first echo inside the method writes directly to `/dev/tty` in unix. because 
 
 ## API and Class Library
 ShellScript provide some API methods to minify the need to write platform-specific code for each platform.  
-These methods try to use the target shell dedicated way to get the results but in cases they will generate meta functions inside the output script file. (meta codes are at the beginning of the file)
+These methods try to use the target shell's dedicated way to get the results but in cases they will generate meta functions inside the output script file. (meta codes are at the beginning of the file)
 
 
 [Enter the Class Library documentation here](https://github.com/amkherad/ShellScript/blob/master/docs/ClassLibrary.md)
