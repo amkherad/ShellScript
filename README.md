@@ -286,6 +286,12 @@ function myFunction () {
 ```
 The first echo inside the method writes directly to `/dev/tty` in unix. because shell environments use standard-output to return a value. (i.e. by redirecting the output of a command/function to a variable or another command.)
 
+## API and Class Library
+ShellScript provide some API methods to minify the need to write platform-specific code for each platform.  
+These methods try to use the target shell dedicated way to get the results but in cases they will generate meta functions inside the output script file. (meta codes are at the beginning of the file)
+
+
+[Enter the Class Library documentation here](http://github.com/amkherad/ShellScript/docs/ClassLibrary.md)
 
 
 ## Contributing
