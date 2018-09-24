@@ -15,5 +15,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
             TraversableChildren = new IStatement[0];
         }
+
+        public override string ToString()
+        {
+            return VariableName;
+        }
     }
 }

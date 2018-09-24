@@ -19,5 +19,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
             TraversableChildren = StatementHelpers.CreateChildren(condition, statement);
         }
+        
+        public override string ToString()
+        {
+            return Condition?.ToString();
+        }
     }
 }

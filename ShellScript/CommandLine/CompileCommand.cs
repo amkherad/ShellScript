@@ -18,7 +18,7 @@ namespace ShellScript.CommandLine
             return false;
         }
 
-        public int Execute(
+        public ResultCodes Execute(
             TextWriter outputWriter,
             TextWriter errorWriter,
             TextWriter warningWriter,
@@ -32,19 +32,19 @@ namespace ShellScript.CommandLine
             if (inputFile == null)
             {
                 errorWriter.WriteLine("Source file is not specified.");
-                return Program.Failure;
+                return ResultCodes.Failure;
             }
 
             if (outputFile == null)
             {
                 errorWriter.WriteLine("Output file is not specified.");
-                return Program.Failure;
+                return ResultCodes.Failure;
             }
 
             if (platform == null)
             {
                 errorWriter.WriteLine("Platform is not specified.");
-                return Program.Failure;
+                return ResultCodes.Failure;
             }
 
             var compiler = new Compiler();
@@ -66,7 +66,7 @@ namespace ShellScript.CommandLine
             if (result.Successful)
             {
                 outputWriter.WriteLine("Compilation finished successfully.");
-                return Program.Successful;
+                return ResultCodes.Successful;
             }
             else
             {
@@ -79,7 +79,7 @@ namespace ShellScript.CommandLine
                     errorWriter.WriteLine(result.Exception?.Message);
                 }
 
-                return Program.Failure;
+                return ResultCodes.Failure;
             }
         }
 

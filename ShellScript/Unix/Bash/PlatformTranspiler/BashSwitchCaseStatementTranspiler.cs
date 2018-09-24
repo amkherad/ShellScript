@@ -11,7 +11,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         
         public bool CanInline(Context context, Scope scope, IStatement statement)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         public bool Validate(Context context, Scope scope, IStatement statement, out string message)
@@ -22,7 +22,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         public void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter, TextWriter nonInlinePartWriter,
             IStatement statement)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter, IStatement statement)

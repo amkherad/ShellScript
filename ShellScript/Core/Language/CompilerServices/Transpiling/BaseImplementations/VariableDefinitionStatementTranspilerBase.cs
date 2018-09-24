@@ -34,13 +34,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                 return false;
             }
 
-            var regex = Lexer.ValidIdentifierName.Match(variableName);
-            if (!regex.Success) // Unlikely to happen.
-            {
-                message = InvalidIdentifierNameCompilerException.CreateMessage(variableName, varDefStt.Info);
-                return false;
-            }
-
             return base.Validate(context, scope, statement, out message);
         }
     }

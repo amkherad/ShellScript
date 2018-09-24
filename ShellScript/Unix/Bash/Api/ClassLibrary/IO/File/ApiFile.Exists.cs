@@ -21,16 +21,16 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.File
                 new FunctionParameterDefinitionStatement(DataTypes.String, "FilePath", null, null),
             };
 
-            protected override string CreateTestExpression(ExpressionBuilderParams p,
+            protected override (DataTypes, string, EvaluationStatement) CreateTestExpression(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
                 var parameter = functionCallStatement.Parameters[0];
 
                 var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
-                var (dataType, expression) = transpiler.GetInline(p.Context, p.Scope, p.MetaWriter,
+                var (dataType, expression, template) = transpiler.GetInline(p.Context, p.Scope, p.MetaWriter,
                     p.NonInlinePartWriter, null, parameter);
 
-                return $"-f {expression}";
+                return (dataType, $"-f {expression}", template);
             }
         }
     }

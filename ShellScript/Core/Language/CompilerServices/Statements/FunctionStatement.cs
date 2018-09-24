@@ -43,8 +43,12 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
         public override string ToString()
         {
-            return
-                $"function {Name}({string.Join(',', (IEnumerable<FunctionParameterDefinitionStatement>) Parameters)}) {{{Environment.NewLine}{Statement}{Environment.NewLine}}}";
+            if (Parameters != null && Parameters.Length > 0)
+            {
+                return $"{DataType} {Name}({string.Join(',', Parameters.Select(x => x.ToString()))}){{}}";
+            }
+            
+            return $"{DataType} {Name}(){{}}";
         }
     }
 }

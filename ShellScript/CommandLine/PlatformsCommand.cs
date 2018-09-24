@@ -15,7 +15,7 @@ namespace ShellScript.CommandLine
             return command.IsCommand("--platforms");
         }
 
-        public int Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
+        public ResultCodes Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
             TextWriter logWriter, CommandContext context)
         {
             foreach (var platform in Platforms.AvailablePlatforms)
@@ -23,7 +23,7 @@ namespace ShellScript.CommandLine
                 outputWriter.WriteLine(platform.Name);
             }
             
-            return Program.Successful;
+            return ResultCodes.Successful;
         }
     }
 }

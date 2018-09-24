@@ -14,12 +14,12 @@ namespace ShellScript.CommandLine
             return command.IsCommand("--daemon");
         }
 
-        public int Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
+        public ResultCodes Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
             TextWriter logWriter, CommandContext context)
         {
             outputWriter.WriteLine("Daemon started.");
             
-            return Program.Successful;
+            return ResultCodes.Successful;
         }
     }
 }

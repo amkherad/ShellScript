@@ -60,7 +60,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                         {
                             if (varInfo.DataType.IsDecimal())
                             {
-                                return new ApiMethodBuilderRawResult(varInfo.DataType, $"${{{varInfo.AccessName}#-}}");
+                                return new ApiMethodBuilderRawResult(varInfo.DataType, $"${{{varInfo.AccessName}#-}}", variableAccessStatement);
                             }
 
                             return CreateNativeMethodWithUtilityExpressionSelector(this, p, _absFunctionInfo,

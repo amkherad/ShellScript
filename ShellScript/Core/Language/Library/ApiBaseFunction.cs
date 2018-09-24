@@ -69,43 +69,48 @@ namespace ShellScript.Core.Language.Library
                 return Inline(new FunctionCallStatement(funcInfo.ObjectName, funcInfo.Name, funcInfo.DataType,
                     parameters, statementInfo));
             }
-            
-            p.MetaWriter.Write("function ");
-            p.MetaWriter.Write(functionInfo.Fqn);
-            p.MetaWriter.WriteLine("() {");
 
-            bool isFirst = true;
-            var utilities = p.Context.Api.Utilities;
-            foreach (var utility in utilityCommands)
+            using (var funcWriter = new StringWriter())
             {
-                if (utilities.TryGetValue(utility.Key, out var util))
-                {
-                    var condition = util.WriteExistenceCondition(p.Context, p.MetaWriter);
-                    
-                    if (isFirst)
-                    {
-                        p.MetaWriter.Write("if [ ");
+                funcWriter.Write("function ");
+                funcWriter.Write(functionInfo.Fqn);
+                funcWriter.WriteLine("() {");
 
-                        isFirst = false;
+                bool isFirst = true;
+                var utilities = p.Context.Api.Utilities;
+                foreach (var utility in utilityCommands)
+                {
+                    if (utilities.TryGetValue(utility.Key, out var util))
+                    {
+                        var condition = util.WriteExistenceCondition(p.Context, funcWriter);
+
+                        if (isFirst)
+                        {
+                            funcWriter.Write("if [ ");
+
+                            isFirst = false;
+                        }
+                        else
+                        {
+                            funcWriter.Write("elif [ ");
+                        }
+
+                        funcWriter.Write(condition);
+                        funcWriter.WriteLine(" ]");
+                        funcWriter.WriteLine("then");
+                        funcWriter.WriteLine(utility.Value);
                     }
                     else
                     {
-                        p.MetaWriter.Write("elif [ ");
+                        throw new InvalidOperationException("Utility is not installed.");
                     }
-                    
-                    p.MetaWriter.Write(condition);
-                    p.MetaWriter.WriteLine(" ]");
-                    p.MetaWriter.WriteLine("then");
-                    p.MetaWriter.WriteLine(utility.Value);
                 }
-                else
-                {
-                    throw new InvalidOperationException("Utility is not installed.");
-                }
+
+                funcWriter.WriteLine("fi");
+                funcWriter.WriteLine("}");
+
+                p.MetaWriter.Write(funcWriter);
             }
-            
-            p.MetaWriter.WriteLine("fi");
-            p.MetaWriter.WriteLine("}");
 
             p.Context.GeneralScope.ReserveNewFunction(functionInfo);
 

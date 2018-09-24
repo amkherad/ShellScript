@@ -69,10 +69,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
         public abstract string PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter,
             TextWriter pinCodeWriter, EvaluationStatement statement);
 
-        public abstract (DataTypes, string) GetInline(Context context, Scope scope, TextWriter metaWriter,
+        public abstract (DataTypes, string, EvaluationStatement) GetInline(Context context, Scope scope, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
 
-        public abstract (DataTypes, string) GetInlineConditional(Context context, Scope scope, TextWriter metaWriter,
+        public abstract (DataTypes, string, EvaluationStatement) GetInlineConditional(Context context, Scope scope, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
 
 
@@ -158,7 +158,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         constantValueStatement.DataType,
                                         (~value).ToString(NumberFormatInfo.InvariantInfo),
                                         constantValueStatement.Info
-                                    );
+                                    )
+                                    {
+                                        ParentStatement = bitwiseEvaluationStatement.ParentStatement
+                                    };
                                 }
 
                                 throw BashTranspilerHelpers.InvalidStatementStructure(scope,
@@ -183,25 +186,28 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     if (rightConstantValue.IsDecimal() &&
                                         long.TryParse(rightConstantValue.Value, out var rightDecimal))
                                     {
-                                        long result;
+                                        long resultVal;
                                         switch (bitwiseEvaluationStatement.Operator)
                                         {
                                             case BitwiseAndOperator _:
-                                                result = leftDecimal & rightDecimal;
+                                                resultVal = leftDecimal & rightDecimal;
                                                 break;
                                             case BitwiseOrOperator _:
-                                                result = leftDecimal | rightDecimal;
+                                                resultVal = leftDecimal | rightDecimal;
                                                 break;
                                             case XorOperator _:
-                                                result = leftDecimal ^ rightDecimal;
+                                                resultVal = leftDecimal ^ rightDecimal;
                                                 break;
                                             default:
                                                 throw new InvalidOperationException();
                                         }
 
                                         return new ConstantValueStatement(DataTypes.Decimal,
-                                            result.ToString(CultureInfo.InvariantCulture),
-                                            bitwiseEvaluationStatement.Info);
+                                            resultVal.ToString(CultureInfo.InvariantCulture),
+                                            bitwiseEvaluationStatement.Info)
+                                        {
+                                            ParentStatement = bitwiseEvaluationStatement.ParentStatement
+                                        };
                                     }
 
                                     throw new InvalidOperatorForTypeCompilerException(
@@ -214,25 +220,28 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     bool.TryParse(leftConstantValue.Value, out var leftBool) &&
                                     bool.TryParse(rightConstantValue.Value, out var rightBool))
                                 {
-                                    bool result;
+                                    bool resultVal;
                                     switch (bitwiseEvaluationStatement.Operator)
                                     {
                                         case BitwiseAndOperator _:
-                                            result = leftBool && rightBool;
+                                            resultVal = leftBool && rightBool;
                                             break;
                                         case BitwiseOrOperator _:
-                                            result = leftBool || rightBool;
+                                            resultVal = leftBool || rightBool;
                                             break;
                                         case XorOperator _:
-                                            result = leftBool ^ rightBool;
+                                            resultVal = leftBool ^ rightBool;
                                             break;
                                         default:
                                             throw new InvalidOperationException();
                                     }
 
                                     return new ConstantValueStatement(DataTypes.Boolean,
-                                        result.ToString(CultureInfo.InvariantCulture),
-                                        bitwiseEvaluationStatement.Info);
+                                        resultVal.ToString(CultureInfo.InvariantCulture),
+                                        bitwiseEvaluationStatement.Info)
+                                    {
+                                        ParentStatement = bitwiseEvaluationStatement.ParentStatement
+                                    };
                                 }
 
                                 throw new InvalidOperatorForTypeCompilerException(
@@ -240,11 +249,19 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     leftConstantValue.Info);
                             }
 
-                            return new BitwiseEvaluationStatement(
+                            var result = new BitwiseEvaluationStatement(
                                 left,
                                 bitwiseEvaluationStatement.Operator,
                                 right,
-                                bitwiseEvaluationStatement.Info);
+                                bitwiseEvaluationStatement.Info)
+                            {
+                                ParentStatement = bitwiseEvaluationStatement.ParentStatement
+                            };
+
+                            left.ParentStatement = result;
+                            right.ParentStatement = result;
+                            
+                            return result;
                         }
 
                         default:
@@ -278,7 +295,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                             (logicalEvaluationStatement.Operator is LogicalAndOperator
                                                 ? leftBool && rightBool
                                                 : leftBool || rightBool).ToString(CultureInfo.InvariantCulture),
-                                            logicalEvaluationStatement.Info);
+                                            logicalEvaluationStatement.Info)
+                                        {
+                                            ParentStatement = logicalEvaluationStatement.ParentStatement
+                                        };
                                     }
 
                                     throw new InvalidOperatorForTypeCompilerException(
@@ -291,11 +311,19 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     leftConstantValue.Info);
                             }
 
-                            return new LogicalEvaluationStatement(
+                            var result = new LogicalEvaluationStatement(
                                 left,
                                 logicalEvaluationStatement.Operator,
                                 right,
-                                logicalEvaluationStatement.Info);
+                                logicalEvaluationStatement.Info)
+                            {
+                                ParentStatement = logicalEvaluationStatement.ParentStatement
+                            };
+
+                            left.ParentStatement = result;
+                            right.ParentStatement = result;
+
+                            return result;
                         }
                         case EqualOperator _:
                         case NotEqualOperator _:
@@ -319,7 +347,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                                 ? leftDecimal == rightDecimal
                                                 : leftDecimal != rightDecimal).ToString(CultureInfo.InvariantCulture),
                                             logicalEvaluationStatement.Info
-                                        );
+                                        )
+                                        {
+                                            ParentStatement = logicalEvaluationStatement.ParentStatement
+                                        };
                                     }
 
                                     if (double.TryParse(leftConstant.Value, out var leftFloat) &&
@@ -330,7 +361,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                             (Math.Abs(leftFloat - rightFloat) < double.Epsilon).ToString(CultureInfo
                                                 .InvariantCulture),
                                             logicalEvaluationStatement.Info
-                                        );
+                                        )
+                                        {
+                                            ParentStatement = logicalEvaluationStatement.ParentStatement
+                                        };
                                     }
                                 }
 
@@ -341,14 +375,25 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         : leftConstant.Value != rightConstant.Value)
                                     .ToString(CultureInfo.InvariantCulture),
                                     logicalEvaluationStatement.Info
-                                );
+                                )
+                                {
+                                    ParentStatement = logicalEvaluationStatement.ParentStatement
+                                };
                             }
 
-                            return new LogicalEvaluationStatement(
+                            var result = new LogicalEvaluationStatement(
                                 left,
                                 logicalEvaluationStatement.Operator,
                                 right,
-                                logicalEvaluationStatement.Info);
+                                logicalEvaluationStatement.Info)
+                            {
+                                ParentStatement = logicalEvaluationStatement.ParentStatement
+                            };
+
+                            left.ParentStatement = result;
+                            right.ParentStatement = result;
+
+                            return result;
                         }
                         case GreaterOperator _:
                         case GreaterEqualOperator _:
@@ -367,55 +412,61 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         long.TryParse(leftConstantValue.Value, out var leftDecimal) &&
                                         long.TryParse(rightConstantValue.Value, out var rightDecimal))
                                     {
-                                        bool result;
+                                        bool resultVal;
                                         switch (logicalEvaluationStatement.Operator)
                                         {
                                             case GreaterOperator _:
-                                                result = leftDecimal > rightDecimal;
+                                                resultVal = leftDecimal > rightDecimal;
                                                 break;
                                             case GreaterEqualOperator _:
-                                                result = leftDecimal >= rightDecimal;
+                                                resultVal = leftDecimal >= rightDecimal;
                                                 break;
                                             case LessOperator _:
-                                                result = leftDecimal < rightDecimal;
+                                                resultVal = leftDecimal < rightDecimal;
                                                 break;
                                             case LessEqualOperator _:
-                                                result = leftDecimal <= rightDecimal;
+                                                resultVal = leftDecimal <= rightDecimal;
                                                 break;
                                             default:
                                                 throw new InvalidOperationException();
                                         }
 
                                         return new ConstantValueStatement(DataTypes.Boolean,
-                                            result.ToString(NumberFormatInfo.InvariantInfo),
-                                            logicalEvaluationStatement.Info);
+                                            resultVal.ToString(NumberFormatInfo.InvariantInfo),
+                                            logicalEvaluationStatement.Info)
+                                        {
+                                            ParentStatement = logicalEvaluationStatement.ParentStatement
+                                        };
                                     }
 
                                     if (double.TryParse(leftConstantValue.Value, out var leftFloat) &&
                                         double.TryParse(rightConstantValue.Value, out var rightFloat))
                                     {
-                                        bool result;
+                                        bool resultVal;
                                         switch (logicalEvaluationStatement.Operator)
                                         {
                                             case GreaterOperator _:
-                                                result = leftFloat > rightFloat;
+                                                resultVal = leftFloat > rightFloat;
                                                 break;
                                             case GreaterEqualOperator _:
-                                                result = leftFloat >= rightFloat;
+                                                resultVal = leftFloat >= rightFloat;
                                                 break;
                                             case LessOperator _:
-                                                result = leftFloat < rightFloat;
+                                                resultVal = leftFloat < rightFloat;
                                                 break;
                                             case LessEqualOperator _:
-                                                result = leftFloat <= rightFloat;
+                                                resultVal = leftFloat <= rightFloat;
                                                 break;
                                             default:
                                                 throw new InvalidOperationException();
                                         }
 
                                         return new ConstantValueStatement(DataTypes.Boolean,
-                                            result.ToString(NumberFormatInfo.InvariantInfo),
-                                            logicalEvaluationStatement.Info);
+                                            resultVal.ToString(NumberFormatInfo.InvariantInfo),
+                                            logicalEvaluationStatement.Info)
+                                        {
+                                            ParentStatement = logicalEvaluationStatement.ParentStatement
+                                        };
                                     }
 
                                     throw new InvalidOperatorForTypeCompilerException(
@@ -425,31 +476,34 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
                                 if (leftConstantValue.IsString() && rightConstantValue.IsString())
                                 {
-                                    bool result;
+                                    bool resultVal;
                                     var comp = context.StringComparer.Compare(leftConstantValue.Value,
                                         rightConstantValue.Value);
 
                                     switch (logicalEvaluationStatement.Operator)
                                     {
                                         case GreaterOperator _:
-                                            result = comp > 0;
+                                            resultVal = comp > 0;
                                             break;
                                         case GreaterEqualOperator _:
-                                            result = comp >= 0;
+                                            resultVal = comp >= 0;
                                             break;
                                         case LessOperator _:
-                                            result = comp < 0;
+                                            resultVal = comp < 0;
                                             break;
                                         case LessEqualOperator _:
-                                            result = comp <= 0;
+                                            resultVal = comp <= 0;
                                             break;
                                         default:
                                             throw new InvalidOperationException();
                                     }
 
                                     return new ConstantValueStatement(DataTypes.Boolean,
-                                        result.ToString(NumberFormatInfo.InvariantInfo),
-                                        logicalEvaluationStatement.Info);
+                                        resultVal.ToString(NumberFormatInfo.InvariantInfo),
+                                        logicalEvaluationStatement.Info)
+                                    {
+                                        ParentStatement = logicalEvaluationStatement.ParentStatement
+                                    };
                                 }
 
                                 throw new InvalidOperatorForTypeCompilerException(
@@ -457,11 +511,19 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     leftConstantValue.Info);
                             }
 
-                            return new LogicalEvaluationStatement(
+                            var result = new LogicalEvaluationStatement(
                                 left,
                                 logicalEvaluationStatement.Operator,
                                 right,
-                                logicalEvaluationStatement.Info);
+                                logicalEvaluationStatement.Info)
+                            {
+                                ParentStatement = logicalEvaluationStatement.ParentStatement
+                            };
+
+                            left.ParentStatement = result;
+                            right.ParentStatement = result;
+
+                            return result;
                         }
                         case NotOperator _:
                         {
@@ -487,7 +549,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         constantValueStatement.DataType,
                                         (!value).ToString(NumberFormatInfo.InvariantInfo),
                                         constantValueStatement.Info
-                                    );
+                                    )
+                                    {
+                                        ParentStatement = logicalEvaluationStatement.ParentStatement
+                                    };
                                 }
 
                                 throw BashTranspilerHelpers.InvalidStatementStructure(scope,
@@ -525,6 +590,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                 {
                                     if (scope.TryGetVariableInfo(variableAccessStatement.VariableName, out _))
                                     {
+                                        variableAccessStatement.ParentStatement =
+                                            arithmeticEvaluationStatement.ParentStatement;
+                                        
                                         return variableAccessStatement;
                                     }
 
@@ -575,7 +643,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                             constantValueStatement.DataType,
                                             (-doubleResult).ToString(NumberFormatInfo.InvariantInfo),
                                             constantValueStatement.Info
-                                        );
+                                        )
+                                        {
+                                            ParentStatement = arithmeticEvaluationStatement.ParentStatement
+                                        };
                                     }
                                 }
 
@@ -583,11 +654,18 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     arithmeticEvaluationStatement);
                             }
 
-                            return new ArithmeticEvaluationStatement(
+                            var result = new ArithmeticEvaluationStatement(
                                 null,
                                 arithmeticEvaluationStatement.Operator,
                                 right,
-                                arithmeticEvaluationStatement.Info);
+                                arithmeticEvaluationStatement.Info)
+                            {
+                                ParentStatement = arithmeticEvaluationStatement.ParentStatement
+                            };
+
+                            right.ParentStatement = result;
+
+                            return result;
                         }
                         case AdditionOperator _:
                         case SubtractionOperator _:
@@ -608,69 +686,75 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         long.TryParse(leftConstant.Value, out var leftDecimal) &&
                                         long.TryParse(rightConstant.Value, out var rightDecimal))
                                     {
-                                        long result;
+                                        long resultVal;
                                         switch (arithmeticEvaluationStatement.Operator)
                                         {
                                             case AdditionOperator _:
-                                                result = leftDecimal + rightDecimal;
+                                                resultVal = leftDecimal + rightDecimal;
                                                 break;
                                             case SubtractionOperator _:
-                                                result = leftDecimal - rightDecimal;
+                                                resultVal = leftDecimal - rightDecimal;
                                                 break;
                                             case MultiplicationOperator _:
-                                                result = leftDecimal * rightDecimal;
+                                                resultVal = leftDecimal * rightDecimal;
                                                 break;
                                             case DivisionOperator _:
-                                                result = leftDecimal / rightDecimal;
+                                                resultVal = leftDecimal / rightDecimal;
                                                 break;
                                             case ModulusOperator _:
-                                                result = leftDecimal / rightDecimal;
+                                                resultVal = leftDecimal / rightDecimal;
                                                 break;
                                             case ReminderOperator _:
-                                                result = leftDecimal % rightDecimal;
+                                                resultVal = leftDecimal % rightDecimal;
                                                 break;
                                             default:
                                                 throw new InvalidOperationException();
                                         }
 
                                         return new ConstantValueStatement(DataTypes.Decimal,
-                                            result.ToString(NumberFormatInfo.InvariantInfo),
+                                            resultVal.ToString(NumberFormatInfo.InvariantInfo),
                                             arithmeticEvaluationStatement.Info
-                                        );
+                                        )
+                                        {
+                                            ParentStatement = arithmeticEvaluationStatement.ParentStatement
+                                        };
                                     }
 
                                     if (double.TryParse(leftConstant.Value, out var leftFloat) &&
                                         double.TryParse(rightConstant.Value, out var rightFloat))
                                     {
-                                        double result;
+                                        double resultVal;
                                         switch (arithmeticEvaluationStatement.Operator)
                                         {
                                             case AdditionOperator _:
-                                                result = leftFloat + rightFloat;
+                                                resultVal = leftFloat + rightFloat;
                                                 break;
                                             case SubtractionOperator _:
-                                                result = leftFloat - rightFloat;
+                                                resultVal = leftFloat - rightFloat;
                                                 break;
                                             case MultiplicationOperator _:
-                                                result = leftFloat * rightFloat;
+                                                resultVal = leftFloat * rightFloat;
                                                 break;
                                             case DivisionOperator _:
-                                                result = leftFloat / rightFloat;
+                                                resultVal = leftFloat / rightFloat;
                                                 break;
                                             case ModulusOperator _:
-                                                result = leftFloat / rightFloat;
+                                                resultVal = leftFloat / rightFloat;
                                                 break;
                                             case ReminderOperator _:
-                                                result = leftFloat % rightFloat;
+                                                resultVal = leftFloat % rightFloat;
                                                 break;
                                             default:
                                                 throw new InvalidOperationException();
                                         }
 
                                         return new ConstantValueStatement(DataTypes.Decimal,
-                                            result.ToString(NumberFormatInfo.InvariantInfo),
+                                            resultVal.ToString(NumberFormatInfo.InvariantInfo),
                                             arithmeticEvaluationStatement.Info
-                                        );
+                                        )
+                                        {
+                                            ParentStatement = arithmeticEvaluationStatement.ParentStatement
+                                        };
                                     }
 
                                     throw BashTranspilerHelpers.InvalidStatementStructure(scope,
@@ -684,7 +768,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         BashTranspilerHelpers.StandardizeString(leftConstant.Value, true) +
                                         BashTranspilerHelpers.StandardizeString(rightConstant.Value, true),
                                         arithmeticEvaluationStatement.Info
-                                    );
+                                    )
+                                    {
+                                        ParentStatement = arithmeticEvaluationStatement.ParentStatement
+                                    };
                                 }
 
                                 if (leftConstant.IsDecimal() || rightConstant.IsString())
@@ -704,7 +791,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     return new ConstantValueStatement(DataTypes.String,
                                         sb.ToString(),
                                         arithmeticEvaluationStatement.Info
-                                    );
+                                    )
+                                    {
+                                        ParentStatement = arithmeticEvaluationStatement.ParentStatement
+                                    };
                                 }
 
                                 if (leftConstant.IsString() || rightConstant.IsDecimal())
@@ -724,18 +814,29 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     return new ConstantValueStatement(DataTypes.String,
                                         sb.ToString(),
                                         arithmeticEvaluationStatement.Info
-                                    );
+                                    )
+                                    {
+                                        ParentStatement = arithmeticEvaluationStatement.ParentStatement
+                                    };
                                 }
 
                                 throw BashTranspilerHelpers.InvalidStatementStructure(scope,
                                     arithmeticEvaluationStatement);
                             }
 
-                            return new ArithmeticEvaluationStatement(
+                            var result = new ArithmeticEvaluationStatement(
                                 left,
                                 arithmeticEvaluationStatement.Operator,
                                 right,
-                                arithmeticEvaluationStatement.Info);
+                                arithmeticEvaluationStatement.Info)
+                            {
+                                ParentStatement = arithmeticEvaluationStatement.ParentStatement
+                            };
+
+                            left.ParentStatement = result;
+                            right.ParentStatement = result;
+
+                            return result;
                         }
 
                         default:
@@ -760,18 +861,32 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             }
                         }
 
-                        return functionCallStatement;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(functionCallStatement.ObjectName))
-                    {
-                    }
-                    else if (context.Platform.Api.TryGetClass(functionCallStatement.ObjectName, out var sdkClass))
-                    {
-                        if (sdkClass.TryGetFunction(functionCallStatement.FunctionName, out var sdkFunc))
+                        if (functionCallStatement.Parameters != null && functionCallStatement.Parameters.Length > 0)
                         {
-                            //sdkFunc.
+                            var parameters = new List<EvaluationStatement>(functionCallStatement.Parameters.Length);
+                            foreach (var param in functionCallStatement.Parameters)
+                            {
+                                parameters.Add(ProcessEvaluation(context, scope, param));
+                            }
+
+                            var paramArray = parameters.ToArray();
+                            
+                            var result = new FunctionCallStatement(functionCallStatement.ObjectName,
+                                functionCallStatement.FunctionName, functionCallStatement.DataType,
+                                paramArray, functionCallStatement.Info)
+                            {
+                                ParentStatement = functionCallStatement.ParentStatement
+                            };
+
+                            foreach (var param in paramArray)
+                            {
+                                param.ParentStatement = result;
+                            }
+                            
+                            return result;
                         }
+
+                        return functionCallStatement;
                     }
 
                     throw new IdentifierNotFoundCompilerException(functionCallStatement.FunctionName,

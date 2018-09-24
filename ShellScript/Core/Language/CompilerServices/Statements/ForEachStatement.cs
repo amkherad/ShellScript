@@ -7,14 +7,14 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
         public IStatement Variable { get; }
         
-        public VariableAccessStatement Iterator { get; }
+        public EvaluationStatement Iterator { get; }
         
         public IStatement Statement { get; }
         
         public IStatement[] TraversableChildren { get; }
 
         
-        public ForEachStatement(IStatement variable, VariableAccessStatement iterator, IStatement statement, StatementInfo info)
+        public ForEachStatement(IStatement variable, EvaluationStatement iterator, IStatement statement, StatementInfo info)
         {
             Variable = variable;
             Iterator = iterator;
@@ -22,6 +22,11 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Info = info;
 
             TraversableChildren = StatementHelpers.CreateChildren(variable, iterator, statement);
+        }
+
+        public override string ToString()
+        {
+            return $"foreach({Variable} in {Iterator})";
         }
     }
 }

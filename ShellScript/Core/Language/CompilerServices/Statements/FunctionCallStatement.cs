@@ -43,5 +43,19 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
             TraversableChildren = StatementHelpers.CreateChildren(parameters.Cast<IStatement>().ToArray());
         }
+
+        public override string ToString()
+        {
+            var name = string.IsNullOrWhiteSpace(ObjectName)
+                ? FunctionName
+                : $"{ObjectName}.{FunctionName}";
+            
+            if (Parameters != null && Parameters.Length > 0)
+            {
+                return $"{name}({string.Join(',', Parameters.Select(p => p.ToString()))})";
+            }
+            
+            return $"{name}()";
+        }
     }
 }

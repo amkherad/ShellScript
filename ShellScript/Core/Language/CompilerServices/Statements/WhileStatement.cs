@@ -6,5 +6,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             : base(condition, statement, info)
         {
         }
+
+        public override string ToString()
+        {
+            return $"while ({Condition}) {{}}";
+        }
     }
 }

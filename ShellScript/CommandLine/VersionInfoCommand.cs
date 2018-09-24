@@ -15,12 +15,12 @@ namespace ShellScript.CommandLine
             return command.IsCommand("-v", "--version");
         }
 
-        public int Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
+        public ResultCodes Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
             TextWriter logWriter, CommandContext context)
         {
             outputWriter.WriteLine(ApplicationContext.Version);
             
-            return Program.Successful;
+            return ResultCodes.Successful;
         }
     }
 }

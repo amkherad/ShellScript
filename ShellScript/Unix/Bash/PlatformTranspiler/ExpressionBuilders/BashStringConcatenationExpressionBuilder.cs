@@ -14,13 +14,20 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             new BashStringConcatenationExpressionBuilder();
 
         public override string FormatVariableAccessExpression(ExpressionBuilderParams p, string expression,
-            IStatement template)
+            EvaluationStatement template)
         {
+            var parentStatement = template.ParentStatement;
+            if (parentStatement != null &&
+                !(parentStatement is EvaluationStatement))
+            {
+                return base.FormatVariableAccessExpression(p, expression, template);
+            }
+            
             return $"${{{expression}}}";
         }
 
         public override string FormatConstantExpression(ExpressionBuilderParams p, string expression,
-            IStatement template)
+            EvaluationStatement template)
         {
             if (template is ConstantValueStatement constantValueStatement)
             {
@@ -33,8 +40,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return base.FormatConstantExpression(p, expression, template);
         }
 
-        protected override (DataTypes, string) CreateExpressionRecursive(ExpressionBuilderParams p,
-            IStatement statement)
+        protected override (DataTypes, string, EvaluationStatement) CreateExpressionRecursive(ExpressionBuilderParams p,
+            EvaluationStatement statement)
         {
             switch (statement)
             {
@@ -42,11 +49,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 {
                     if (constantValueStatement.IsString())
                     {
-                        return (DataTypes.String,
-                            BashTranspilerHelpers.ToBashString(constantValueStatement.Value, true, false));
+                        return (
+                            DataTypes.String,
+                            BashTranspilerHelpers.ToBashString(constantValueStatement.Value, true, false),
+                            constantValueStatement
+                        );
                     }
 
-                    return (DataTypes.String, constantValueStatement.Value);
+                    return (DataTypes.String, constantValueStatement.Value, constantValueStatement);
                 }
                 case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
                 {
@@ -60,9 +70,9 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                 var right = arithmeticEvaluationStatement.Right;
 
                                 var np = new ExpressionBuilderParams(p, nonInlinePartWriterPinned);
-                                
-                                var (leftDataType, leftExp) = CreateExpressionRecursive(np, left);
-                                var (rightDataType, rightExp) = CreateExpressionRecursive(np, right);
+
+                                var (leftDataType, leftExp, leftTemplate) = CreateExpressionRecursive(np, left);
+                                var (rightDataType, rightExp, rightTemplate) = CreateExpressionRecursive(np, right);
 
                                 if (leftDataType.IsString() || rightDataType.IsString())
                                 {
@@ -79,7 +89,16 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
                                     p.NonInlinePartWriter.Write(nonInlinePartWriterPinned);
 
-                                    return (DataTypes.String, exp);
+                                    return (
+                                        DataTypes.String,
+                                        exp,
+                                        new ArithmeticEvaluationStatement(
+                                            leftTemplate,
+                                            arithmeticEvaluationStatement.Operator,
+                                            rightTemplate,
+                                            arithmeticEvaluationStatement.Info
+                                        )
+                                    );
                                 }
                             }
 

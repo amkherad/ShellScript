@@ -23,6 +23,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             TraversableChildren = StatementHelpers.CreateChildren(left, @operator, right);
         }
 
+        public override string ToString()
+        {
+            return $"{Left} {Operator} {Right}";
+        }
 
         public static ArithmeticEvaluationStatement CreateNegate(NegativeNumberOperator op,
             EvaluationStatement operand, StatementInfo info)

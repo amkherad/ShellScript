@@ -23,7 +23,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is FunctionCallStatement functionCallStatement)) throw new InvalidOperationException();
 
-            var (dataType, exp) = CreateBashExpression(context, scope, metaWriter, nonInlinePartWriter, statement,
+            var (dataType, exp, template) = CreateBashExpression(context, scope, metaWriter, nonInlinePartWriter, statement,
                 functionCallStatement);
 
             writer.Write(exp);
@@ -59,7 +59,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     paramExp.Append(' ');
 
                     var transpiler = context.GetEvaluationTranspilerForStatement(stt);
-                    var (dataType, expression) =
+                    var (dataType, expression, template) =
                         transpiler.GetInline(context, scope, metaWriter, writer, functionCallStatement, stt);
 
                     paramExp.Append(expression);

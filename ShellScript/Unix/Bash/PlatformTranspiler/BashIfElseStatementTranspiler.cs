@@ -14,7 +14,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         public override void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement statement)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
@@ -131,7 +131,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             var expressionBuilder = context.GetEvaluationTranspilerForStatement(statement);
 
-            var (dataType, expression) = expressionBuilder.GetInlineConditional(context, scope, metaWriter,
+            var (dataType, expression, template) = expressionBuilder.GetInlineConditional(context, scope, metaWriter,
                 nonInlinePartWriter, ifElseStatement, statement);
 
             if (dataType != DataTypes.Boolean)

@@ -22,7 +22,7 @@ namespace ShellScript.CommandLine
             return command.IsEmpty;
         }
 
-        public int Execute(TextWriter writer, TextWriter errorWriter, TextWriter warningWriter,
+        public ResultCodes Execute(TextWriter writer, TextWriter errorWriter, TextWriter warningWriter,
             TextWriter logWriter, CommandContext context)
         {
             writer.WriteLine($"ShellScript ({ApplicationContext.Version}) by Ali Mousavi Kherad");
@@ -37,7 +37,7 @@ namespace ShellScript.CommandLine
             WriteEntry(writer, "exec, --exec", "Executes the given source/project file without compilation.");
             WriteEntry(writer, "--daemon", "Starts the runtime daemon.");
 
-            return Program.Successful;
+            return ResultCodes.Successful;
         }
 
         private void WriteEntry(TextWriter writer, string commands, string help)

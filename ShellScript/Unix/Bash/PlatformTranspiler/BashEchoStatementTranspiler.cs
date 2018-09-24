@@ -20,7 +20,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             TextWriter nonInlinePartWriter,
             IStatement statement)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
@@ -35,7 +35,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
                 var transpiler = context.GetEvaluationTranspilerForStatement(stt);
 
-                var (dataType, expression) = transpiler.GetInline(context, scope, metaWriter, writer, null, stt);
+                var (dataType, expression, template) = transpiler.GetInline(context, scope, metaWriter, writer, null, stt);
                 paramExp.Append(expression);
             }
 

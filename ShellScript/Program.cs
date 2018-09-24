@@ -6,15 +6,19 @@ using ShellScript.Unix.Bash;
 
 namespace ShellScript
 {
-    class Program
+    public enum ResultCodes
     {
-        public const int Successful = 0;
-        public const int Failure = 1;
+        Successful = 0,
+        Failure = 1,
+    }
 
+    public class Program
+    {
         static int Main(string[] args)
         {
             var outputWriter = Console.Out; //new StreamWriter(Console.OpenStandardError());
-            var errorWriter = new ColoredWriter(Console.Out, ConsoleColor.Red); //new StreamWriter(Console.OpenStandardError());
+            var errorWriter =
+                new ColoredWriter(Console.Out, ConsoleColor.Red); //new StreamWriter(Console.OpenStandardError());
             var warningWriter = new ColoredWriter(Console.Out, ConsoleColor.Yellow);
             var logWriter = new ColoredWriter(Console.Out, ConsoleColor.White);
 
@@ -28,7 +32,8 @@ namespace ShellScript
                 {
                     if (command.CanHandle(commandContext))
                     {
-                        return command.Execute(outputWriter, errorWriter, warningWriter, logWriter, commandContext);
+                        return (int) command.Execute(outputWriter, errorWriter, warningWriter, logWriter,
+                            commandContext);
                     }
                 }
             }
@@ -37,8 +42,9 @@ namespace ShellScript
                 errorWriter.WriteLine(ex);
             }
 
-            errorWriter.WriteLine(DesignGuidelines.ErrorOutputHead + " Invalid command passed. ({0})", args.Length > 0 ? args[0] : "null");
-            return Failure;
+            errorWriter.WriteLine(DesignGuidelines.ErrorOutputHead + " Invalid command passed. ({0})",
+                args.Length > 0 ? args[0] : "null");
+            return (int) ResultCodes.Failure;
         }
     }
 }

@@ -9,34 +9,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
     public class BashConditionalExpressionBuilder : BashDefaultExpressionBuilder
     {
         public new static BashConditionalExpressionBuilder Instance { get; } = new BashConditionalExpressionBuilder();
-        
-        public override bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p,
-            DataTypes dataType, IStatement template)
-        {
-            if (template is ConstantValueStatement)
-                return false;
-            if (template is VariableAccessStatement)
-                return false;
-            if (template is FunctionCallStatement)
-                return false;
 
-            return dataType.IsNumericOrFloat();
-        }
 
-        public override bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p,
-            DataTypes left, IStatement leftTemplate, DataTypes right, IStatement rightTemplate)
-        {
-            if (leftTemplate is ConstantValueStatement)
-                return false;
-            if (leftTemplate is VariableAccessStatement)
-                return false;
-            if (leftTemplate is FunctionCallStatement)
-                return false;
-
-            return left.IsNumericOrFloat();
-        }
-
-        public override string FormatExpression(ExpressionBuilderParams p, string expression, IStatement template)
+        public override string FormatExpression(ExpressionBuilderParams p, string expression,
+            EvaluationStatement template)
         {
             if (template is LogicalEvaluationStatement)
             {
@@ -50,7 +26,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         }
 
         public override string FormatExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
-            IStatement template)
+            EvaluationStatement template)
         {
             if (dataType.IsBoolean() || template is LogicalEvaluationStatement)
             {
@@ -63,19 +39,20 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return base.FormatExpression(p, expression, template);
         }
 
-        public override string FormatSubExpression(ExpressionBuilderParams p, string expression, IStatement template)
+        public override string FormatSubExpression(ExpressionBuilderParams p, string expression,
+            EvaluationStatement template)
         {
             if (template is LogicalEvaluationStatement)
             {
                 return expression;
             }
-            
+
             return base.FormatSubExpression(p, expression, template);
         }
 
-
-        public override string FormatLogicalExpression(ExpressionBuilderParams p, DataTypes leftDataType, string left, IOperator op,
-            DataTypes rightDataType, string right, IStatement template)
+        public override string FormatLogicalExpression(ExpressionBuilderParams p,
+            DataTypes leftDataType, string left, IOperator op, DataTypes rightDataType, string right,
+            EvaluationStatement template)
         {
             if (!(template is LogicalEvaluationStatement logicalEvaluationStatement))
                 throw new InvalidOperationException();
@@ -128,7 +105,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
             left = _createStringExpression(left, logicalEvaluationStatement.Left);
             right = _createStringExpression(right, logicalEvaluationStatement.Right);
-            
+
             return $"{left} {opStr} {right}";
         }
 
@@ -138,7 +115,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             {
                 return exp;
             }
-            
+
             if (statement is VariableAccessStatement _)
             {
                 return exp;

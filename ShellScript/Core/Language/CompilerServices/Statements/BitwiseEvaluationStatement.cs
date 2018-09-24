@@ -10,9 +10,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public EvaluationStatement Left { get; }
         public BitwiseOperator Operator { get; }
         public EvaluationStatement Right { get; }
-        
-        
-        public BitwiseEvaluationStatement(EvaluationStatement left, BitwiseOperator @operator, EvaluationStatement right, StatementInfo info)
+
+
+        public BitwiseEvaluationStatement(EvaluationStatement left, BitwiseOperator @operator,
+            EvaluationStatement right, StatementInfo info)
         {
             Left = left;
             Operator = @operator;
@@ -22,9 +23,13 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             TraversableChildren = StatementHelpers.CreateChildren(left, @operator, right);
         }
 
+        public override string ToString()
+        {
+            return $"{Left} {Operator} {Right}";
+        }
 
-
-        public static BitwiseEvaluationStatement CreateNot(BitwiseNotOperator op, EvaluationStatement operand, StatementInfo info)
+        public static BitwiseEvaluationStatement CreateNot(BitwiseNotOperator op, EvaluationStatement operand,
+            StatementInfo info)
         {
             return new BitwiseEvaluationStatement(null, op, operand, info);
         }

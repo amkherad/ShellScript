@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
@@ -11,55 +12,34 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
     public abstract class ExpressionBuilderBase : IExpressionBuilder
     {
         public virtual bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p,
-            DataTypes dataType, IStatement template)
+            DataTypes dataType, EvaluationStatement template)
         {
             return false;
-
-//            if (template is ConstantValueStatement)
-//                return false;
-//            if (template is VariableAccessStatement)
-//                return false;
-//            if (template is FunctionCallStatement)
-//                return false;
-//
-//            return dataType.IsNumericOrFloat();
         }
 
-        public virtual bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p,
-            DataTypes left, IStatement leftTemplate, DataTypes right, IStatement rightTemplate)
+        public virtual bool ShouldBePinnedToFloatingPointVariable(
+            ExpressionBuilderParams p, EvaluationStatement template,
+            DataTypes left, EvaluationStatement leftTemplate, DataTypes right, EvaluationStatement rightTemplate)
         {
             return false;
-
-//            if (leftTemplate is ConstantValueStatement)
-//                return false;
-//            if (leftTemplate is VariableAccessStatement)
-//                return false;
-//            if (leftTemplate is FunctionCallStatement)
-//                return false;
-//
-//            return left.IsNumericOrFloat();
         }
 
         public abstract string PinExpressionToVariable(ExpressionBuilderParams p,
-            DataTypes dataTypes, string nameHint, string expression, IStatement template);
+            DataTypes dataTypes, string nameHint, string expression, EvaluationStatement template);
 
         public abstract string PinFloatingPointExpressionToVariable(ExpressionBuilderParams p,
-            DataTypes dataTypes, string nameHint, string expression, IStatement template);
+            DataTypes dataTypes, string nameHint, string expression, EvaluationStatement template);
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string FormatExpression(ExpressionBuilderParams p, string expression, IStatement template)
+        public virtual string FormatExpression(ExpressionBuilderParams p, string expression,
+            EvaluationStatement template)
         {
-            if (template is EvaluationStatement evaluationStatement)
+            var expressionDataType = template.GetDataType(p.Context, p.Scope);
+
+            if (expressionDataType.IsString())
             {
-                var expressionDataType = evaluationStatement.GetDataType(p.Context, p.Scope);
-
-                if (expressionDataType.IsString())
-                {
-                    return $"\"{expression}\"";
-                }
-
-                return expression;
+                return $"\"{expression}\"";
             }
 
             return expression;
@@ -67,7 +47,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatExpression(ExpressionBuilderParams p, DataTypes expressionDataType,
-            string expression, IStatement template)
+            string expression, EvaluationStatement template)
         {
             if (expressionDataType.IsString())
             {
@@ -78,7 +58,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string FormatSubExpression(ExpressionBuilderParams p, string expression, IStatement template)
+        public virtual string FormatSubExpression(ExpressionBuilderParams p, string expression,
+            EvaluationStatement template)
         {
             if (template is ConstantValueStatement)
                 return expression;
@@ -91,8 +72,15 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public virtual string FormatFunctionCallParameterSubExpression(ExpressionBuilderParams p, DataTypes dataType,
+            string expression, EvaluationStatement template)
+        {
+            return expression;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatArithmeticExpression(ExpressionBuilderParams p, string expression,
-            IStatement template)
+            EvaluationStatement template)
         {
             return expression;
         }
@@ -100,14 +88,14 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatArithmeticExpression(ExpressionBuilderParams p, DataTypes leftDataType,
             string left, IOperator op,
-            DataTypes rightDataType, string right, IStatement template)
+            DataTypes rightDataType, string right, EvaluationStatement template)
         {
             return $"{left} {op} {right}";
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatBitwiseExpression(ExpressionBuilderParams p, string expression,
-            IStatement template)
+            EvaluationStatement template)
         {
             return expression;
         }
@@ -115,14 +103,14 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatBitwiseExpression(ExpressionBuilderParams p, DataTypes leftDataType, string left,
             IOperator op,
-            DataTypes rightDataType, string right, IStatement template)
+            DataTypes rightDataType, string right, EvaluationStatement template)
         {
             return $"{left} {op} {right}";
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatLogicalExpression(ExpressionBuilderParams p, string expression,
-            IStatement template)
+            EvaluationStatement template)
         {
             return expression;
         }
@@ -130,28 +118,28 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatLogicalExpression(ExpressionBuilderParams p, DataTypes leftDataType, string left,
             IOperator op,
-            DataTypes rightDataType, string right, IStatement template)
+            DataTypes rightDataType, string right, EvaluationStatement template)
         {
             return $"{left} {op} {right}";
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatVariableAccessExpression(ExpressionBuilderParams p, string expression,
-            IStatement template)
+            EvaluationStatement template)
         {
-            return '$' + expression;
+            return expression;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatFunctionCallExpression(ExpressionBuilderParams p, string expression,
-            IStatement template)
+            EvaluationStatement template)
         {
             return expression;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatConstantExpression(ExpressionBuilderParams p, string expression,
-            IStatement template)
+            EvaluationStatement template)
         {
             if (template is ConstantValueStatement constantValueStatement)
             {
@@ -170,13 +158,15 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
             return expression;
         }
 
-        public virtual (DataTypes, string) CreateExpression(ExpressionBuilderParams p, IStatement statement)
+        public virtual (DataTypes, string, EvaluationStatement) CreateExpression(ExpressionBuilderParams p,
+            EvaluationStatement statement)
         {
-            var (dataType, exp) = CreateExpressionRecursive(p, statement);
-            return (dataType, FormatExpression(p, dataType, exp, statement));
+            var (dataType, exp, template) = CreateExpressionRecursive(p, statement);
+            return (dataType, FormatExpression(p, dataType, exp, statement), template);
         }
 
-        protected virtual (DataTypes, string) CreateExpressionRecursive(ExpressionBuilderParams p, IStatement statement)
+        protected virtual (DataTypes, string, EvaluationStatement) CreateExpressionRecursive(ExpressionBuilderParams p,
+            EvaluationStatement statement)
         {
             switch (statement)
             {
@@ -190,7 +180,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             FormatConstantExpression(p,
                                 constantValueStatement.Value,
                                 constantValueStatement
-                            )
+                            ),
+                            constantValueStatement
                         );
                     }
 
@@ -202,7 +193,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             FormatConstantExpression(p,
                                 constantValueStatement.Value,
                                 constantValueStatement
-                            )
+                            ),
+                            constantValueStatement
                         );
                     }
 
@@ -212,7 +204,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         FormatConstantExpression(p,
                             constantValueStatement.Value,
                             constantValueStatement
-                        )
+                        ),
+                        constantValueStatement
                     );
                 }
                 case VariableAccessStatement variableAccessStatement:
@@ -225,7 +218,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             FormatVariableAccessExpression(p,
                                 varInfo.AccessName,
                                 variableAccessStatement
-                            )
+                            ),
+                            variableAccessStatement
                         );
                     }
 
@@ -238,7 +232,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             FormatVariableAccessExpression(p,
                                 constInfo.AccessName,
                                 variableAccessStatement
-                            )
+                            ),
+                            variableAccessStatement
                         );
                     }
 
@@ -249,7 +244,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                 {
                     if (bitwiseEvaluationStatement.Operator is BitwiseNotOperator)
                     {
-                        var (dataType, exp) = CreateExpressionRecursive(p,
+                        var (dataType, exp, template) = CreateExpressionRecursive(p,
                             bitwiseEvaluationStatement.Right);
 
                         if (!dataType.IsDecimal())
@@ -260,7 +255,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                         exp = FormatSubExpression(p,
                             exp,
-                            bitwiseEvaluationStatement
+                            template
                         );
 
                         exp = $"~{exp}";
@@ -271,13 +266,15 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             DataTypes.Decimal,
                             FormatBitwiseExpression(p,
                                 exp,
-                                bitwiseEvaluationStatement
-                            )
+                                template
+                            ),
+                            new BitwiseEvaluationStatement(null, bitwiseEvaluationStatement.Operator, template,
+                                bitwiseEvaluationStatement.Info)
                         );
                     }
 
                     var left = bitwiseEvaluationStatement.Left;
-                    var (leftDataType, leftExp) =
+                    var (leftDataType, leftExp, leftTemplate) =
                         CreateExpressionRecursive(p, left);
 
                     if (!(leftDataType.IsDecimal() || leftDataType.IsBoolean()))
@@ -286,7 +283,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     }
 
                     var right = bitwiseEvaluationStatement.Right;
-                    var (rightDataType, rightExp) =
+                    var (rightDataType, rightExp, rightTemplate) =
                         CreateExpressionRecursive(p, right);
 
                     if (!(rightDataType.IsDecimal() || rightDataType.IsBoolean()))
@@ -342,7 +339,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             rightDataType,
                             rightExp,
                             bitwiseEvaluationStatement
-                        )
+                        ),
+                        new BitwiseEvaluationStatement(leftTemplate, bitwiseEvaluationStatement.Operator, rightTemplate,
+                            bitwiseEvaluationStatement.Info)
                     );
                 }
                 case LogicalEvaluationStatement logicalEvaluationStatement:
@@ -350,7 +349,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     if (logicalEvaluationStatement.Operator is NotOperator)
                     {
                         var operand = logicalEvaluationStatement.Right;
-                        var (dataType, exp) = CreateExpressionRecursive(p, operand);
+                        var (dataType, exp, template) = CreateExpressionRecursive(p, operand);
 
                         if (dataType != DataTypes.Boolean)
                         {
@@ -368,18 +367,21 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         if (ShouldBePinnedToFloatingPointVariable(p, dataType,
                             logicalEvaluationStatement))
                         {
-                            return (dataType,
-                                    PinFloatingPointExpressionToVariable(
-                                        p,
-                                        dataType,
-                                        null,
-                                        FormatLogicalExpression(p,
-                                            exp,
-                                            logicalEvaluationStatement
-                                        ),
-                                        logicalEvaluationStatement
-                                    )
-                                );
+                            var varName = PinFloatingPointExpressionToVariable(
+                                p,
+                                dataType,
+                                null,
+                                FormatLogicalExpression(p,
+                                    exp,
+                                    logicalEvaluationStatement
+                                ),
+                                logicalEvaluationStatement
+                            );
+                            return (
+                                dataType,
+                                varName,
+                                new VariableAccessStatement(varName, logicalEvaluationStatement.Info)
+                            );
                         }
 
                         return
@@ -388,12 +390,14 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             FormatLogicalExpression(p,
                                 exp,
                                 logicalEvaluationStatement
-                            )
+                            ),
+                            new LogicalEvaluationStatement(null, logicalEvaluationStatement.Operator, template,
+                                logicalEvaluationStatement.Info)
                         );
                     }
 
                     var left = logicalEvaluationStatement.Left;
-                    var (leftDataType, leftExp) = CreateExpressionRecursive(p, left);
+                    var (leftDataType, leftExp, leftTemplate) = CreateExpressionRecursive(p, left);
 
 //                    if (!(leftDataType.IsDecimal() || leftDataType.IsBoolean()))
 //                    {
@@ -401,7 +405,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 //                    }
 
                     var right = logicalEvaluationStatement.Right;
-                    var (rightDataType, rightExp) =
+                    var (rightDataType, rightExp, rightTemplate) =
                         CreateExpressionRecursive(p, right);
 
 //                    if (!(rightDataType.IsDecimal() || rightDataType.IsBoolean()))
@@ -428,25 +432,29 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         right
                     );
 
-                    if (ShouldBePinnedToFloatingPointVariable(p, leftDataType, left, rightDataType, right))
+                    if (ShouldBePinnedToFloatingPointVariable(p, logicalEvaluationStatement, leftDataType, left,
+                        rightDataType, right))
                     {
+                        var varName = PinFloatingPointExpressionToVariable(
+                            p,
+                            DataTypes.Boolean,
+                            "logical",
+                            FormatLogicalExpression(p,
+                                leftDataType,
+                                leftExp,
+                                logicalEvaluationStatement.Operator,
+                                rightDataType,
+                                rightExp,
+                                logicalEvaluationStatement
+                            ),
+                            logicalEvaluationStatement
+                        );
+
                         return
                         (
                             DataTypes.Boolean,
-                            PinFloatingPointExpressionToVariable(
-                                p,
-                                DataTypes.Boolean,
-                                "logical",
-                                FormatLogicalExpression(p,
-                                    leftDataType,
-                                    leftExp,
-                                    logicalEvaluationStatement.Operator,
-                                    rightDataType,
-                                    rightExp,
-                                    logicalEvaluationStatement
-                                ),
-                                logicalEvaluationStatement
-                            )
+                            varName,
+                            new VariableAccessStatement(varName, logicalEvaluationStatement.Info)
                         );
                     }
 
@@ -460,7 +468,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             rightDataType,
                             rightExp,
                             logicalEvaluationStatement
-                        )
+                        ),
+                        new LogicalEvaluationStatement(leftTemplate, logicalEvaluationStatement.Operator,
+                            rightTemplate, logicalEvaluationStatement.Info)
                     );
                 }
                 case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
@@ -492,7 +502,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             }
                         }
 
-                        var (dt, exp) = CreateExpressionRecursive(p, operand);
+                        var (dt, exp, template) = CreateExpressionRecursive(p, operand);
 
                         if (!dt.IsNumber())
                         {
@@ -506,19 +516,22 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                         if (ShouldBePinnedToFloatingPointVariable(p, dt, arithmeticEvaluationStatement))
                         {
+                            var varName = PinFloatingPointExpressionToVariable(
+                                p,
+                                dt,
+                                null,
+                                FormatArithmeticExpression(p,
+                                    exp,
+                                    arithmeticEvaluationStatement
+                                ),
+                                arithmeticEvaluationStatement
+                            );
+
                             return
                             (
                                 dt,
-                                PinFloatingPointExpressionToVariable(
-                                    p,
-                                    dt,
-                                    null,
-                                    FormatArithmeticExpression(p,
-                                        exp,
-                                        arithmeticEvaluationStatement
-                                    ),
-                                    arithmeticEvaluationStatement
-                                )
+                                varName,
+                                new VariableAccessStatement(varName, arithmeticEvaluationStatement.Info)
                             );
                         }
 
@@ -528,7 +541,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             FormatArithmeticExpression(p,
                                 exp,
                                 arithmeticEvaluationStatement
-                            )
+                            ),
+                            arithmeticEvaluationStatement.Left == null
+                                ? new ArithmeticEvaluationStatement(null, arithmeticEvaluationStatement.Operator,
+                                    template, arithmeticEvaluationStatement.Info)
+                                : new ArithmeticEvaluationStatement(template, arithmeticEvaluationStatement.Operator,
+                                    null, arithmeticEvaluationStatement.Info)
                         );
                     }
 
@@ -558,7 +576,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             }
                         }
 
-                        var (dt, exp) = CreateExpressionRecursive(p, operand);
+                        var (dt, exp, template) = CreateExpressionRecursive(p, operand);
 
                         if (!dt.IsNumber())
                         {
@@ -572,19 +590,22 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                         if (ShouldBePinnedToFloatingPointVariable(p, dt, arithmeticEvaluationStatement))
                         {
+                            var varName = PinFloatingPointExpressionToVariable(
+                                p,
+                                dt,
+                                null,
+                                FormatArithmeticExpression(p,
+                                    exp,
+                                    arithmeticEvaluationStatement
+                                ),
+                                arithmeticEvaluationStatement
+                            );
+
                             return
                             (
                                 dt,
-                                PinFloatingPointExpressionToVariable(
-                                    p,
-                                    dt,
-                                    null,
-                                    FormatArithmeticExpression(p,
-                                        exp,
-                                        arithmeticEvaluationStatement
-                                    ),
-                                    arithmeticEvaluationStatement
-                                )
+                                varName,
+                                new VariableAccessStatement(varName, arithmeticEvaluationStatement.Info)
                             );
                         }
 
@@ -594,7 +615,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             FormatArithmeticExpression(p,
                                 exp,
                                 arithmeticEvaluationStatement
-                            )
+                            ),
+                            arithmeticEvaluationStatement.Left == null
+                                ? new ArithmeticEvaluationStatement(null, arithmeticEvaluationStatement.Operator,
+                                    template, arithmeticEvaluationStatement.Info)
+                                : new ArithmeticEvaluationStatement(template, arithmeticEvaluationStatement.Operator,
+                                    null, arithmeticEvaluationStatement.Info)
                         );
                     }
 
@@ -602,7 +628,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     {
                         var operand = arithmeticEvaluationStatement.Right;
 
-                        var (dt, exp) = CreateExpressionRecursive(p, operand);
+                        var (dt, exp, template) = CreateExpressionRecursive(p, operand);
 
                         if (!dt.IsNumber())
                         {
@@ -619,19 +645,22 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                         if (ShouldBePinnedToFloatingPointVariable(p, dt, arithmeticEvaluationStatement))
                         {
+                            var varName = PinFloatingPointExpressionToVariable(
+                                p,
+                                dt,
+                                null,
+                                FormatArithmeticExpression(p,
+                                    exp,
+                                    arithmeticEvaluationStatement
+                                ),
+                                arithmeticEvaluationStatement
+                            );
+
                             return
                             (
                                 dt,
-                                PinFloatingPointExpressionToVariable(
-                                    p,
-                                    dt,
-                                    null,
-                                    FormatArithmeticExpression(p,
-                                        exp,
-                                        arithmeticEvaluationStatement
-                                    ),
-                                    arithmeticEvaluationStatement
-                                )
+                                varName,
+                                new VariableAccessStatement(varName, arithmeticEvaluationStatement.Info)
                             );
                         }
 
@@ -641,15 +670,17 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             FormatArithmeticExpression(p,
                                 exp,
                                 arithmeticEvaluationStatement
-                            )
+                            ),
+                            new ArithmeticEvaluationStatement(null, arithmeticEvaluationStatement.Operator,
+                                template, arithmeticEvaluationStatement.Info)
                         );
                     }
 
                     var left = arithmeticEvaluationStatement.Left;
-                    var (leftDataType, leftExp) = CreateExpressionRecursive(p, left);
+                    var (leftDataType, leftExp, leftTemplate) = CreateExpressionRecursive(p, left);
 
                     var right = arithmeticEvaluationStatement.Right;
-                    var (rightDataType, rightExp) =
+                    var (rightDataType, rightExp, rightTemplate) =
                         CreateExpressionRecursive(p, right);
 
                     var dataType = StatementHelpers.OperateDataTypes(arithmeticEvaluationStatement.Operator,
@@ -664,28 +695,38 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         right
                     );
 
-                    if (ShouldBePinnedToFloatingPointVariable(p, leftDataType, left, rightDataType, right))
+                    if (ShouldBePinnedToFloatingPointVariable(p, arithmeticEvaluationStatement, leftDataType, left,
+                        rightDataType, right))
                     {
+                        var varName = PinFloatingPointExpressionToVariable(
+                            p,
+                            dataType,
+                            "arithmetic",
+                            FormatArithmeticExpression(p,
+                                leftDataType,
+                                leftExp,
+                                arithmeticEvaluationStatement.Operator,
+                                rightDataType,
+                                rightExp,
+                                arithmeticEvaluationStatement
+                            ),
+                            arithmeticEvaluationStatement
+                        );
+
                         return
                         (
                             dataType,
-                            PinFloatingPointExpressionToVariable(
-                                p,
-                                dataType,
-                                "arithmetic",
-                                FormatArithmeticExpression(p,
-                                    leftDataType,
-                                    leftExp,
-                                    arithmeticEvaluationStatement.Operator,
-                                    rightDataType,
-                                    rightExp,
-                                    arithmeticEvaluationStatement
-                                ),
-                                arithmeticEvaluationStatement
-                            )
+                            varName,
+                            new VariableAccessStatement(varName, arithmeticEvaluationStatement.Info)
                         );
                     }
 
+                    var newTmp = new ArithmeticEvaluationStatement(leftTemplate, arithmeticEvaluationStatement.Operator,
+                        rightTemplate, arithmeticEvaluationStatement.Info);
+
+                    leftTemplate.ParentStatement = newTmp;
+                    rightTemplate.ParentStatement = newTmp;
+                    
                     return
                     (
                         dataType,
@@ -696,7 +737,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             rightDataType,
                             rightExp,
                             arithmeticEvaluationStatement
-                        )
+                        ),
+                        newTmp
                     );
                 }
                 case FunctionCallStatement functionCallStatement: //functions are always not-inlined.
@@ -715,7 +757,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         {
                             case ApiMethodBuilderRawResult rawResult:
                             {
-                                return (rawResult.DataType, rawResult.Expression);
+                                return (rawResult.DataType, rawResult.Expression, rawResult.Template);
                             }
                             case ApiMethodBuilderInlineResult inlineResult:
                             {
@@ -732,13 +774,16 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                     call.Append(funcInfo.AccessName);
 
+                    var paramTemplates = new List<EvaluationStatement>();
                     foreach (var param in functionCallStatement.Parameters)
                     {
-                        var (dataType, exp) =
+                        var (dataType, exp, template) =
                             CreateExpressionRecursive(p, param);
 
                         call.Append(' ');
-                        call.Append(exp);
+                        call.Append(FormatFunctionCallParameterSubExpression(p, dataType, exp, template));
+
+                        paramTemplates.Add(template);
                     }
 
                     call.Append('`');
@@ -749,10 +794,21 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         functionCallStatement
                     );
 
+                    var paramsArray = paramTemplates.ToArray();
+                    var newTmp = new FunctionCallStatement(functionCallStatement.ObjectName,
+                        functionCallStatement.FunctionName,
+                        functionCallStatement.DataType, paramsArray, functionCallStatement.Info);
+                    
+                    foreach (var param in paramsArray)
+                    {
+                        param.ParentStatement = newTmp;
+                    }
+
                     return
                     (
                         functionCallStatement.DataType,
-                        callExp
+                        callExp,
+                        newTmp
                     );
                 }
 

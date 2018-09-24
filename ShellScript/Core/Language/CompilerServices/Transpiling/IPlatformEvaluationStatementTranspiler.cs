@@ -9,10 +9,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         string PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter, TextWriter pinCodeWriter,
             EvaluationStatement statement);
         
-        (DataTypes, string) GetInline(Context context, Scope scope, TextWriter metaWriter,
+        (DataTypes, string, EvaluationStatement) GetInline(Context context, Scope scope, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
         
-        (DataTypes, string) GetInlineConditional(Context context, Scope scope, TextWriter metaWriter,
+        (DataTypes, string, EvaluationStatement) GetInlineConditional(Context context, Scope scope, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
     }
 }

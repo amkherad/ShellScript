@@ -10,9 +10,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public EvaluationStatement Left { get; }
         public LogicalOperator Operator { get; }
         public EvaluationStatement Right { get; }
-        
-        
-        public LogicalEvaluationStatement(EvaluationStatement left, LogicalOperator @operator, EvaluationStatement right, StatementInfo info)
+
+
+        public LogicalEvaluationStatement(EvaluationStatement left, LogicalOperator @operator,
+            EvaluationStatement right, StatementInfo info)
         {
             Left = left;
             Operator = @operator;
@@ -21,9 +22,15 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
             TraversableChildren = StatementHelpers.CreateChildren(left, @operator, right);
         }
-       
-        
-        public static LogicalEvaluationStatement CreateNot(NotOperator op, EvaluationStatement operand, StatementInfo info)
+
+        public override string ToString()
+        {
+            return $"{Left} {Operator} {Right}";
+        }
+
+
+        public static LogicalEvaluationStatement CreateNot(NotOperator op, EvaluationStatement operand,
+            StatementInfo info)
         {
             return new LogicalEvaluationStatement(null, op, operand, info);
         }

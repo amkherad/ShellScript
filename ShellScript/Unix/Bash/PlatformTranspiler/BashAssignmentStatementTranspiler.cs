@@ -71,7 +71,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             var transpiler = context.GetEvaluationTranspilerForStatement(evaluation);
 
-            var (dataType, expression) =
+            var (dataType, expression, template) =
                 transpiler.GetInline(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
 
             writer.Write($"{varInfo.AccessName}=");

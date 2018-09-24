@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using ShellScript.Core.Language;
 using ShellScript.Core.Language.CompilerServices;
+using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations;
@@ -25,7 +26,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         public override void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement statement)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
@@ -48,6 +49,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     throw new InvalidOperationException(ErrorMessages.ConstantValueRequired);
                 }
 
+                if (!StatementHelpers.IsAssignableFrom(varDefStt.DataType, constantValueStatement.DataType))
+                {
+                    throw new TypeMismatchCompilerException(constantValueStatement.DataType, varDefStt.DataType,
+                        varDefStt.Info);
+                }
+
                 scope.ReserveNewConstant(varDefStt.DataType, varDefStt.Name, constantValueStatement.Value);
             }
             else
@@ -61,13 +68,19 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                         throw new InvalidOperationException();
                     }
 
-                    //it pins the non-inlineable values to a helper variable:
+                    //it pins the non-inlinable values to a helper variable:
                     //int x = 34 * myFunc();
                     //becomes:
                     //myFuncResult=myFunc()
                     //x=$((34 * myFuncResult))
-                    var (dataType, expression) = transpiler.GetInline(context, scope, metaWriter, writer, null, def);
+                    var (dataType, expression, template) = transpiler.GetInline(context, scope, metaWriter, writer, null, def);
 
+                    if (!StatementHelpers.IsAssignableFrom(varDefStt.DataType, dataType))
+                    {
+                        throw new TypeMismatchCompilerException(dataType, varDefStt.DataType,
+                            varDefStt.Info);
+                    }
+                    
                     WriteVariableDefinition(context, scope, writer, varDefStt.Name, expression);
                 }
                 else

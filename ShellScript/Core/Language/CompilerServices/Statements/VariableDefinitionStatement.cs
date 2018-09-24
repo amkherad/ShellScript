@@ -4,10 +4,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class VariableDefinitionStatement : DefinitionStatement
     {
-        public override bool CanBeEmbedded => true;
-        
+        public override bool CanBeEmbedded => false;
+
         public bool IsConstant { get; }
-        
+
         public VariableDefinitionStatement(
             DataTypes dataType,
             string name,

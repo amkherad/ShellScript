@@ -11,7 +11,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
     {
         public override void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement statement)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter, IStatement statement)

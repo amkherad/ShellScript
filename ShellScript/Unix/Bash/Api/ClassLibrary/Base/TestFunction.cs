@@ -6,17 +6,17 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Base
 {
     public abstract class TestFunction : BashFunction
     {
-        protected abstract string CreateTestExpression(ExpressionBuilderParams p,
+        protected abstract (DataTypes, string, EvaluationStatement) CreateTestExpression(ExpressionBuilderParams p,
             FunctionCallStatement functionCallStatement);
 
         public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
             FunctionCallStatement functionCallStatement)
         {
             AssertParameters(functionCallStatement.Parameters);
-            
-            var exp = CreateTestExpression(p, functionCallStatement);
 
-            return new ApiMethodBuilderRawResult(DataType, exp);
+            var (dataType, exp, template) = CreateTestExpression(p, functionCallStatement);
+
+            return new ApiMethodBuilderRawResult(DataType, exp, template);
         }
     }
 }

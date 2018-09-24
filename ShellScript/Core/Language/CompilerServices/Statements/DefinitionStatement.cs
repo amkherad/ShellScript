@@ -9,14 +9,15 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
         public DataTypes DataType { get; }
         public string Name { get; }
-        
+
         public EvaluationStatement DefaultValue { get; }
         public bool HasDefaultValue { get; }
 
         public IStatement[] TraversableChildren { get; protected set; }
 
-        
-        public DefinitionStatement(DataTypes dataType, string name, EvaluationStatement defaultValue, bool hasDefaultValue, StatementInfo info)
+
+        public DefinitionStatement(DataTypes dataType, string name, EvaluationStatement defaultValue,
+            bool hasDefaultValue, StatementInfo info)
         {
             DataType = dataType;
             Name = name;
@@ -25,6 +26,16 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Info = info;
 
             TraversableChildren = StatementHelpers.CreateChildren(defaultValue);
+        }
+
+        public override string ToString()
+        {
+            if (DefaultValue != null)
+            {
+                return $"{DataType} {Name} = {DefaultValue}";
+            }
+
+            return $"{DataType} {Name}";
         }
     }
 }

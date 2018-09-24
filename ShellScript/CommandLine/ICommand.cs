@@ -11,7 +11,7 @@ namespace ShellScript.CommandLine
 
         bool CanHandle(CommandContext command);
 
-        int Execute(
+        ResultCodes Execute(
             TextWriter outputWriter,
             TextWriter errorWriter,
             TextWriter warningWriter,

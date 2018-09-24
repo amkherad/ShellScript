@@ -14,11 +14,11 @@ namespace ShellScript.CommandLine
             return command.IsCommand("exec", "--exec");
         }
 
-        public int Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
+        public ResultCodes Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
             TextWriter logWriter, CommandContext context)
         {
             errorWriter.WriteLine("Not implemented.");
-            return Program.Successful;
+            return ResultCodes.Successful;
         }
     }
 }

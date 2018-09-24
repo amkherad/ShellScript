@@ -11,5 +11,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             Info = info;
         }
+
+        public override string ToString()
+        {
+            return $"throw ";
+        }
     }
 }

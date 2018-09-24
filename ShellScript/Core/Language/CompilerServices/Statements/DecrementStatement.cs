@@ -2,13 +2,13 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public class DecrementStatement : EvaluationStatement
     {
-        public override bool CanBeEmbedded { get; }
+        public override bool CanBeEmbedded => true;
         public override StatementInfo Info { get; }
 
         public VariableAccessStatement Variable { get; }
-        
+
         public bool IsPostfix { get; }
-        
+
         public DecrementStatement(VariableAccessStatement variable, bool isPostfix, StatementInfo info)
         {
             Variable = variable;
@@ -16,6 +16,13 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Info = info;
 
             TraversableChildren = StatementHelpers.CreateChildren(variable);
+        }
+
+        public override string ToString()
+        {
+            return IsPostfix
+                ? $"{Variable}--"
+                : $"--{Variable}";
         }
     }
 }
