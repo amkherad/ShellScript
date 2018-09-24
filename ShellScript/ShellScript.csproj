@@ -4,6 +4,7 @@
         <OutputType>Exe</OutputType>
         <LangVersion>7.2</LangVersion>
         <TargetFramework>netcoreapp2.1</TargetFramework>
+        <Version>0.1.0.2018</Version>
     </PropertyGroup>
 
     <ItemGroup>

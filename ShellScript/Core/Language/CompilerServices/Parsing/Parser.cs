@@ -120,7 +120,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             return DataTypes.Float;
                         case "object":
                             return DataTypes.Class;
-                        case "variant":
+                        //case "variant":
                         //case "var":
                         //    return DataTypes.Variant;
 
