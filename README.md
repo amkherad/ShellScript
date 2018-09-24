@@ -290,12 +290,12 @@ ShellScript provide some API methods to minify the need to write platform-specif
 These methods try to use the target shell dedicated way to get the results but in cases they will generate meta functions inside the output script file. (meta codes are at the beginning of the file)
 
 
-[Enter the Class Library documentation here](http://github.com/amkherad/ShellScript/docs/ClassLibrary.md)
+[Enter the Class Library documentation here](https://github.com/amkherad/ShellScript/blob/master/docs/ClassLibrary.md)
 
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+Please read [Contributing.md](https://github.com/amkherad/ShellScript/blob/master/docs/Contributing.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 ## Authors
 
