@@ -50,6 +50,7 @@ As of today ShellScript support transpiling to Unix-Bash and Windows-Batch shell
 
 ### Data Types
 ShellScript is a strong-typed/static-typed language, all data types are listed below:  
+
 | DataType | Alias(es)     | Description
 |----------|---------------|-------------
 | Decimal  | decimal, int  | Any decimal number. (e.g. 956)
