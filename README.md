@@ -61,7 +61,7 @@ ShellScript is a strong-typed/static-typed language, all data types are listed b
 | String   | string        | Representing a string of characters.
 | Void     | void          | Void data type. (The only usage is to define a void method)
 | Object   | object        | Representing an instance of a class. (different from objects in C#) `[NOT IMPLEMENTED YET]`
-| Array    | {DATATYPE}[]  | Represents an array of items of the given data type. (e.g. int[]) `[NOT IMPLEMENTED YET]`
+| Array    | DATATYPE[]  | Represents an array of items of the given data type. (e.g. int[]) `[NOT IMPLEMENTED YET]`
 | Delegate | delegate      | Holds a reference to a callable object (function). `[NOT IMPLEMENTED YET]`
 
 Types have no boundaries or limitation in the language itself but they're limited to target platform specifications.
@@ -92,14 +92,14 @@ There are four places for variable definitions:
 * Defining a variable inside for/foreach loop:
 
   ```csharp
-  for(int myVariable = 0; myVariable <10; myVariable++) { }
-  foreach(int myVariable in GetIntegers()) { }
+  for (int myVariable = 0; myVariable <10; myVariable++) { }
+  foreach (int myVariable in GetIntegers()) { }
   ```
 
 * Defining a parameter in a function definition:
 
   ```csharp
-  void myFunction(int myParam1) { }
+  void myFunction (int myParam1) { }
   ```
 
 Just like C#, variable definition is not an embedded statement, example:
@@ -112,8 +112,8 @@ for (int i = 0; i < 100; i++) {
 }
 ```
 
-### Assignement
-There are four places for assignements:  
+### Assignment
+There are four places for assignments:  
 * Assigning a variable inside a block of code:
 
   ```csharp
@@ -233,7 +233,9 @@ do {
 
 ### Evaluation Expressions And Operators
 
-There's no limitations to expressions, but it's highly suggested to use parenthesis to clarify expressions -and it will compile faster :)-.
+There's no limitations to expressions, but it's highly suggested to use parenthesis to clarify expressions.
+
+Here are all the operators with their order (first line has the most priority):
 
 | Category         | Operator                          | Associativity
 |------------------|-----------------------------------|-----------------
@@ -307,21 +309,12 @@ Command-line format is ShellScript command [parameters] [-switch-name[=switch-va
 
 #### help, -h, --help
 To show the help.
-```
-ShellScript help
-```
 
 #### --platforms
 To print the installed target platforms.
-```
-ShellScript --platforms
-```
 
 #### -v, --version
 To print the version of the compiler.
-```
-ShellScript --version
-```
 
 #### compile, -c, --compile
 To compile a file/project.
