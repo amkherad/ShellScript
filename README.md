@@ -3,7 +3,7 @@
 
 [Work In Progress]  
 Cross-platform intermediate shell scripting language.  
-A transpiler to generate native OS shell commands from a shared code base with a powerfull class library and language features.
+A transpiler to generate native OS shell commands from a shared code base with a powerfull class library and rich language features.
 
 ## Installing
 
@@ -35,6 +35,7 @@ sudo pacman -S dotnet-sdk
 
 For other operating systems please refer to [Microsoft .NET downloads](https://www.microsoft.com/net/download) and install .NET Core 2.1
 
+Clone the repository and build the solution:
 ```
 git clone git@github.com:amkherad/ShellScript.git
 cd ShellScript
@@ -45,7 +46,7 @@ dotnet build ShellScript.sln
 
 ## Getting Started
 
-ShellScript is a C# like language with less features from C# and some additional features to allow coding for shells.  
+ShellScript is a C# like language with less features from C# and with some additional features to allow coding for shell scripting environments.  
 As of today ShellScript support transpiling to Unix-Bash and Windows-Batch shell languages.
 
 ### Data Types
@@ -64,21 +65,21 @@ ShellScript is a strong-typed/static-typed language, all data types are listed b
 
 Types have no boundaries or limitation in the language itself but they're limited to target platform specifications.
 
-Only decimal types can cast to float types automatically, for other types an explicit cast is required.
+Only decimal types can cast to float types implicitly, for other types an explicit cast is required.
 
 Example of data types in code:
 ```csharp
 int i = 956;
 decimal d = 956;
 float f = 56.48;
-double d = +8.56e-23
+double d = +8.56e-23;
 number n = 956;
 number m = +8.56e-23;
 string s = "Hello World";
 ```
 
 ### Variable Definition
-Variable definitions are similar to C# except there is no var keyword.  
+Variable definitions are similar to C# except there is no var keyword for auto typing.  
 There are four places for variable definitions:  
 * Defining a variable inside a block of code:
 
@@ -99,6 +100,16 @@ There are four places for variable definitions:
   ```csharp
   void myFunction(int myParam1) { }
   ```
+
+Just like C#, variable definition is not an embedded statement, example:
+```csharp
+for (int i = 0; i < 100; i++)
+    int j = i; //Compiler error.
+
+for (int i = 0; i < 100; i++) {
+    int j = i; //OK
+}
+```
 
 ### Assignement
 There are four places for assignements:  
@@ -243,7 +254,7 @@ There's no limitations to expressions, but it's highly suggested to use parenthe
 return (1024 ^ 1023) + 1024 * 2; //1 + 2048 = 2049
 ```
 
-Non-void functions concidered an evaluation expression:
+Non-void functions are considered as an evaluation expression:
 ```csharp
 return 2 * factorial(20);
 ```
@@ -258,14 +269,14 @@ The echo syntax doesn't require parenthesis unlike general function calls.
 echo ("Hello World");
 ```
 
-Most of the time echo is an syntax-to-syntax transpilation, but it can generate different syntaxes on different target platforms, look at this code:
+Most of the times echo is a syntax-to-syntax transpilation, but it can generate different syntaxes on different target platforms, look at this code:
 ```csharp
 int myFunction (int param1) {
     echo ("Hello World");
     return 10;
 }
 ```
-This code will transpile to the following in unix bash:
+This code will transpile to the following script in unix bash:
 ```bash
 function myFunction () {
     echo "Hello World" > /dev/tty
@@ -273,7 +284,7 @@ function myFunction () {
     return 0; //this might be omitted.
 }
 ```
-The first echo inside the method writes directly to `/dev/tty` in unix. because shell environments use standard-output for returning a value. (i.e. by redirecting the output of a command/function to a variable.)
+The first echo inside the method writes directly to `/dev/tty` in unix. because shell environments use standard-output to return a value. (i.e. by redirecting the output of a command/function to a variable or another command.)
 
 
 
