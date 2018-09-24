@@ -1,8 +1,6 @@
 using System;
-using System.Reflection.Metadata;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Statements.Operators;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 

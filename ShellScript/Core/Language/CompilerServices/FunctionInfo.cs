@@ -18,7 +18,7 @@ namespace ShellScript.Core.Language.CompilerServices
             {
                 if (ObjectName != null)
                 {
-                    return $"{ObjectName}.{ReName ?? Name}";
+                    return $"{ObjectName}_{ReName ?? Name}";
                 }
 
                 return ReName ?? Name;

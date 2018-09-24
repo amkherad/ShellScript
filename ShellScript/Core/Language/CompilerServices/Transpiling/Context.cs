@@ -152,52 +152,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         {
             return Transpilers.OfType<TTranspiler>().FirstOrDefault();
         }
-
-
-        public bool IsSdkFunctionExists(string objectName, string functionName)
-            => IsSdkFunctionExists(objectName, functionName, -1);
-
-        
-        public bool IsSdkFunctionExists(string objectName, string functionName, int numberOfParameters)
-        {
-            if (!Api.TryGetClass(objectName, out var sdkClass))
-            {
-                return false;
-            }
-
-            if (!sdkClass.TryGetFunction(functionName, out var sdkFunction))
-            {
-                return false;
-            }
-
-            if (numberOfParameters != -1)
-            {
-                return sdkFunction.Parameters.Length == numberOfParameters;
-            }
-
-            return true;
-        }
-
-
-        public bool IsSdkFunctionExists(string functionName)
-            => IsSdkFunctionExists(functionName, -1);
-
-
-        public bool IsSdkFunctionExists(string functionName, int numberOfParameters)
-        {
-            if (!Api.TryGetGeneralFunction(functionName, out var sdkFunction))
-            {
-                return false;
-            }
-
-            if (numberOfParameters != -1)
-            {
-                return sdkFunction.Parameters.Length == numberOfParameters;
-            }
-
-            return true;
-        }
-
         
         public string GetLastFunctionCallStorageVariable(TextWriter metaTextWriter)
         {

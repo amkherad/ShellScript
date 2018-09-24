@@ -3,13 +3,14 @@ using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Base;
 
-namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO
+namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.File
 {
     public partial class ApiFile
     {
         public class Exists : TestFunction
         {
             public override string Name => "Exists";
+            public override string ClassName => ClassAccessName;
             public override DataTypes DataType => DataTypes.Boolean;
 
             public override bool IsStatic => true;

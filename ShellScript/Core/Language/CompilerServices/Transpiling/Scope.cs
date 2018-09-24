@@ -257,6 +257,21 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             return false;
         }
 
+        public bool TryGetFunctionInfo(FunctionInfo functionInfo, out FunctionInfo actualFunctionInfo)
+        {
+            var that = this;
+            do
+            {
+                if (that._functions.TryGetValue(functionInfo, out actualFunctionInfo))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
+
         public bool TryGetFunctionInfo(FunctionCallStatement functionCallStatement, out FunctionInfo functionInfo)
         {
             var funcInfo = new FunctionInfo(functionCallStatement.ObjectName, functionCallStatement.FunctionName);

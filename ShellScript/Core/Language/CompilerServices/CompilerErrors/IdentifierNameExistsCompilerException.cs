@@ -12,6 +12,16 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
         {
             VariableName = variableName;
         }
+        
+        public IdentifierNameExistsCompilerException(VariableAccessStatement variableAccessStatement)
+            : base(CreateMessage(variableAccessStatement.VariableName, variableAccessStatement.Info), variableAccessStatement.Info)
+        {
+        }
+        
+        public IdentifierNameExistsCompilerException(FunctionCallStatement functionCallStatement)
+            : base(CreateMessage(functionCallStatement.Fqn, functionCallStatement.Info), functionCallStatement.Info)
+        {
+        }
 
         public static string CreateMessage(string variableName, StatementInfo info)
         {

@@ -6,6 +6,7 @@ namespace ShellScript.Core.Language.Library
     public interface IApiFunc : IApiObject
     {
         DataTypes DataType { get; }
+        string ClassName { get; }
         
         bool IsStatic { get; }
         bool AllowDynamicParams { get; }

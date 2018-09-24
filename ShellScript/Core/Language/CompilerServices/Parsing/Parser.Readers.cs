@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection.Metadata;
 using ShellScript.Core.Helpers;
 using ShellScript.Core.Language.CompilerServices.Lexing;
 using ShellScript.Core.Language.CompilerServices.Statements;

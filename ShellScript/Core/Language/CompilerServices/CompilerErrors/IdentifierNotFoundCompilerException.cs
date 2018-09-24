@@ -9,7 +9,17 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
             : base(CreateMessage(identifierName, info), info)
         {
         }
-
+        
+        public IdentifierNotFoundCompilerException(VariableAccessStatement variableAccessStatement)
+            : base(CreateMessage(variableAccessStatement.VariableName, variableAccessStatement.Info), variableAccessStatement.Info)
+        {
+        }
+        
+        public IdentifierNotFoundCompilerException(FunctionCallStatement functionCallStatement)
+            : base(CreateMessage(functionCallStatement.Fqn, functionCallStatement.Info), functionCallStatement.Info)
+        {
+        }
+        
         public IdentifierNotFoundCompilerException(string identifierName, StatementInfo info, Exception innerException)
             : base(CreateMessage(identifierName, info), info, innerException)
         {

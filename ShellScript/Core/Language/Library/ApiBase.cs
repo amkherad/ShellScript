@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using ShellScript.Core.Language.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
@@ -9,6 +10,7 @@ namespace ShellScript.Core.Language.Library
         public abstract IApiVariable[] Variables { get; }
         public abstract IApiFunc[] Functions { get; }
         public abstract IApiClass[] Classes { get; }
+        public abstract IDictionary<string, IThirdPartyUtility> Utilities { get; }
 
         public abstract string Name { get; }
 

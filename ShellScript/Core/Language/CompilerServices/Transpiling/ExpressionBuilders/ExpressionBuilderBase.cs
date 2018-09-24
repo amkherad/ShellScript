@@ -711,9 +711,19 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     {
                         var result = apiFunctionInfo.Function.Build(p, functionCallStatement);
 
-                        if (result is ApiMethodBuilderRawResult rawResult)
+                        switch (result)
                         {
-                            return (rawResult.DataType, rawResult.Expression);
+                            case ApiMethodBuilderRawResult rawResult:
+                            {
+                                return (rawResult.DataType, rawResult.Expression);
+                            }
+                            case ApiMethodBuilderInlineResult inlineResult:
+                            {
+                                return CreateExpression(p, inlineResult.Statement);
+                            }
+
+                            default:
+                                throw new InvalidOperationException();
                         }
                     }
 

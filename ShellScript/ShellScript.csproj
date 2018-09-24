@@ -2,12 +2,20 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp2.1</TargetFramework>
         <LangVersion>7.2</LangVersion>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
       <Folder Include="Windows.Batch" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Unix.Bash\Api\ClassLibrary\Core\Math\ApiMath_Abs_Bash.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Unix\Bash\Api\ClassLibrary\Core\Math\ApiMath_Abs_Bash.txt" />
     </ItemGroup>
 
     <Import Project="..\ShellScript.Luncher\ShellScript.Luncher.projitems" Label="Shared" />
