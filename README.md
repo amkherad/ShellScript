@@ -43,6 +43,8 @@ dotnet build ShellScript.sln
 
 * You can find the binaries in ShellScript/ShellScript/bin/[Release-Debug]/[Framework]
 
+---
+
 ## Getting Started
 
 ShellScript is a C# like language with less features from C# and with some additional features to allow coding for shell scripting environments.  
@@ -166,7 +168,7 @@ double myDouble (decimal parameter1) {
 
 ### Conditional Blocks
 
-**If** block:  
+#### If  
 If block is implemented exactly as C#.
 
 ```csharp
@@ -179,7 +181,7 @@ if (condition) {
 }
 ```
 
-**Switch Case** block:  
+#### Switch Case  
 Switch case block is implemented exactly as C#.
 
 ```csharp
@@ -197,33 +199,37 @@ switch (value1) {
 ### Loops
 There are four loops in ShellScript.
 
-* **for** to iterate using a condition and an optional counter:
-  ```csharp
-  for (int i = 0; i < 10; i++) {
-      echo ("Line: " + i);
-  }
-  ```
+#### for
+for syntax used to iterate using a condition and an optional counter:
+```csharp
+for (int i = 0; i < 10; i++) {
+    echo ("Line: " + i);
+}
+```
 
-* **foreach** to iterate over an array:
-  ```csharp
-  foreach (int age in GetAges()) {
-      echo ("Age is: " + age);
-  }
-  ```
+#### foreach
+foreach syntax used to iterate over an array:
+```csharp
+foreach (int age in GetAges()) {
+    echo ("Age is: " + age);
+}
+```
 
-* **while** to iterate using a condition:
-  ```csharp
-  while (_continue) {
-      echo ($"Continue is {_continue}");
-  }
-  ```
+#### while
+while syntax used to iterate using a condition:
+```csharp
+while (_continue) {
+    echo ($"Continue is {_continue}");
+}
+```
 
-* **do while** to iterate at least once using a condition:
-  ```csharp
-  do {
-      echo ("Going to check the condition.");
-  } while (_continue);
-  ```
+#### do while
+do while syntax used to iterate at least once using a condition:
+```csharp
+do {
+    echo ("Going to check the condition.");
+} while (_continue);
+```
 
 ### Evaluation Expressions And Operators
 
@@ -285,6 +291,8 @@ function myFunction () {
 ```
 The first echo inside the method writes directly to `/dev/tty` in unix. because shell environments use standard-output to return a value. (i.e. by redirecting the output of a command/function to a variable or another command.)
 
+---
+
 ## API and Class Library
 ShellScript provide some API methods to minify the need to write platform-specific code for each platform.  
 These methods try to use the target shell's dedicated way to get the results but in cases they will generate meta functions inside the output script file. (meta codes are at the beginning of the file)
@@ -292,6 +300,40 @@ These methods try to use the target shell's dedicated way to get the results but
 
 [Enter the Class Library documentation here](https://github.com/amkherad/ShellScript/blob/master/docs/ClassLibrary.md)
 
+---
+
+## Command-Line
+Command-line format is ShellScript command [parameters] [-switch-name[=switch-value]]
+
+#### help, -h, --help
+To show the help.
+```
+ShellScript help
+```
+
+#### --platforms
+To print the installed target platforms.
+```
+ShellScript --platforms
+```
+
+#### -v, --version
+To print the version of the compiler.
+```
+ShellScript --version
+```
+
+#### compile, -c, --compile
+To compile a file/project.
+```
+ShellScript compile Source Output Platform [-switch-name[=switch-value]]
+```
+Example:
+```
+ShellScript compile /home/github/projects/test.shellscript /home/github/projects/build/test.bash Unix-Bash --verbose
+```
+
+---  
 
 ## Contributing
 
@@ -299,7 +341,7 @@ Please read [Contributing.md](https://github.com/amkherad/ShellScript/blob/maste
 
 ## Authors
 
-* **Ali Mousavi Kherad** - *Initial work*
+* **Ali Mousavi Kherad** - *Owner*
 
 See also the list of [contributors](https://github.com/amkherad/ShellScript/contributors) who participated in this project.
 

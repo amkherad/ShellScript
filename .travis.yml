@@ -1,5 +1,6 @@
 language: csharp
 mono: none
+api_key: "GITHUB OAUTH TOKEN"
 dotnet: 2.1
 script:
 - dotnet restore
