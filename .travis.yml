@@ -3,6 +3,10 @@ mono: none
 dotnet: 2.1
 script:
 - dotnet build --configuration Release
+branches:
+  only:
+  - master
+  - /^v.*$/
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN

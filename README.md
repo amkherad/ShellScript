@@ -19,9 +19,9 @@ sudo pacman -S dotnet-runtime
 sudo pacman -S dotnet-host
 ```
 
-### Download the Binary
+### Download the Binaries
 
-[ShellScript Binaries](http://google.com/) 
+[ShellScript Releases](https://github.com/amkherad/ShellScript/releases) 
 
 ### Build from the source
 
