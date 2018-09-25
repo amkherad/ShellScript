@@ -50,7 +50,7 @@ dotnet build ShellScript.sln
 ShellScript is a C# like language with less features from C# and with some additional features to allow coding for shell scripting environments.  
 As of today ShellScript supports transpiling to Unix-Bash and Windows-Batch shell languages.
 
-Here are some rules of ShellScript:
+Here are some rules of the ShellScript:
 
 * Keywords in ShellScript are case-sensitive.
 * White-spaces are totally ignored unless they're inside single or double quote.
@@ -262,7 +262,7 @@ do {
       //Infinite loop
   }
   ```
-* It's better to avoid micro-optimizations or outsmart the compiler, because ShellScript will optimize the well-known statements to platform's dedicated way to implement the functilnality, and doing so will prevent ShellScript from recognizing the function.
+* It's better to avoid micro-optimizations or outsmart the compiler, because ShellScript will optimize the well-known statements to platform's dedicated way to implement the functionality or even ignore statements or reorder for better results, and doing so will prevent ShellScript from recognizing the function.
   ```csharp
   //keep files of a directory in an array to optimize performance.
   string[] files = Directory.GetFiles("Path-To-Directory");
@@ -274,7 +274,8 @@ do {
       echo (fileName);
   }
 
-  //the code above will prevent to query the file system twice, but as said before using arrays will generate hacks, so the generated code might not be as good as expected.
+  //the code above will prevent to query the file system twice, but as said before using arrays will generate hacks,
+  //so the generated code might not be as good as expected.
 
   //now iterating directory's files by querying file system separately.
   foreach (string fileName in Directory.GetFiles("Path-To-Directory")) {
@@ -285,7 +286,9 @@ do {
       echo (fileName);
   }
 
-  //this code will generate "for filename in Path-To-Directory/*; do" in bash and it's easier to understand (if required to read the output) and it's not using any hacks. but it may be slower (you can benchmark your code to choose which is better for your requirements)
+  //this code will generate "for filename in Path-To-Directory/*; do" in bash and
+  //it's easier to understand (if required to read the output) and it's not using any hacks.
+  //but it may be slower (you can benchmark your code to choose which is better for your requirements)
   ```
 
 
@@ -319,7 +322,7 @@ Here are all the operators with their order (first line has the most priority):
 return (1024 ^ 1023) + 1024 * 2; //1 + 2048 = 2049
 ```
 
-Non-void functions are considered as an evaluation expression:
+Non-void functions are considered as evaluation expression:
 ```csharp
 return 2 * factorial(20);
 ```
