@@ -6,7 +6,15 @@ script:
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN
-  file: ShellScript/bin/Release/netcoreapp2.1/ShellScript.dll
-  skip_cleanup: true
+  file:
+  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.dll
+  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.deps.json
+  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.runtimeconfig.dev.json
+  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.runtimeconfig.json
+  - ShellScript/bin/Release/netcoreapp2.1/shellscript.shellscript
+  - ShellScript/bin/Release/netcoreapp2.1/shellscript.sh
+
+    skip_cleanup: true
   on:
     repo: amkherad/ShellScript
+    tags: true
