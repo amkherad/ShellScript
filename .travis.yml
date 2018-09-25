@@ -4,16 +4,14 @@ dotnet: 2.1
 script:
 - dotnet build --configuration Release
 
+before_deploy:
+  - cd ShellScript/bin/Release/
+  - tar -zcf ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.tar.gz netcoreapp2.1
+
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN
-  file:
-  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.dll
-  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.deps.json
-  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.runtimeconfig.dev.json
-  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.runtimeconfig.json
-  - ShellScript/bin/Release/netcoreapp2.1/shellscript.shellscript
-  - ShellScript/bin/Release/netcoreapp2.1/shellscript.sh
+  file: ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.tar.gz
 
   skip_cleanup: true
   on:
