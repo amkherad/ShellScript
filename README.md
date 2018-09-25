@@ -1,5 +1,9 @@
 # ShellScript
 
+| Travis      |
+|-------------|
+| [![Build Status](https://travis-ci.com/amkherad/ShellScript.svg?branch=master)](https://travis-ci.com/amkherad/ShellScript) |
+
 [Work In Progress]  
 Cross-platform intermediate shell scripting language.  
 A transpiler to generate native OS shell commands from a shared code base with a powerfull class library and rich language features.
