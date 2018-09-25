@@ -262,7 +262,7 @@ do {
       //Infinite loop
   }
   ```
-* It's better to avoid micro-optimizations or outsmart the compiler, because ShellScript will optimize the well-known statements to platform's dedicated way to implement the functionality or even ignore statements or reorder for better results, and doing so will prevent ShellScript from recognizing the function.
+* It's better to avoid micro-optimizations or outsmarting the compiler, because ShellScript will optimize the well-known statements to platform's dedicated way to implement the functionality or even ignore statements or reorder for better results, and doing so will prevent ShellScript from recognizing the function.
   ```csharp
   //keep files of a directory in an array to optimize performance.
   string[] files = Directory.GetFiles("Path-To-Directory");
@@ -294,9 +294,9 @@ do {
 
 ### Evaluation Expressions And Operators
 
-There's no limitations to expressions, but it's highly suggested to use parenthesis to clarify expressions.
+There's no limitations on expressions, but it's highly suggested to use parenthesis to clarify expressions.
 
-Here are all the operators with their order (first line has the most priority):
+Here are all the operators with their order (first row has the most priority):
 
 | Category         | Operator                            | Associativity
 |------------------|-------------------------------------|-----------------
@@ -390,8 +390,9 @@ The first echo inside the method writes directly to `/dev/tty` in unix. because 
 ShellScript provide some API methods to minify the need to write platform-specific code for each platform.  
 These methods try to use the target shell's dedicated way to get the results but in cases they will generate meta functions inside the output script file. (meta codes are at the beginning of the file)
 
+* It's possible to override API functions by knowing the generated function name and writing your own function with that name before the first usage of the API.
 
-[Enter the Class Library documentation here](https://github.com/amkherad/ShellScript/blob/master/docs/ClassLibrary.md)
+[Enter the API documentation here](https://github.com/amkherad/ShellScript/blob/master/docs/ClassLibrary.md)
 
 ---
 
