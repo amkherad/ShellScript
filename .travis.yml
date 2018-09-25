@@ -1,24 +1,13 @@
 language: csharp
 mono: none
 dotnet: 2.1
-
 script:
 - dotnet build --configuration Release
-
 deploy:
-  cleanup: false
-  skip_cleanup: true
-
   provider: releases
   api_key:
-    secure: H3xc5mfpBOHDbZJzbFljaA9sBijWb9la6OUzcGsKmPZOa2p+CfDFWVPmKMgGUQkOQxv6btAxn+G5H5vb8CYzByG07St5t1kNxk3MZZz7RKcaLnPAX3SQogvIPSnA4Zyljnw/GscMN3LmKDTiaxxuLAX3U8gtTbDqXNHAizwHWqJzqxv15z/DsTZUyIjx3jl/K/7oMZYbVjtX0LGfabWBi4OnpisMKKLxJxU2tCIPUhVdEAmYzSJCHvbHoJQgNdMSNsjvMCQFXF1xM+wNLgOm6a+BxcTmgn/A5UduiV59ZZ8nR86AM+7/JSlCBpQbD7/esD3tnmesHlU3DhWAH7ZGWb5UXDgjhg2k8mHDYX63QUWMfXD/GAfsr/uW+BOsWIWwG5YQsV5tFMpPBZgooIwyTb1wXAczoTv2/s1X05fMaJT97C8DMgM/6qYtnkqGTrlzFJYZRYBchiZlIz50HRzbivsfdkq8uVUyIWhi4QhDO8U3hd8hqFwICPFguYO5JfA2Uvg5zYnwzn7V2RiPKbeUhHxlXSh6b5gCaxYWxssYqxtQHcxug153OXjvbE+fjseH4EGNLPeeSXMF/BAP33DzbcA+hzoTHSrukznQvwZaIoc05ga6m8+lYgLEA8CJFQ0qYTcwT+Wvoz9FMiav9F9FlH+80KOaD/veeApQFYkInJc=
-
-  file:
-  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.dll
-  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.deps.json
-  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.runtimeconfig.dev.json
-  - ShellScript/bin/Release/netcoreapp2.1/ShellScript.runtimeconfig.json
-  - ShellScript/bin/Release/netcoreapp2.1/shellscript.shellscript
-  - ShellScript/bin/Release/netcoreapp2.1/shellscript.sh
+    secure: Dm6g9LMH4BCEBIR+VReqHn+zuuuy1JZxkCy29Ln9L2UGLH0cerAKNdtuNwMQ7PI/I6KbWKKMje2tWg5Xt57HfFKqNcR1nztWRaCp+QQs9kE8mJpu8UwdtfztvzAefR10OyY7fvmkKdfypHHBgonWQSPuqajHzolzyql3TTgHZbZec0LbPIToJWiYXhVyE/aNm/AP6v4tALNVCry/8Qrv8EcYKw+t0L+m65CxeBI8i4iARt6mTh/GVO/mGw1CDcaJtrSADIylGvt3/Auj8W8/xP4C9Vsh0oxC87kbpPNI54JLUd1qlT8p2hQp16mIZrXbBZe7soZgyolar6I6VEcui58kFsc+Qip8MKl9PEJHlfF7DptcOzsfhMs1QCIOYBtluU4JOnosrnT+aAIVc4qXsmGcmk1bm12BTv0/kxgI5PF3JnFfIA82gJBBwIbNMRXEJrOG4uqpcd79T/dwCp0TvrOoQhal0dK1B511uWBKXrc1QJC5c030bLn5kZLcgVYI6E/wLrklhXehDb+yogWP8A5ny9FH5+JkAlD1mYvpAgl2H8sb1RevwJAb2ZOMr85UM6QHocxMARs1CoGxjnyjWIBZID4EgEStDlCIrCU7XSPbGyqlY6Qozl+h0+TE7xDlo1k8H6VEbt+YkvGAmiXenq4IiKSpmUEr6NnpzM6wFRs=
+  file: ShellScript/bin/Release/netcoreapp2.1/ShellScript.dll
+  skip_cleanup: true
   on:
     repo: amkherad/ShellScript
