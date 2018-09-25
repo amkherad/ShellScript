@@ -4,6 +4,8 @@
 Cross-platform intermediate shell scripting language.  
 A transpiler to generate native OS shell commands from a shared code base with a powerfull class library and rich language features.
 
+Learning all shell scripting languages 
+
 ## Installing
 
 ### Arch Linux
@@ -23,12 +25,12 @@ sudo pacman -S dotnet-host
 
 ### Build from the source
 
-First you need to install dotnet core SDK and runtime along side with host:
+First you need to install dotnet core host and runtime along side with SDK:
 
 Arch Linux:
 ```
-sudo pacman -S dotnet-runtime
 sudo pacman -S dotnet-host
+sudo pacman -S dotnet-runtime
 sudo pacman -S dotnet-sdk
 ```
 
@@ -47,7 +49,7 @@ dotnet build ShellScript.sln
 
 ## Getting Started
 
-ShellScript is a C# like language with less features from C# and with some additional features to allow coding for shell scripting environments.  
+ShellScript is a C#-like language with less features from C# and some new features to allow coding for shell scripting environments.  
 As of today ShellScript supports transpiling to Unix-Bash and Windows-Batch shell languages.
 
 Here are some rules of the ShellScript:
@@ -180,7 +182,7 @@ double myDouble (decimal parameter1) {
 }
 ```
 
-### Conditional Blocks
+### Conditional Blocks (Branches)
 
 * Conditional blocks with known-value conditions will be explicitly compiled.
   ```csharp
@@ -364,7 +366,7 @@ Echo is one of the special syntaxes in ShellScript. it's classified as a **void*
 The echo syntax doesn't require parenthesis unlike general function calls.
 
 ```csharp
-echo ("Hello World");
+echo "Hello World";
 ```
 
 Most of the times echo is a syntax-to-syntax transpilation, but it can generate different syntaxes on different target platforms, look at this code:
