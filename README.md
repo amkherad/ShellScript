@@ -50,19 +50,34 @@ dotnet build ShellScript.sln
 ShellScript is a C# like language with less features from C# and with some additional features to allow coding for shell scripting environments.  
 As of today ShellScript supports transpiling to Unix-Bash and Windows-Batch shell languages.
 
+Here are some rules of ShellScript:
+
+* Keywords in ShellScript are case-sensitive.
+* White-spaces are totally ignored unless they're inside single or double quote.
+* Blocks are free to use (i.e. you can have {} wherever you want just like C#)
+* Variables are accessible to their scope only.
+* Using arrays will generate hacks to implement the functions, so avoid using arrays as possible.
+* API functions and objects will be written to the output only when they're used inside of the code.
+* ShellScript API methods will use platform's dedicated way to get the results wherever possible instead of writing it's own function.
+  ```csharp
+  int x = -23;
+  echo Math.Abs(x); //will generate 'echo ${x#-}' in bash.
+  ```
+* There's no label/goto syntax.
+
 ### Data Types
 ShellScript is a strong-typed/static-typed language, all data types are listed below:  
 
-| DataType | Alias(es)     | Description
-|----------|---------------|-------------
-| Decimal  | decimal, int  | Any decimal number. (e.g. 956)
-| Float    | double, float | Any float number. (e.g. 56.48)
-| Number   | number        | Any number, either decimal or float.
-| String   | string        | Representing a string of characters.
-| Void     | void          | Void data type. (The only usage is to define a void method)
-| Object   | object        | Representing an instance of a class. (different from objects in C#) `[NOT IMPLEMENTED YET]`
-| Array    | DATATYPE[]  | Represents an array of items of the given data type. (e.g. int[]) `[NOT IMPLEMENTED YET]`
-| Delegate | delegate      | Holds a reference to a callable object (function). `[NOT IMPLEMENTED YET]`
+| Data Type | Alias(es)     | Description
+|-----------|---------------|-------------
+| Decimal   | decimal, int  | Any decimal number. (e.g. 956)
+| Float     | double, float | Any float number. (e.g. 56.48)
+| Number    | number        | Any number, either decimal or float.
+| String    | string        | Representing a string of characters.
+| Void      | void          | Void data type. (The only usage is to define a void method)
+| Object    | object        | Representing an instance of a class. (different from object in C#) `[NOT IMPLEMENTED YET]`
+| Array     | DATATYPE[]  | Represents an array of items of the given data type. (e.g. int[]) `[NOT IMPLEMENTED YET]`
+| Delegate  | delegate      | Holds a reference to a callable object (function). `[NOT IMPLEMENTED YET]`
 
 Types have no boundaries or limitation in the language itself but they're limited to target platform specifications.
 
@@ -95,6 +110,7 @@ There are four places for variable definitions:
   for (int myVariable = 0; myVariable <10; myVariable++) { }
   foreach (int myVariable in GetIntegers()) { }
   ```
+  - foreach variable is immutable inside foreach block (and inaccessible outside of the block, if it's defined in the foreach statement).
 
 * Defining a parameter in a function definition:
 
@@ -124,14 +140,14 @@ There are four places for assignments:
 * Assigning a variable inside for/foreach loop:
 
   ```csharp
-  for(myVariable = 0; myVariable <10; myVariable++) { }
-  [^footnote1] foreach(myVariable in GetIntegers()) { }
+  for (myVariable = 0; myVariable < 10; myVariable++) { }
+  foreach (myVariable in GetIntegers()) { }
   ```
 
 * Assigning a parameter to a default value:
 
   ```csharp
-  void myFunction(int myParam1 = 10) { }
+  void myFunction (int myParam1 = 10) { }
   ```
 
 * Assigning a variable inside an evaluation expression: `[NOT IMPLEMENTED YET]`
@@ -140,8 +156,6 @@ There are four places for assignments:
   myVariable = x = 2;
   while ((that = that.Parent) != null) { }
   ```
-
-[^footnote1]: foreach variable is immutable inside foreach block (and inaccessible outside of the block, if it's defined in the foreach statement).
 
 ### Function Definition
 ShellScript use same syntax for function definition as C#.  
@@ -167,6 +181,16 @@ double myDouble (decimal parameter1) {
 ```
 
 ### Conditional Blocks
+
+* Conditional blocks with known-value conditions will be explicitly compiled.
+  ```csharp
+  if (true) {
+      echo ("true");
+  } else {
+      echo ("false");
+  }
+  //The entire if statement will be removed and only one echo ("true") will be generated.
+  ```
 
 #### If  
 If block is implemented exactly as C#.
@@ -231,29 +255,63 @@ do {
 } while (_continue);
 ```
 
+* Empty loops will be ignored.
+* Prefered loop for infinite iterations is **`for`**.
+  ```csharp
+  for (;;) {
+      //Infinite loop
+  }
+  ```
+* It's better to avoid micro-optimizations or outsmart the compiler, because ShellScript will optimize the well-known statements to platform's dedicated way to implement the functilnality, and doing so will prevent ShellScript from recognizing the function.
+  ```csharp
+  //keep files of a directory in an array to optimize performance.
+  string[] files = Directory.GetFiles("Path-To-Directory");
+  foreach (string fileName in files) {
+      echo (fileName);
+  }
+  //somewhere else in the code, we need to iterate the files again.
+  foreach (string fileName in files) {
+      echo (fileName);
+  }
+
+  //the code above will prevent to query the file system twice, but as said before using arrays will generate hacks, so the generated code might not be as good as expected.
+
+  //now iterating directory's files by querying file system separately.
+  foreach (string fileName in Directory.GetFiles("Path-To-Directory")) {
+      echo (fileName);
+  }
+  //somewhere else in the code, we need to iterate the files again.
+  foreach (string fileName in Directory.GetFiles("Path-To-Directory")) {
+      echo (fileName);
+  }
+
+  //this code will generate "for filename in Path-To-Directory/*; do" in bash and it's easier to understand (if required to read the output) and it's not using any hacks. but it may be slower (you can benchmark your code to choose which is better for your requirements)
+  ```
+
+
 ### Evaluation Expressions And Operators
 
 There's no limitations to expressions, but it's highly suggested to use parenthesis to clarify expressions.
 
 Here are all the operators with their order (first line has the most priority):
 
-| Category         | Operator                          | Associativity
-|------------------|-----------------------------------|-----------------
-| Postfix          | () [] ++ -- .                     | Left to right
-| Unary	           | + - ! ~ ++ - - (type)             | Right to left
-| Multiplicative   | * / %                             | Left to right
-| Additive         | + -                               | Left to right
-| Shift            | << >>                             | Left to right
-| Relational       | < <= > >=                         | Left to right
-| Equality         | == !=                             | Left to right
-| Bitwise AND	   | &                                 | Left to right
-| Bitwise XOR	   | ^                                 | Left to right
-| Bitwise OR	   | \|                                | Left to right
-| Logical AND	   | &&                                | Left to right
-| Logical OR	   | \|\|                              | Left to right
-| Conditional	   | ?:                                | Right to left
-| Assignment	   | = += -= *= /= %=>>= <<= &= ^= \|= | Right to left
-| Comma	           | ,                                 | Left to right
+| Category         | Operator                            | Associativity
+|------------------|-------------------------------------|-----------------
+| Primary/Postfix  | () [] ++ -- .                       | Left to right
+| Unary	           | + - ! ~ ++ - - `(type)`             | Right to left
+| Multiplicative   | * / %                               | Left to right
+| Additive         | + -                                 | Left to right
+| Shift            | `<<` `>>`                           | Left to right
+| Relational       | < <= > >=                           | Left to right
+| Equality         | == !=                               | Left to right
+| Bitwise AND	   | &                                   | Left to right
+| Bitwise XOR	   | ^                                   | Left to right
+| Bitwise OR	   | \|                                  | Left to right
+| Logical AND	   | &&                                  | Left to right
+| Logical OR	   | \|\|                                | Left to right
+| Conditional	   | ?:                                  | Right to left
+| Assignment	   | = `+= -= *= /= %=>>= <<= &= ^= \|=` | Right to left
+| Comma	           | ,                                   | Left to right
 
 `Some operators are not implemented yet.`
 
@@ -266,10 +324,40 @@ Non-void functions are considered as an evaluation expression:
 return 2 * factorial(20);
 ```
 
-Transpiler will do it's best for reliability and high performance, but sometimes the performance and correctness rely on external utilities, like using floating-point arithmetic in bash, it will use **awk** or other utilities available to do the math but they can reject to calculate the expression. (e.g. compiling awk with no math enabled)
+* Sometimes expressions will be truncated into multiple helper variables.
+* Constant expressions will be calculated at compile-time. (i.e. 1024 * 2 will generate 2048 constant value)
+* Both void methods or non-void methods will be inlined if there's only one statement inside.
+* By default ShellScript only check errors/exceptions for the methods/commands having throw syntax inside or marked by a throws syntax.
+* Writing raw platform-specific code is considered unsafe and should be avoided unless there's no other way.
+* You can enable value tracking to treat variables as constant if their value is not changed.
+  ```csharp
+  int x = 10;
+  return x * 10 / 3;
+  //if value-tracking enabled it will generate "return 33" constant value instead of arithmetic evaluation.
+  //that's because value of x is not changed before reading it.
+  ```
+
+#### String Concatenation
+You can concatenate strings using addition operator (+) or using string interpolation ($"").
+```csharp
+return "Hello" + " " + "World " + dateValue;
+```
+```csharp
+return $"Hello World {dateValue}";
+```
+
+* You can use both single quote or double quote. (Both are string, ShellScript has no character data type)
+* String escaping is exactly like C#.
+* Concatenating constant strings will generate a concatenated constant string.
+* You can use multiplication operator on one decimal and one string to repeat the string.
+  ```csharp
+  echo (80 * "-"); //will repeat (-) 80 times.
+  ```
+
+Transpiler will do it's best for reliability and high performance, but sometimes the performance and correctness relies on external utilities, like using floating-point arithmetic in bash, it will use `awk` or other utilities available to do the math but they can reject to calculate the expression. (e.g. compiling `awk` with no math enabled)
 
 ## Echo
-Echo is one of the special syntaxes in ShellScript. it's classified as a **Void** function call. (i.e. cannot be used inside evaluation expressions)  
+Echo is one of the special syntaxes in ShellScript. it's classified as a **void** function call. (i.e. cannot be used inside evaluation expressions)  
 The echo syntax doesn't require parenthesis unlike general function calls.
 
 ```csharp
@@ -291,7 +379,7 @@ function myFunction () {
     return 0; //this might be omitted.
 }
 ```
-The first echo inside the method writes directly to `/dev/tty` in unix. because shell environments use standard-output to return a value. (i.e. by redirecting the output of a command/function to a variable or another command.)
+The first echo inside the method writes directly to `/dev/tty` in unix. because shell environments use standard-output to return a value. (i.e. by redirecting the output of a command/function to a variable or another command)
 
 ---
 
