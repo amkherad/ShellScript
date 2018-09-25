@@ -2,18 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellScript", "ShellScript\ShellScript.csproj", "{39413563-93C2-43EC-970A-6246C69F5184}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Resources", "Resources", "{08D350BD-16D1-48A7-ABF0-E92A31D55218}"
-ProjectSection(SolutionItems) = preProject
-	Guidelines.txt = Guidelines.txt
-	README.md = README.md
-	.travis.yml = .travis.yml
-EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellScript.MSTest", "ShellScript.MSTest\ShellScript.MSTest.csproj", "{B0E41259-2058-42D2-81E6-4349CFDF7A59}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ShellScript.Luncher", "ShellScript.Luncher\ShellScript.Luncher.shproj", "{B9852B36-9228-45DC-AB2F-1DD3DD56106F}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestScripts", "TestScripts", "{EC640C9D-3D01-4743-8CB0-C17E49FE8F25}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

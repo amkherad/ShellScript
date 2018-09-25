@@ -6,12 +6,12 @@ script:
 
 before_deploy:
   - cd ShellScript/bin/Release/
-  - tar -zcf ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.tar.gz netcoreapp2.1
+  - tar -zcf ${TRAVIS_BUILD_DIR}${REPO}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.tar.gz netcoreapp2.1
 
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN
-  file: ${TRAVIS_BUILD_DIR}${REPO}-${BUILD_ENV}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.tar.gz
+  file: ${TRAVIS_BUILD_DIR}${REPO}-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}.tar.gz
 
   skip_cleanup: true
   on:

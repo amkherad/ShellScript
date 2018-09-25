@@ -1,14 +1,14 @@
 # ShellScript
 
-| Travis      |
-|-------------|
+| Linux Build (Travis-CI) |
+|-------------------------|
 | [![Build Status](https://travis-ci.com/amkherad/ShellScript.svg?branch=master)](https://travis-ci.com/amkherad/ShellScript) |
 
 [Work In Progress]  
 Cross-platform intermediate shell scripting language.  
 A transpiler to generate native OS shell commands from a shared code base with a powerfull class library and rich language features.
 
-Learning all shell scripting languages 
+Learning all of the shell scripting languages with all those details could be so fraustating and it can be forgotten so easily due to tons of details and special cases, the idea of ShellScript is to create an intermediate language that can be transpiled (source to source compilation) into any shell language with use of paltform-dependent utilities.
 
 ## Installing
 
@@ -362,7 +362,7 @@ return "Hello" + " " + "World " + dateValue;
 return $"Hello World {dateValue}";
 ```
 
-* You can use both single quote or double quote. (Both are string, ShellScript has no character data type)
+* You can use both single quote or double quote. (both are strings, ShellScript has no character data type)
 * String escaping is exactly like C#.
 * Concatenating constant strings will generate a concatenated constant string.
 * You can use multiplication operator on one decimal and one string to repeat the string.
