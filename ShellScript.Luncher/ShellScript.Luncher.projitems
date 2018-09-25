@@ -9,6 +9,9 @@
     <Import_RootNamespace>ShellScript.Luncher</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)shellscript.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)shellscript.shellscript">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
