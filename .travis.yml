@@ -15,7 +15,7 @@ deploy:
   - ShellScript/bin/Release/netcoreapp2.1/shellscript.shellscript
   - ShellScript/bin/Release/netcoreapp2.1/shellscript.sh
 
-    skip_cleanup: true
+  skip_cleanup: true
   on:
     repo: amkherad/ShellScript
     tags: true
