@@ -90,6 +90,7 @@ Example of data types in code:
 int i = 956;
 decimal d = 956;
 float f = 56.48;
+float f = +8.56e-23;
 double d = +8.56e-23;
 number n = 956;
 number m = +8.56e-23;
@@ -109,7 +110,7 @@ There are four places for variable definitions:
 * Defining a variable inside for/foreach loop:
 
   ```csharp
-  for (int myVariable = 0; myVariable <10; myVariable++) { }
+  for (int myVariable = 0; myVariable < 10; myVariable++) { }
   foreach (int myVariable in GetIntegers()) { }
   ```
   - foreach variable is immutable inside foreach block (and inaccessible outside of the block, if it's defined in the foreach statement).
@@ -184,17 +185,7 @@ double myDouble (decimal parameter1) {
 
 ### Conditional Blocks (Branches)
 
-* Conditional blocks with known-value conditions will be explicitly compiled.
-  ```csharp
-  if (true) {
-      echo ("true");
-  } else {
-      echo ("false");
-  }
-  //The entire if statement will be removed and only one echo ("true") will be generated.
-  ```
-
-#### If  
+#### If
 If block is implemented exactly as C#.
 
 ```csharp
@@ -207,7 +198,7 @@ if (condition) {
 }
 ```
 
-#### Switch Case  
+#### Switch Case
 Switch case block is implemented exactly as C#.
 
 ```csharp
@@ -221,6 +212,20 @@ switch (value1) {
     }
 }
 ```
+
+* Conditional blocks with constant conditions will be compiled if their condition is true.
+  ```csharp
+  if (true) {
+      echo ("true");
+  } else if (false) {
+      echo ("false");
+  } else {
+      echo ("else");
+  }
+  //The entire if statement will be removed and only one echo ("true") will be generated.
+  ```
+* `if` may compile to a `switch case` syntax if required or vice-versa.
+* `if` and `switch case` considered as branch statements, they're required to return a value in every branch inside a non-void method, and may be converted to arithmetic/logical expression to remove branch.
 
 ### Loops
 There are four loops in ShellScript.
@@ -258,13 +263,13 @@ do {
 ```
 
 * Empty loops will be ignored.
-* Prefered loop for infinite iterations is **`for`**.
+* Preferred loop for infinite iterations is **`for`**.
   ```csharp
   for (;;) {
       //Infinite loop
   }
   ```
-* It's better to avoid micro-optimizations or outsmarting the compiler, because ShellScript will optimize the well-known statements to platform's dedicated way to implement the functionality or even ignore statements or reorder for better results, and doing so will prevent ShellScript from recognizing the function.
+* It's better to avoid micro-optimizations or outsmarting the compiler, because ShellScript will optimize the well-known statements to platform's dedicated way to implement the functionality, even ignore statements or reorder for better results, and doing so will prevent ShellScript from recognizing the function.
   ```csharp
   //keep files of a directory in an array to optimize performance.
   string[] files = Directory.GetFiles("Path-To-Directory");
@@ -329,6 +334,7 @@ Non-void functions are considered as evaluation expression:
 return 2 * factorial(20);
 ```
 
+* Expressions are parsed from left to right.
 * Sometimes expressions will be truncated into multiple helper variables.
 * Constant expressions will be calculated at compile-time. (i.e. 1024 * 2 will generate 2048 constant value)
 * Both void methods or non-void methods will be inlined if there's only one statement inside.
@@ -341,6 +347,7 @@ return 2 * factorial(20);
   //if value-tracking enabled it will generate "return 33" constant value instead of arithmetic evaluation.
   //that's because value of x is not changed before reading it.
   ```
+* Evaluation of second operand in logical operators is UB (Undefined Behavior) and it depends on the target shell.
 
 #### String Concatenation
 You can concatenate strings using addition operator (+) or using string interpolation ($"").

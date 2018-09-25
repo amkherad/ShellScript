@@ -1,6 +1,15 @@
 language: csharp
 mono: none
-api_key: "GITHUB OAUTH TOKEN"
 dotnet: 2.1
+skip_cleanup: true
+
 script:
-- dotnet restore
+- dotnet build --configuration Release
+
+deploy:
+  provider: releases
+  api_key:
+    secure: H3xc5mfpBOHDbZJzbFljaA9sBijWb9la6OUzcGsKmPZOa2p+CfDFWVPmKMgGUQkOQxv6btAxn+G5H5vb8CYzByG07St5t1kNxk3MZZz7RKcaLnPAX3SQogvIPSnA4Zyljnw/GscMN3LmKDTiaxxuLAX3U8gtTbDqXNHAizwHWqJzqxv15z/DsTZUyIjx3jl/K/7oMZYbVjtX0LGfabWBi4OnpisMKKLxJxU2tCIPUhVdEAmYzSJCHvbHoJQgNdMSNsjvMCQFXF1xM+wNLgOm6a+BxcTmgn/A5UduiV59ZZ8nR86AM+7/JSlCBpQbD7/esD3tnmesHlU3DhWAH7ZGWb5UXDgjhg2k8mHDYX63QUWMfXD/GAfsr/uW+BOsWIWwG5YQsV5tFMpPBZgooIwyTb1wXAczoTv2/s1X05fMaJT97C8DMgM/6qYtnkqGTrlzFJYZRYBchiZlIz50HRzbivsfdkq8uVUyIWhi4QhDO8U3hd8hqFwICPFguYO5JfA2Uvg5zYnwzn7V2RiPKbeUhHxlXSh6b5gCaxYWxssYqxtQHcxug153OXjvbE+fjseH4EGNLPeeSXMF/BAP33DzbcA+hzoTHSrukznQvwZaIoc05ga6m8+lYgLEA8CJFQ0qYTcwT+Wvoz9FMiav9F9FlH+80KOaD/veeApQFYkInJc=
+  file: ShellScript/bin/Release
+  on:
+    repo: amkherad/ShellScript
