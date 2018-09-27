@@ -1,4 +1,5 @@
 using System;
+using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Statements.Operators;
 using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
@@ -36,7 +37,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 }
             }
 
-            return base.FormatExpression(p, expression, template);
+            return base.FormatExpression(p, dataType, expression, template);
         }
 
         public override string FormatSubExpression(ExpressionBuilderParams p, string expression,
@@ -103,13 +104,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 opStr = op.ToString();
             }
 
-            left = _createStringExpression(left, logicalEvaluationStatement.Left);
-            right = _createStringExpression(right, logicalEvaluationStatement.Right);
-
+            left = _createBoolExpression(leftDataType, left, logicalEvaluationStatement.Left);
+            right = _createBoolExpression(rightDataType, right, logicalEvaluationStatement.Right);
+            
             return $"{left} {opStr} {right}";
         }
 
-        private string _createStringExpression(string exp, IStatement statement)
+        private string _createBoolExpression(DataTypes dataType, string exp, IStatement statement)
         {
             if (statement is ConstantValueStatement _)
             {
@@ -127,13 +128,33 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 {
                     return $"[ {exp} ]";
                 }
-                else
+
+                return exp;
+            }
+
+            if (dataType.IsBoolean())
+            {
+                if (exp[0] != '[' && exp[exp.Length - 1] != ']')
                 {
-                    return exp;
+                    return $"[ {exp} ]";
                 }
+
+                return exp;
             }
 
             return $"$(({exp}))";
+        }
+
+        public override (DataTypes, string, EvaluationStatement) CreateExpression(ExpressionBuilderParams p,
+            EvaluationStatement statement)
+        {
+            var(dataType, exp, template) = base.CreateExpression(p, statement);
+            if (dataType != DataTypes.Boolean)
+            {
+                throw new TypeMismatchCompilerException(dataType, DataTypes.Boolean, statement.Info);
+            }
+
+            return (dataType, exp, template);
         }
     }
 }

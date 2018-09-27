@@ -1,11 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using ShellScript.Core.Language.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
+using ShellScript.Unix.Bash.PlatformTranspiler;
 
 namespace ShellScript.Core.Language.Library
 {
@@ -18,16 +19,23 @@ namespace ShellScript.Core.Language.Library
         public abstract bool AllowDynamicParams { get; }
         public abstract FunctionParameterDefinitionStatement[] Parameters { get; }
 
+        public static Dictionary<string, string> UtilitiesLookupTestVariableName { get; }
 
-        public abstract IApiMethodBuilderResult Build(ExpressionBuilderParams p, FunctionCallStatement functionCallStatement);
+        static ApiBaseFunction()
+        {
+            UtilitiesLookupTestVariableName = new Dictionary<string, string>();
+        }
 
-        
+        public abstract IApiMethodBuilderResult Build(ExpressionBuilderParams p,
+            FunctionCallStatement functionCallStatement);
+
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ApiMethodBuilderInlineResult Inline(EvaluationStatement statement)
         {
             return new ApiMethodBuilderInlineResult(statement);
         }
-        
+
         public static IApiMethodBuilderResult UseNativeResourceMethod<TFunc>(
             TFunc func, ExpressionBuilderParams p, string resourceName, FunctionInfo functionInfo,
             EvaluationStatement[] parameters, StatementInfo statementInfo)
@@ -48,7 +56,7 @@ namespace ShellScript.Core.Language.Library
                 {
                     p.MetaWriter.WriteLine(line);
                 }
-                
+
                 p.MetaWriter.WriteLine();
             }
 
@@ -57,7 +65,35 @@ namespace ShellScript.Core.Language.Library
             return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.DataType,
                 parameters, statementInfo));
         }
-        
+
+        public static string GetUtilityLookupTestVariableName(Context context, TextWriter metaWriter,
+            IThirdPartyUtility utility)
+        {
+            var utilName = utility.Name;
+            if (UtilitiesLookupTestVariableName.TryGetValue(utilName, out var name))
+            {
+                return $"${name} -ne 0";
+            }
+
+            var condition = utility.WriteExistenceCondition(context, metaWriter);
+
+            metaWriter.WriteLine($"if [ {condition} ]");
+            metaWriter.WriteLine("then");
+            
+            name = context.GeneralScope.NewHelperVariable(DataTypes.Boolean, $"{utilName}_existence");
+            BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(context, context.GeneralScope, metaWriter,
+                name, "1");
+            
+            metaWriter.WriteLine("else");
+            
+            BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(context, context.GeneralScope, metaWriter,
+                name, "0");
+            
+            metaWriter.WriteLine("fi");
+
+            return $"${name} -ne 0";
+        }
+
         public static IApiMethodBuilderResult CreateNativeMethodWithUtilityExpressionSelector<TFunc>(
             TFunc func, ExpressionBuilderParams p, FunctionInfo functionInfo,
             IDictionary<string, string> utilityCommands,
@@ -82,7 +118,7 @@ namespace ShellScript.Core.Language.Library
                 {
                     if (utilities.TryGetValue(utility.Key, out var util))
                     {
-                        var condition = util.WriteExistenceCondition(p.Context, funcWriter);
+                        var condition = GetUtilityLookupTestVariableName(p.Context, p.MetaWriter, util);
 
                         if (isFirst)
                         {
@@ -100,10 +136,11 @@ namespace ShellScript.Core.Language.Library
                         funcWriter.WriteLine("then");
                         funcWriter.WriteLine(utility.Value);
                     }
-                    else
-                    {
-                        throw new InvalidOperationException("Utility is not installed.");
-                    }
+                    //Just ignoring the utility!
+//                    else
+//                    {
+//                        throw new InvalidOperationException("Utility is not installed.");
+//                    }
                 }
 
                 funcWriter.WriteLine("fi");
@@ -117,9 +154,13 @@ namespace ShellScript.Core.Language.Library
             return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.DataType,
                 parameters, statementInfo));
         }
-        
+
 
         public void AssertParameters(EvaluationStatement[] parameters)
+        {
+        }
+        
+        public void AssertExpressionParameters(EvaluationStatement[] parameters)
         {
         }
     }

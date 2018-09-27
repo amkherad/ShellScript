@@ -63,7 +63,7 @@ Here are some rules of the ShellScript:
 * Blocks are free to use (i.e. you can have {} wherever you want just like C#)
 * Variables are accessible to their scope only.
 * Using arrays will generate hacks to implement the functions, so avoid using arrays as possible.
-* API functions and objects will be written to the output only when they're used inside of the code.
+* API functions and objects will be written to the output only when they're used inside the code.
 * ShellScript API methods will use platform's dedicated way to get the results wherever possible instead of writing it's own function.
   ```csharp
   int x = -23;
@@ -80,14 +80,11 @@ ShellScript is a strong-typed/static-typed language, all data types are listed b
 | Float     | double, float | Any float number. (e.g. 56.48)
 | Number    | number        | Any number, either decimal or float.
 | String    | string        | Representing a string of characters.
+| Boolean   | bool          | Representing a boolean value. (i.e. true or false)
 | Void      | void          | Void data type. (The only usage is to define a void method)
 | Object    | object        | Representing an instance of a class. (different from object in C#) `[NOT IMPLEMENTED YET]`
-| Array     | DATATYPE[]  | Represents an array of items of the given data type. (e.g. int[]) `[NOT IMPLEMENTED YET]`
+| Array     | DATATYPE[]    | Represents an array of items of the given data type. (e.g. int[]) `[NOT IMPLEMENTED YET]`
 | Delegate  | delegate      | Holds a reference to a callable object (function). `[NOT IMPLEMENTED YET]`
-
-Types have no boundaries or limitation in the language itself but they're limited to target platform specifications.
-
-Only decimal types can cast to float types implicitly, for other types an explicit cast is required.
 
 Example of data types in code:
 ```csharp
@@ -100,6 +97,12 @@ number n = 956;
 number m = +8.56e-23;
 string s = "Hello World";
 ```
+
+##### Notices
+
+* Types have no boundaries or limitation in the language itself but they're limited to target platform specifications.
+
+* Only decimal types can cast to float types implicitly, for other types an explicit cast is required.
 
 ### Variable Definition
 Variable definitions are similar to C#, except there is no var keyword for auto typing.  
@@ -125,15 +128,17 @@ There are four places for variable definitions:
   void myFunction (int myParam1) { }
   ```
 
-Just like C#, variable definition is not an embedded statement, example:
-```csharp
-for (int i = 0; i < 100; i++)
-    int j = i; //Compiler error.
+##### Notices
 
-for (int i = 0; i < 100; i++) {
-    int j = i; //OK
-}
-```
+* Just like C#, variable definition is not an embedded statement, example:
+  ```csharp
+  for (int i = 0; i < 100; i++)
+      int j = i; //Compiler error.
+  
+  for (int i = 0; i < 100; i++) {
+      int j = i; //OK
+  }
+  ```
 
 ### Assignment
 There are four places for assignments:  
@@ -162,6 +167,16 @@ There are four places for assignments:
   ```csharp
   myVariable = x = 2;
   while ((that = that.Parent) != null) { }
+  ```
+
+##### Notices
+* Assignments doesn't have any result, so these are incorrect:
+  ```csharp
+  y = x = 2;
+  //--------
+  if ((buf = value) != 0) {
+
+  }
   ```
 
 ### Function Definition
@@ -217,6 +232,8 @@ switch (value1) {
 }
 ```
 
+##### Notices
+
 * Conditional blocks with constant conditions will be compiled if their condition is true.
   ```csharp
   if (true) {
@@ -265,6 +282,8 @@ do {
     echo ("Going to check the condition.");
 } while (_continue);
 ```
+
+##### Notices
 
 * Empty loops will be ignored.
 * Preferred loop for infinite iterations is **`for`**.
@@ -338,8 +357,10 @@ Non-void functions are considered as evaluation expression:
 return 2 * factorial(20);
 ```
 
+##### Notices
+
 * Expressions are parsed from left to right.
-* Sometimes expressions will be truncated into multiple helper variables.
+* Expressions may be truncated into multiple helper variables.
 * Constant expressions will be calculated at compile-time. (i.e. 1024 * 2 will generate 2048 constant value)
 * Both void methods or non-void methods will be inlined if there's only one statement inside.
 * By default ShellScript only check errors/exceptions for the methods/commands having throw syntax inside or marked by a throws syntax.
@@ -361,6 +382,8 @@ return "Hello" + " " + "World " + dateValue;
 ```csharp
 return $"Hello World {dateValue}";
 ```
+
+##### Notices
 
 * You can use both single quote or double quote. (both are strings, ShellScript has no character data type)
 * String escaping is exactly like C#.

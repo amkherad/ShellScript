@@ -101,15 +101,13 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             {
                 case TokenType.DataType:
                 {
-                    switch (token.Value)
+                    switch (token.Value.ToLower())
                     {
-                        case "void":
-                            return DataTypes.Void;
-                        
-                        case "null":
-                            return dataType;
                         case "int":
                             return DataTypes.Decimal;
+                        case "bool":
+                        case "boolean":
+                            return DataTypes.Boolean;
                         case "decimal":
                             return DataTypes.Decimal;
                         case "number":
@@ -124,6 +122,9 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         //case "var":
                         //    return DataTypes.Variant;
 
+                        case "void":
+                            return DataTypes.Void;
+                        
                         case "int[]":
                             return DataTypes.Decimal | DataTypes.Array;
                         case "decimal[]":
@@ -138,6 +139,9 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             return DataTypes.Class | DataTypes.Array;
                         //case "variant[]":
                         //    return DataTypes.Variant | DataTypes.Array;
+                        
+                        case "null":
+                            return dataType;
                     }
 
                     break;

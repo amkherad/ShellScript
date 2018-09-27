@@ -3,6 +3,7 @@ using System.Linq;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api.ClassLibrary.IO.File;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math;
+using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform;
 using ShellScript.Unix.Utilities;
 
 namespace ShellScript.Unix.Bash.Api
@@ -15,6 +16,8 @@ namespace ShellScript.Unix.Bash.Api
         public override IApiClass[] Classes { get; } =
         {
             new ApiMath(),
+            
+            new ApiPlatform(),
 
             new ApiFile(),
         };

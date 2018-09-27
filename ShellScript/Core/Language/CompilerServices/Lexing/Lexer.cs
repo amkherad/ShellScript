@@ -111,11 +111,12 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         );
 
         public static readonly Regex Number = new Regex(@"^([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)", RegexOptions.Compiled);
-        public static readonly Regex DataType = new Regex(@"^(const|void|int(?!\[\])|double(?!\[\])|float(?!\[\])|string(?!\[\])|object(?!\[\])|number(?!\[\])|decimal(?!\[\])|int\[\]|double\[\]|float\[\]|string\[\]|object\[\]|number\[\]|decimal\[\])(?!\w)", RegexOptions.Compiled);
+        public static readonly Regex DataType = new Regex(@"^(const|void|int(?!\[\])|bool(?!\[\])|double(?!\[\])|float(?!\[\])|string(?!\[\])|object(?!\[\])|number(?!\[\])|decimal(?!\[\])|int\[\]|bool\[\]|double\[\]|float\[\]|string\[\]|object\[\]|number\[\]|decimal\[\])(?!\w)", RegexOptions.Compiled);
         public static readonly Regex ValidIdentifierName = new Regex(@"^\w+", RegexOptions.Compiled);
         
         public static readonly Regex MultiLineCommentOpen = new Regex(@"^/\*", RegexOptions.Compiled);
         public static readonly Regex MultiLineCommentClose = new Regex(@"^\*/", RegexOptions.Compiled);
+        public const string MultiLineCommentCloseText = "*/";
 
         /// <summary>
         /// This method tokenize the input stream.
@@ -211,12 +212,11 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
                     {
                         if (isMultilineCommentOpen)
                         {
-                            var multiLineComment = TokenPatterns[TokenType.MultiLineCommentClose];
-                            var multiLineCommentIndex = line.IndexOf(multiLineComment, StringComparison.Ordinal);
+                            var multiLineCommentIndex = line.IndexOf(MultiLineCommentCloseText, StringComparison.Ordinal);
 
                             if (multiLineCommentIndex > 0)
                             {
-                                var offset = multiLineCommentIndex + multiLineComment.Length;
+                                var offset = multiLineCommentIndex + MultiLineCommentCloseText.Length;
                                 line = line.Substring(offset);
                                 columnNumber += offset;
 

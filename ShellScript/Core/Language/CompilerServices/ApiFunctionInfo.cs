@@ -8,8 +8,8 @@ namespace ShellScript.Core.Language.CompilerServices
         public IApiFunc Function { get; }
         
         public ApiFunctionInfo(DataTypes dataType, string name, string reName, string objectName, IApiFunc function, bool isParams,
-            FunctionParameterDefinitionStatement[] parameters)
-            : base(dataType, name, reName, objectName, isParams, parameters, null)
+            FunctionParameterDefinitionStatement[] parameters, bool byPassParameterValidation = false)
+            : base(dataType, name, reName, objectName, isParams, parameters, null, byPassParameterValidation)
         {
             Function = function;
         }

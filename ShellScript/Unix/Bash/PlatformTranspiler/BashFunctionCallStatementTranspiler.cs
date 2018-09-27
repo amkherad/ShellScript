@@ -74,7 +74,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         public static void CheckParameters(Context context, Scope scope, FunctionCallStatement functionCallStatement,
             FunctionInfo funcInfo)
         {
-            if (funcInfo.IsParams)
+            if (funcInfo.IsParams || funcInfo.ByPassParameterValidation)
                 return;
 
             var funcInfoParameters = funcInfo.Parameters;
@@ -96,14 +96,15 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             for (var i = 0; i < funcInfo.Parameters.Length; i++)
             {
-                var passed = functionCallStatement.Parameters[i];
                 var schema = funcInfo.Parameters[i];
+                if (schema == null) continue;
+                var passed = functionCallStatement.Parameters[i];
 
                 var dataType = passed.GetDataType(context, scope);
 
                 if (dataType != schema.DataType)
                 {
-                    if (schema.DataType == DataTypes.Numeric || schema.DataType == DataTypes.Float &&
+                    if ((schema.DataType == DataTypes.Numeric || schema.DataType == DataTypes.Float) &&
                         dataType == DataTypes.Decimal)
                     {
                         continue;

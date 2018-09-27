@@ -30,7 +30,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             var test = right.IsNumericOrFloat() || left.IsNumericOrFloat();
             if (test)
             {
-                return template.ParentStatement is FunctionCallStatement;
+                return
+                    template.ParentStatement is FunctionCallStatement;
             }
 
             return false;
@@ -65,7 +66,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         {
             if (template is ConstantValueStatement constantValueStatement)
             {
-                if (constantValueStatement.GetDataType(p.Context, p.Scope).IsString())
+                if (constantValueStatement.IsString())
                     return $"\"{expression}\"";
                 
                 return expression;
@@ -76,17 +77,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             if (template is FunctionCallStatement)
                 return expression;
 
-            if (template is EvaluationStatement evaluationStatement)
+            if (template.GetDataType(p.Context, p.Scope).IsNumericOrFloat())
             {
-                if (evaluationStatement.GetDataType(p.Context, p.Scope).IsNumericOrFloat())
+                if (expression.Contains("\""))
                 {
-                    if (expression.Contains("\""))
-                    {
-                        expression = expression.Replace('"', '\'');
-                    }
-
-                    return $"`awk \"BEGIN {{print {expression}}}\"`";
+                    expression = expression.Replace('"', '\'');
                 }
+
+                return $"`awk \"BEGIN {{print {expression}}}\"`";
             }
 
             return base.FormatExpression(p, expression, template);
@@ -118,7 +116,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 return $"`awk \"BEGIN {{print {expression}}}\"`";
             }
 
-            return base.FormatExpression(p, expression, template);
+            return base.FormatExpression(p, dataType, expression, template);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

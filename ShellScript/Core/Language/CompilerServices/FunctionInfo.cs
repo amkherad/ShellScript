@@ -39,6 +39,7 @@ namespace ShellScript.Core.Language.CompilerServices
         }
 
         public bool IsParams { get; }
+        public bool ByPassParameterValidation { get; }
         public FunctionParameterDefinitionStatement[] Parameters { get; }
 
         public IStatement InlinedStatement { get; }
@@ -46,7 +47,7 @@ namespace ShellScript.Core.Language.CompilerServices
 
         public FunctionInfo(DataTypes dataType, string name, string reName, string objectName, bool isParams,
             FunctionParameterDefinitionStatement[] parameters,
-            IStatement inlinedStatement)
+            IStatement inlinedStatement, bool byPassParameterValidation = false)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             ObjectName = objectName;
@@ -54,6 +55,7 @@ namespace ShellScript.Core.Language.CompilerServices
             IsParams = isParams;
             Parameters = parameters;
             InlinedStatement = inlinedStatement;
+            ByPassParameterValidation = byPassParameterValidation;
             DataType = dataType;
         }
 

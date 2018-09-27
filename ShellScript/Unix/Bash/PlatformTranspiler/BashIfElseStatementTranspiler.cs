@@ -39,7 +39,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             var condition =
                 EvaluationStatementTranspilerBase.ProcessEvaluation(context, scope, ifElseStatement.MainIf.Condition);
 
-            if (StatementHelpers.IsAbsoluteValue(condition, out var isTrue))
+            if (StatementHelpers.IsAbsoluteBooleanValue(condition, out var isTrue))
             {
                 if (isTrue)
                 {
@@ -67,7 +67,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 {
                     condition = EvaluationStatementTranspilerBase.ProcessEvaluation(context, scope, elseIf.Condition);
 
-                    if (StatementHelpers.IsAbsoluteValue(condition, out isTrue))
+                    if (StatementHelpers.IsAbsoluteBooleanValue(condition, out isTrue))
                     {
                         if (isTrue)
                         {

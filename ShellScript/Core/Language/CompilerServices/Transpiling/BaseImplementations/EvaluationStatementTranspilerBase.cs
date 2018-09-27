@@ -69,10 +69,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
         public abstract string PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter,
             TextWriter pinCodeWriter, EvaluationStatement statement);
 
-        public abstract (DataTypes, string, EvaluationStatement) GetInline(Context context, Scope scope, TextWriter metaWriter,
+        public abstract (DataTypes, string, EvaluationStatement) GetInline(Context context, Scope scope,
+            TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
 
-        public abstract (DataTypes, string, EvaluationStatement) GetInlineConditional(Context context, Scope scope, TextWriter metaWriter,
+        public abstract (DataTypes, string, EvaluationStatement) GetInlineConditional(Context context, Scope scope,
+            TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
 
 
@@ -260,7 +262,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
                             left.ParentStatement = result;
                             right.ParentStatement = result;
-                            
+
                             return result;
                         }
 
@@ -278,37 +280,80 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             var left = ProcessEvaluation(context, scope, logicalEvaluationStatement.Left);
                             var right = ProcessEvaluation(context, scope, logicalEvaluationStatement.Right);
 
-                            if (left is ConstantValueStatement leftConstantValue &&
-                                right is ConstantValueStatement rightConstantValue)
+                            var leftConstantValue = left as ConstantValueStatement;
+                            var rightConstantValue = right as ConstantValueStatement;
+
+                            ValueTuple<ConstantValueStatement, EvaluationStatement> singleConstantPair;
+
+                            if (leftConstantValue != null)
                             {
-                                if ((leftConstantValue.DataType == DataTypes.Boolean ||
-                                     leftConstantValue.IsDecimal()) &&
-                                    StatementHelpers.TryParseBooleanFromString(leftConstantValue.Value,
-                                        out var leftBool))
+                                if (rightConstantValue != null)
                                 {
-                                    if ((leftConstantValue.DataType == DataTypes.Boolean ||
-                                         rightConstantValue.IsDecimal()) &&
-                                        StatementHelpers.TryParseBooleanFromString(rightConstantValue.Value,
-                                            out var rightBool))
+                                    if ((leftConstantValue.IsBoolean() /*||
+                                         leftConstantValue.IsDecimal()*/) &&
+                                        StatementHelpers.TryParseBooleanFromString(leftConstantValue.Value,
+                                            out var leftBool))
                                     {
-                                        return new ConstantValueStatement(DataTypes.Boolean,
-                                            (logicalEvaluationStatement.Operator is LogicalAndOperator
-                                                ? leftBool && rightBool
-                                                : leftBool || rightBool).ToString(CultureInfo.InvariantCulture),
-                                            logicalEvaluationStatement.Info)
+                                        if ((rightConstantValue.IsBoolean() /*||
+                                             rightConstantValue.IsDecimal()*/) &&
+                                            StatementHelpers.TryParseBooleanFromString(rightConstantValue.Value,
+                                                out var rightBool))
                                         {
-                                            ParentStatement = logicalEvaluationStatement.ParentStatement
-                                        };
+                                            return new ConstantValueStatement(DataTypes.Boolean,
+                                                (logicalEvaluationStatement.Operator is LogicalAndOperator
+                                                    ? leftBool && rightBool
+                                                    : leftBool || rightBool).ToString(CultureInfo.InvariantCulture),
+                                                logicalEvaluationStatement.Info)
+                                            {
+                                                ParentStatement = logicalEvaluationStatement.ParentStatement
+                                            };
+                                        }
+
+                                        throw new InvalidOperatorForTypeCompilerException(
+                                            logicalEvaluationStatement.Operator.GetType(), rightConstantValue.DataType,
+                                            rightConstantValue.Info);
                                     }
 
                                     throw new InvalidOperatorForTypeCompilerException(
-                                        logicalEvaluationStatement.Operator.GetType(), rightConstantValue.DataType,
-                                        rightConstantValue.Info);
+                                        logicalEvaluationStatement.Operator.GetType(), leftConstantValue.DataType,
+                                        leftConstantValue.Info);
                                 }
 
-                                throw new InvalidOperatorForTypeCompilerException(
-                                    logicalEvaluationStatement.Operator.GetType(), leftConstantValue.DataType,
-                                    leftConstantValue.Info);
+                                singleConstantPair.Item1 = leftConstantValue;
+                                singleConstantPair.Item2 = right;
+                            }
+                            else
+                            {
+                                singleConstantPair.Item1 = rightConstantValue;
+                                singleConstantPair.Item2 = left;
+                            }
+
+                            if (singleConstantPair.Item1 != null)
+                            {
+                                if (singleConstantPair.Item1.IsBoolean())
+                                {
+                                    if (StatementHelpers.TryParseBooleanFromString(singleConstantPair.Item1.Value,
+                                        out var boolVal))
+                                    {
+                                        if (logicalEvaluationStatement.Operator is LogicalAndOperator)
+                                        {
+                                            return boolVal
+                                                ? singleConstantPair.Item2
+                                                : singleConstantPair.Item1;
+                                        }
+                                        
+                                        //LogicalOrOperator
+                                        return boolVal
+                                            ? singleConstantPair.Item1
+                                            : singleConstantPair.Item2;
+                                    }
+                                    
+                                    throw new InvalidStatementStructureCompilerException(singleConstantPair.Item1,
+                                        singleConstantPair.Item1.Info);
+                                }
+
+                                throw new InvalidStatementStructureCompilerException(singleConstantPair.Item1,
+                                    singleConstantPair.Item1.Info);
                             }
 
                             var result = new LogicalEvaluationStatement(
@@ -592,7 +637,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     {
                                         variableAccessStatement.ParentStatement =
                                             arithmeticEvaluationStatement.ParentStatement;
-                                        
+
                                         return variableAccessStatement;
                                     }
 
@@ -870,7 +915,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             }
 
                             var paramArray = parameters.ToArray();
-                            
+
                             var result = new FunctionCallStatement(functionCallStatement.ObjectName,
                                 functionCallStatement.FunctionName, functionCallStatement.DataType,
                                 paramArray, functionCallStatement.Info)
@@ -882,7 +927,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             {
                                 param.ParentStatement = result;
                             }
-                            
+
                             return result;
                         }
 

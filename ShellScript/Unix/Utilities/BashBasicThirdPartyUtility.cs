@@ -11,7 +11,7 @@ namespace ShellScript.Unix.Utilities
         public string WriteExistenceCondition(Context context, TextWriter nonInlinePartWriter)
         {
             nonInlinePartWriter.WriteLine($"command -v {Name} > /dev/null");
-            return "$? == 0";
+            return "$? -eq 0";
         }
     }
 }

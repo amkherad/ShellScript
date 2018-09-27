@@ -377,8 +377,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsFloat(this ConstantValueStatement constantValueStatement)
         {
-            var dataType = constantValueStatement.DataType;
-            return dataType == DataTypes.Float;
+            return constantValueStatement.DataType == DataTypes.Float;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -390,8 +389,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsDecimal(this ConstantValueStatement constantValueStatement)
         {
-            var dataType = constantValueStatement.DataType;
-            return dataType == DataTypes.Decimal;
+            return constantValueStatement.DataType == DataTypes.Decimal;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -403,8 +401,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsBoolean(this ConstantValueStatement constantValueStatement)
         {
-            var dataType = constantValueStatement.DataType;
-            return dataType == DataTypes.Boolean;
+            return constantValueStatement.DataType == DataTypes.Boolean;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -416,8 +413,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsString(this ConstantValueStatement constantValueStatement)
         {
-            var dataType = constantValueStatement.DataType;
-            return dataType == DataTypes.String;
+            return constantValueStatement.DataType == DataTypes.String;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -429,8 +425,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsArray(this ConstantValueStatement constantValueStatement)
         {
-            var dataType = constantValueStatement.DataType;
-            return dataType == DataTypes.Array;
+            return constantValueStatement.DataType == DataTypes.Array;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -442,8 +437,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsObject(this ConstantValueStatement constantValueStatement)
         {
-            var dataType = constantValueStatement.DataType;
-            return dataType == DataTypes.Class;
+            return constantValueStatement.DataType == DataTypes.Class;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -455,13 +449,24 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsFunction(this ConstantValueStatement constantValueStatement)
         {
-            var dataType = constantValueStatement.DataType;
-            return dataType == DataTypes.Delegate;
+            return constantValueStatement.DataType == DataTypes.Delegate;
         }
 
         public static bool IsAbsoluteValue(IStatement statement, out bool isTrue)
         {
             if (statement is ConstantValueStatement constantValueStatement)
+            {
+                return TryParseBooleanFromString(constantValueStatement.Value, out isTrue);
+            }
+
+            isTrue = false;
+            return false;
+        }
+        
+        public static bool IsAbsoluteBooleanValue(IStatement statement, out bool isTrue)
+        {
+            if (statement is ConstantValueStatement constantValueStatement &&
+                constantValueStatement.IsBoolean())
             {
                 return TryParseBooleanFromString(constantValueStatement.Value, out isTrue);
             }

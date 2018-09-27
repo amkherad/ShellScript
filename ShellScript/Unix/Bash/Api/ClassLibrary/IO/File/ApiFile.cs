@@ -12,6 +12,10 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.File
         public override IApiFunc[] Functions { get; } =
         {
             new Exists(),
+            new CanRead(),
+            new CanWrite(),
+            new CanExecute(),
+            new IsLink(),
         };
     }
 }

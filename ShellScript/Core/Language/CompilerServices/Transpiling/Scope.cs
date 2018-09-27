@@ -187,22 +187,22 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
 
             return new string(stringChars);
         }
-        
-        public string NewVariable(DataTypes dataType)
-        {
-            var counter = 1;
-            var baseName = "v_" + _generateRandomString(12);
-            var varName = baseName;
-            while (IsIdentifierExists(varName))
-            {
-                varName = baseName + counter++;
-            }
-
-            _identifiers.Add(varName);
-            _variables.Add(new VariableInfo(dataType, varName, null));
-
-            return varName;
-        }
+//        
+//        public string NewVariable(DataTypes dataType)
+//        {
+//            var counter = 1;
+//            var baseName = "v_" + _generateRandomString(12);
+//            var varName = baseName;
+//            while (IsIdentifierExists(varName))
+//            {
+//                varName = baseName + counter++;
+//            }
+//
+//            _identifiers.Add(varName);
+//            _variables.Add(new VariableInfo(dataType, varName, null));
+//
+//            return varName;
+//        }
 
         public string NewHelperVariable(DataTypes dataType, string nameHint)
         {
