@@ -72,7 +72,7 @@ namespace ShellScript.MSTest.CompilingTests
                 var (dataType, exp, template) = transpiler.GetInline(context, context.GeneralScope, metaWriter,
                     codeWriter, definitionStt, definitionStt.DefaultValue);
 
-                Assert.AreEqual("True", exp);
+                Assert.AreEqual("true", exp);
             }
         }
     }
