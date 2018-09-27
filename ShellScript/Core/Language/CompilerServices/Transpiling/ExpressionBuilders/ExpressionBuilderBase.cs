@@ -172,32 +172,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
             {
                 case ConstantValueStatement constantValueStatement:
                 {
-                    if (constantValueStatement.IsNumber())
-                    {
-                        return
-                        (
-                            constantValueStatement.DataType,
-                            FormatConstantExpression(p,
-                                constantValueStatement.Value,
-                                constantValueStatement
-                            ),
-                            constantValueStatement
-                        );
-                    }
-
-                    if (constantValueStatement.IsString())
-                    {
-                        return
-                        (
-                            DataTypes.String,
-                            FormatConstantExpression(p,
-                                constantValueStatement.Value,
-                                constantValueStatement
-                            ),
-                            constantValueStatement
-                        );
-                    }
-
                     return
                     (
                         constantValueStatement.DataType,

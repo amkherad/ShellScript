@@ -14,7 +14,7 @@ namespace ShellScript.MSTest.ParsingTests
         [TestMethod]
         public void ParseFunction()
         {
-            var code = "function test(int x) { echo; }";
+            var code = "void test(int x) { echo; }";
             var parser = new Parser();
 
             var statements = parser
@@ -28,7 +28,7 @@ namespace ShellScript.MSTest.ParsingTests
         [TestMethod]
         public void ParseEvaluation()
         {
-            var code = "var x = (46 * 34) - 23 / 4 * myFunc()";
+            var code = "int x = (46 * 34) - 23 / 4 * myFunc()";
             var parser = new Parser();
 
             var statements = parser
@@ -43,7 +43,7 @@ namespace ShellScript.MSTest.ParsingTests
         public void ParseIf()
         {
             var code = new StringBuilder()
-                    .AppendLine("var x = 0;")
+                    .AppendLine("int x = 0;")
                     .AppendLine()
                     .AppendLine("if (x == 2) {")
                     .AppendLine("    echo \"Hello\";")

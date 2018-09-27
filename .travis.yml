@@ -2,6 +2,7 @@ language: csharp
 mono: none
 dotnet: 2.1
 script:
+- dotnet test ShellScript.MSTest/ShellScript.MSTest.csproj
 - dotnet build --configuration Release
 
 before_deploy:

@@ -35,21 +35,46 @@ namespace ShellScript.MSTest.CompilingTests
         }
 
         [TestMethod]
-        public void TestCalculateEvaluation()
+        public void TestDecimalCalculationEvaluation()
         {
             var parser = new Parser();
 
             using (var reader = new StringReader("int x = 2 + 2"))
+            using (var metaWriter = new StringWriter())
+            using (var codeWriter = new StringWriter())
             {
-                var context = new Context(new UnixBashPlatform(), new CompilerFlags(), Console.Out, Console.Out,
-                    Console.Out);
-                var stt = parser.Parse(reader, new ParserInfo(Console.Out, Console.Out, true, "", "", ""));
-                var definitionStt = stt.First() as DefinitionStatement;
+                var context = Helper.CreateBashContext();
 
-                var result = EvaluationStatementTranspilerBase.ProcessEvaluation(context, context.GeneralScope,
-                    definitionStt.DefaultValue);
+                var stt = parser.Parse(reader, Helper.CreateParserInfo());
+                var definitionStt = (DefinitionStatement) stt.First();
 
-                Assert.IsNotNull(result);
+                var transpiler = context.GetEvaluationTranspilerForStatement(definitionStt.DefaultValue);
+                var (dataType, exp, template) = transpiler.GetInline(context, context.GeneralScope, metaWriter,
+                    codeWriter, definitionStt, definitionStt.DefaultValue);
+
+                Assert.AreEqual("4", exp);
+            }
+        }
+
+        [TestMethod]
+        public void TestBooleanCalculationEvaluation()
+        {
+            var parser = new Parser();
+
+            using (var reader = new StringReader("int x = true || false || true && false"))
+            using (var metaWriter = new StringWriter())
+            using (var codeWriter = new StringWriter())
+            {
+                var context = Helper.CreateBashContext();
+
+                var stt = parser.Parse(reader, Helper.CreateParserInfo());
+                var definitionStt = (DefinitionStatement) stt.First();
+
+                var transpiler = context.GetEvaluationTranspilerForStatement(definitionStt.DefaultValue);
+                var (dataType, exp, template) = transpiler.GetInline(context, context.GeneralScope, metaWriter,
+                    codeWriter, definitionStt, definitionStt.DefaultValue);
+
+                Assert.AreEqual("True", exp);
             }
         }
     }
