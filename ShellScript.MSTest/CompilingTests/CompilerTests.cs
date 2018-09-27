@@ -18,32 +18,31 @@ namespace ShellScript.MSTest.CompilingTests
         [TestMethod]
         public void TestCompiler()
         {
-//            Platforms.AddPlatform(new UnixBashPlatform());
-//
-//            var compiler = new Compiler();
-//            var result = compiler.CompileFromSource(
-//                Console.Out,
-//                Console.Out,
-//                Console.Out,
-//                "/home/amk/Temp/ShellScript/variables.shellscript",
-//                "/home/amk/Temp/ShellScript/variables.sh",
-//                "unix-bash",
-//                CompilerFlags.CreateDefault()
-//            );
-            
-            
+            Platforms.AddPlatform(new UnixBashPlatform());
+
+            var compiler = new Compiler();
+            var result = compiler.CompileFromSource(
+                Console.Out,
+                Console.Out,
+                Console.Out,
+                "/home/amk/Temp/ShellScript/variables.shellscript",
+                "/home/amk/Temp/ShellScript/variables.sh",
+                "unix-bash",
+                CompilerFlags.CreateDefault()
+            );
+
+            GC.KeepAlive(result);
         }
 
         [TestMethod]
         public void TestDecimalCalculationEvaluation()
         {
-            var parser = new Parser();
-
             using (var reader = new StringReader("int x = 2 + 2"))
             using (var metaWriter = new StringWriter())
             using (var codeWriter = new StringWriter())
             {
                 var context = Helper.CreateBashContext();
+                var parser = new Parser(context);
 
                 var stt = parser.Parse(reader, Helper.CreateParserInfo());
                 var definitionStt = (DefinitionStatement) stt.First();
@@ -59,13 +58,12 @@ namespace ShellScript.MSTest.CompilingTests
         [TestMethod]
         public void TestBooleanCalculationEvaluation()
         {
-            var parser = new Parser();
-
             using (var reader = new StringReader("int x = true || false || true && false"))
             using (var metaWriter = new StringWriter())
             using (var codeWriter = new StringWriter())
             {
                 var context = Helper.CreateBashContext();
+                var parser = new Parser(context);
 
                 var stt = parser.Parse(reader, Helper.CreateParserInfo());
                 var definitionStt = (DefinitionStatement) stt.First();

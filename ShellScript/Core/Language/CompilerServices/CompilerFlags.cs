@@ -45,6 +45,14 @@ namespace ShellScript.Core.Language.CompilerServices
         public bool UseSegments { get; set; }
 
         
+        //==========================
+        // Info
+        //==========================
+        public string Author { get; set; }
+        public string ContactInfo { get; set; }
+        public string WikiUrl { get; set; }
+        
+        
         public static CompilerFlags CreateDefault()
         {
             return new CompilerFlags

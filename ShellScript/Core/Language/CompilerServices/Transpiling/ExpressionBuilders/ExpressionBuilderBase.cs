@@ -176,7 +176,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     (
                         constantValueStatement.DataType,
                         FormatConstantExpression(p,
-                            constantValueStatement.Value,
+                            constantValueStatement.IsBoolean()
+                            ? constantValueStatement.Value.ToLower()
+                            : constantValueStatement.Value,
                             constantValueStatement
                         ),
                         constantValueStatement

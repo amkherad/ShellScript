@@ -25,22 +25,22 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 //                writer.WriteLine("].");
 //            }
 
-            if (!string.IsNullOrWhiteSpace(context.Author))
+            if (!string.IsNullOrWhiteSpace(context.Flags.Author))
             {
                 writer.Write("Author: ");
-                writer.WriteLine(context.Author);
+                writer.WriteLine(context.Flags.Author);
             }
 
-            if (!string.IsNullOrWhiteSpace(context.ContactInfo))
+            if (!string.IsNullOrWhiteSpace(context.Flags.ContactInfo))
             {
                 writer.Write("ContactInfo: ");
-                writer.WriteLine(context.ContactInfo);
+                writer.WriteLine(context.Flags.ContactInfo);
             }
 
-            if (!string.IsNullOrWhiteSpace(context.WikiUrl))
+            if (!string.IsNullOrWhiteSpace(context.Flags.WikiUrl))
             {
                 writer.Write("Wiki: ");
-                writer.WriteLine(context.WikiUrl);
+                writer.WriteLine(context.Flags.WikiUrl);
             }
 
             if (context.Flags.UseSegments)

@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+using System;
 using ShellScript.Core.Language;
 using ShellScript.Core.Language.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
@@ -12,10 +12,10 @@ namespace ShellScript.Unix.Bash
     {
         public string Name => "Unix-Bash";
 
-        public string[] CompilerConstants { get; } =
+        public ValueTuple<DataTypes, string, string>[] CompilerConstants { get; } =
         {
-            "unix",
-            "bash",
+            (DataTypes.Boolean, "Unix", "true"),
+            (DataTypes.Boolean, "Bash", "true"),
         };
 
         public IApi Api { get; } = new UnixBashApi();

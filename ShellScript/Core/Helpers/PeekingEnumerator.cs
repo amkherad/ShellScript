@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ShellScript.Core.Helpers
 {
-    public class PeekingEnumerator<TElement> : IEnumerator<TElement>
+    public class PeekingEnumerator<TElement> : IPeekingEnumerator<TElement>
         where TElement : class
     {
         private IEnumerator<TElement> _enumerator;

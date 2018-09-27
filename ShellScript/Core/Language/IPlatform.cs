@@ -1,3 +1,4 @@
+using System;
 using ShellScript.Core.Language.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.Library;
@@ -12,7 +13,7 @@ namespace ShellScript.Core.Language
         
         string Name { get; }
         
-        string[] CompilerConstants { get; }
+        ValueTuple<DataTypes, string, string>[] CompilerConstants { get; }
 
         CompilerFlags ReviseFlags(CompilerFlags flags);
     }

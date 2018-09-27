@@ -420,6 +420,33 @@ function myFunction () {
 ```
 The first echo inside the method writes directly to `/dev/tty` in unix. because shell environments use standard-output to return a value. (i.e. by redirecting the output of a command/function to a variable or another command)
 
+## Pre-Processors (Macros)
+
+Like every C-like language ShellScript has pre-processors.  
+Pre-processors are checked before the compilation begins, so you can make statements and tokens conditional, or changing some compilation behaviors.
+
+#### If pre-processor
+`#if` used to make statements and tokens conditional:
+```csharp
+#if (Bash)
+echo ("Welcome bash users");
+#elseif (Bath)
+echo ("Welcome batch users");
+#else
+echo ("Welcome everyone");
+#endif
+```
+
+#### Option pre-processor
+`#option` used to set or override compiler options.
+```csharp
+#option ("Author", "Ali Mousavi Kherad") //this will set the author property.
+#option ("Awk", "Disable") //this will disable usage of awk
+```
+
+###### Notices
+* If pre-processor MUST have parenthesis unlike C#.
+
 ---
 
 ## API and Class Library

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using ShellScript.Core.Helpers;
 using ShellScript.Core.Language.CompilerServices.Lexing;
+using ShellScript.Core.Language.CompilerServices.PreProcessors;
 using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Core.Language.CompilerServices.Parsing
@@ -61,17 +63,23 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             "call",
             "echo",
         };
-        
-        private Lexer _lexer;
 
-        public Parser()
+        public Context Context { get; }
+        private Lexer _lexer;
+        private PreProcessorParser _preProcessorParser;
+
+        public Parser(Context context)
         {
+            Context = context;
             _lexer = new Lexer();
+            _preProcessorParser = new PreProcessorParser(this, context);
         }
         
-        public Parser(Lexer lexer)
+        public Parser(Context context, Lexer lexer, PreProcessorParser preProcessorParser)
         {
+            Context = context;
             _lexer = lexer;
+            _preProcessorParser = preProcessorParser;
         }
 
 
@@ -79,7 +87,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         {
             var tokens = _lexer.Tokenize(reader);
             
-            using (var tokensEnumerator = new PeekingEnumerator<Token>(tokens.GetEnumerator()))
+            using (var tokensEnumerator = _preProcessorParser.CreateParserProxy(tokens.GetEnumerator(), info))
             {
                 IStatement statement;
                 while ((statement = ReadStatement(tokensEnumerator, info)) != null)
@@ -153,7 +161,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             return dataType;
         }
 
-        protected IStatement ReadStatement(PeekingEnumerator<Token> enumerator, ParserInfo info)
+        protected IStatement ReadStatement(IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             Token token;
 

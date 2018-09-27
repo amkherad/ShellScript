@@ -1,0 +1,19 @@
+
+
+int intVar;
+int intVarVal = 10 / 10;
+
+decimal decVar;
+decimal decVarVal = 10 * 10;
+
+float floatVar;
+float floatVarVal = 3.5 * 2;
+
+double doubleVar;
+double doubleVarVal = +10e-2 * 2;
+
+string strVar;
+string strVarVal = "Hello" + " " + "World";
+
+bool boolVar;
+bool boolVarVal = true || false && false;

@@ -23,7 +23,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         /// <exception cref="IllegalSyntaxException"></exception>
         /// <exception cref="ParserSyntaxException"></exception>
         /// <exception cref="ParserException"></exception>
-        public BlockStatement ReadBlockStatement(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public BlockStatement ReadBlockStatement(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.OpenBrace)
                 throw UnexpectedSyntax(token, info);
@@ -318,7 +318,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         /// <param name="enumerator"></param>
         /// <param name="info"></param>
         /// <returns></returns>
-        public EvaluationStatement ReadEvaluationStatement(Token token, PeekingEnumerator<Token> enumerator,
+        public EvaluationStatement ReadEvaluationStatement(Token token, IPeekingEnumerator<Token> enumerator,
             ParserInfo info)
         {
             var statements = new LinkedList<IStatement>();
@@ -508,6 +508,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     case TokenType.OpenBrace:
                     case TokenType.SequenceTerminatorNewLine:
                     case TokenType.Comma:
+                    case TokenType.Colon: //used in pre-processors
                     {
                         try
                         {
@@ -532,6 +533,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                         case TokenType.SequenceTerminator:
                         case TokenType.OpenBrace:
                         case TokenType.Comma:
+                        case TokenType.Colon: //used in pre-processors
                         {
                             try
                             {
@@ -580,7 +582,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         /// <param name="dataTypeHint"></param>
         /// <returns></returns>
         /// <exception cref="???"></exception>
-        public ConstantValueStatement ReadConstantValue(Token token, PeekingEnumerator<Token> enumerator,
+        public ConstantValueStatement ReadConstantValue(Token token, IPeekingEnumerator<Token> enumerator,
             ParserInfo info, DataTypes dataTypeHint)
         {
             switch (token.Type)
@@ -605,7 +607,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             return new ConstantValueStatement(dataTypeHint, token.Value, CreateStatementInfo(info, token));
         }
 
-        public EvaluationStatement ReadAssignmentOrFunctionCall(Token token, PeekingEnumerator<Token> enumerator,
+        public EvaluationStatement ReadAssignmentOrFunctionCall(Token token, IPeekingEnumerator<Token> enumerator,
             ParserInfo info)
         {
             if (token.Type != TokenType.IdentifierName)
@@ -650,7 +652,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             throw UnexpectedSyntax(token, info);
         }
 
-        public EvaluationStatement ReadVariableOrFunctionCall(Token token, PeekingEnumerator<Token> enumerator,
+        public EvaluationStatement ReadVariableOrFunctionCall(Token token, IPeekingEnumerator<Token> enumerator,
             ParserInfo info)
         {
             if (token.Type != TokenType.IdentifierName)
@@ -754,7 +756,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
 
         public IStatement ReadVariableDefinitionAndAssignment(Token token,
-            PeekingEnumerator<Token> enumerator, ParserInfo info)
+            IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.DataType)
                 throw UnexpectedSyntax(token, info);
@@ -829,7 +831,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
 
         public FunctionParameterDefinitionStatement ReadParameterDefinition(Token token,
-            PeekingEnumerator<Token> enumerator, ParserInfo info)
+            IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.DataType)
                 throw UnexpectedSyntax(token, info);
@@ -865,7 +867,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         }
 
         public FunctionParameterDefinitionStatement[] ReadParameterDefinitions(Token token,
-            PeekingEnumerator<Token> enumerator, ParserInfo info)
+            IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.OpenParenthesis)
                 throw UnexpectedSyntax(token, info);
@@ -918,7 +920,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         /// <param name="info"></param>
         /// <returns></returns>
         /// <exception cref="???"></exception>
-        public IStatement ReadVariableOrFunctionDefinition(Token token, PeekingEnumerator<Token> enumerator,
+        public IStatement ReadVariableOrFunctionDefinition(Token token, IPeekingEnumerator<Token> enumerator,
             ParserInfo info)
         {
             var constToken = token;
@@ -1062,7 +1064,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                 CreateStatementInfo(info, token));
         }
 
-        public IfElseStatement ReadIf(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public IfElseStatement ReadIf(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.If)
                 throw UnexpectedSyntax(token, info);
@@ -1185,12 +1187,12 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             }
         }
 
-        public SwitchCaseStatement ReadSwitchCase(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public SwitchCaseStatement ReadSwitchCase(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             return null;
         }
 
-        public WhileStatement ReadWhile(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public WhileStatement ReadWhile(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.While)
                 throw UnexpectedSyntax(token, info);
@@ -1239,7 +1241,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             return result;
         }
 
-        public DoWhileStatement ReadDoWhile(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public DoWhileStatement ReadDoWhile(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.Do)
                 throw UnexpectedSyntax(token, info);
@@ -1298,13 +1300,13 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             return result;
         }
 
-        public WhileStatement ReadLoop(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public WhileStatement ReadLoop(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             return ReadWhile(token, enumerator, info);
         }
 
         //TODO: support multiple post loop evaluations
-        public ForStatement ReadFor(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public ForStatement ReadFor(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             throw new NotImplementedException();
             if (token.Type != TokenType.For)
@@ -1392,7 +1394,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             return result;
         }
 
-        public ForEachStatement ReadForEach(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public ForEachStatement ReadForEach(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.ForEach)
                 throw UnexpectedSyntax(token, info);
@@ -1482,13 +1484,13 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             return result;
         }
 
-        public IStatement ReadClass(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public IStatement ReadClass(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             return null;
         }
 
 
-        public IStatement ReadEcho(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public IStatement ReadEcho(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.Echo)
                 throw UnexpectedSyntax(token, info);
@@ -1507,7 +1509,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             return result;
         }
 
-        public ReturnStatement ReadReturn(Token token, PeekingEnumerator<Token> enumerator, ParserInfo info)
+        public ReturnStatement ReadReturn(Token token, IPeekingEnumerator<Token> enumerator, ParserInfo info)
         {
             if (token.Type != TokenType.Return)
                 throw UnexpectedSyntax(token, info);

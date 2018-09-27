@@ -16,4 +16,8 @@
       <ProjectReference Include="..\ShellScript\ShellScript.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="TestScripts\Expressions" />
+    </ItemGroup>
+
 </Project>
