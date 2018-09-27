@@ -292,35 +292,6 @@ do {
       //Infinite loop
   }
   ```
-* It's better to avoid micro-optimizations or outsmarting the compiler, because ShellScript will optimize the well-known statements to platform's dedicated way to implement the functionality, even ignore statements or reorder for better results, and doing so will prevent ShellScript from recognizing the function.
-  ```csharp
-  //keep files of a directory in an array to optimize performance.
-  string[] files = Directory.GetFiles("Path-To-Directory");
-  foreach (string fileName in files) {
-      echo (fileName);
-  }
-  //somewhere else in the code, we need to iterate the files again.
-  foreach (string fileName in files) {
-      echo (fileName);
-  }
-
-  //the code above will prevent to query the file system twice, but as said before using arrays will generate hacks,
-  //so the generated code might not be as good as expected.
-
-  //now iterating directory's files by querying file system separately.
-  foreach (string fileName in Directory.GetFiles("Path-To-Directory")) {
-      echo (fileName);
-  }
-  //somewhere else in the code, we need to iterate the files again.
-  foreach (string fileName in Directory.GetFiles("Path-To-Directory")) {
-      echo (fileName);
-  }
-
-  //this code will generate "for filename in Path-To-Directory/*; do" in bash and
-  //it's easier to understand (if required to read the output) and it's not using any hacks.
-  //but it may be slower (you can benchmark your code to choose which is better for your requirements)
-  ```
-
 
 ### Evaluation Expressions And Operators
 
@@ -373,6 +344,35 @@ return 2 * factorial(20);
   //that's because value of x is not changed before reading it.
   ```
 * Evaluation of second operand in logical operators is UB (Undefined Behavior) and it depends on the target shell.
+* It's better to avoid micro-optimizations or outsmarting the compiler, because ShellScript will optimize the well-known statements to platform's dedicated way to implement the functionality, even ignore statements or reorder for better results, and doing so will prevent ShellScript from recognizing the function.
+  ```csharp
+  //keep files of a directory in an array to optimize performance.
+  string[] files = Directory.GetFiles("Path-To-Directory");
+  foreach (string fileName in files) {
+      echo (fileName);
+  }
+  //somewhere else in the code, we need to iterate the files again.
+  foreach (string fileName in files) {
+      echo (fileName);
+  }
+
+  //the code above will prevent to query the file system twice, but as said before using arrays will generate hacks,
+  //so the generated code might not be as good as expected.
+
+  //now iterating directory's files by querying file system separately.
+  foreach (string fileName in Directory.GetFiles("Path-To-Directory")) {
+      echo (fileName);
+  }
+  //somewhere else in the code, we need to iterate the files again.
+  foreach (string fileName in Directory.GetFiles("Path-To-Directory")) {
+      echo (fileName);
+  }
+
+  //this code will generate "for filename in Path-To-Directory/*; do" in bash and
+  //it's easier to understand (if required to read the output) and it's not using any hacks.
+  //but it may be slower (you can benchmark your code to choose which is better for your requirements)
+  ```
+
 
 #### String Concatenation
 You can concatenate strings using addition operator (+) or using string interpolation ($"").
