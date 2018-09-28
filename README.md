@@ -301,7 +301,7 @@ Here are all the operators with their order (first row has the most priority):
 
 | Category         | Operator                            | Associativity
 |------------------|-------------------------------------|-----------------
-| Primary/Postfix  | () [] ++ -- .                       | Left to right
+| Primary/Postfix  | () `[]` ++ -- .                     | Left to right
 | Unary	           | + - ! ~ ++ - - `(type)`             | Right to left
 | Multiplicative   | * / %                               | Left to right
 | Additive         | + -                                 | Left to right
@@ -313,14 +313,14 @@ Here are all the operators with their order (first row has the most priority):
 | Bitwise OR	   | \|                                  | Left to right
 | Logical AND	   | &&                                  | Left to right
 | Logical OR	   | \|\|                                | Left to right
-| Conditional	   | ?:                                  | Right to left
+| Conditional	   | `?:`                                | Right to left
 | Assignment	   | = `+= -= *= /= %=>>= <<= &= ^= \|=` | Right to left
 | Comma	           | ,                                   | Left to right
 
 `Some operators are not implemented yet.`
 
 ```csharp
-return (1024 ^ 1023) + 1024 * 2; //1 + 2048 = 2049
+return (1024 ^ 1023) + 1024 * 2; //7 + 2048 = 2055
 ```
 
 Non-void functions are considered as evaluation expression:
