@@ -1,0 +1,16 @@
+
+double coffeePrice = 3.50;
+int coffeeCount = 4;//14
+
+double pizzaPrice = 39.99;
+int pizzaCount = 3;//119.97
+
+number total = ((coffeePrice * coffeeCount) + (pizzaPrice * pizzaCount));//133.97
+
+double taxPercentage = 7.2;
+
+total = total - (total * taxPercentage / 100); //124.32416
+
+string totalStr = "Total: " + (total - (total * taxPercentage / 100)); //124.32416
+
+echo total;
