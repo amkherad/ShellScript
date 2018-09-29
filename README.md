@@ -96,6 +96,7 @@ double d = +8.56e-23;
 number n = 956;
 number m = +8.56e-23;
 string s = "Hello World";
+boolean b = true || false;
 ```
 
 ##### Notices
@@ -205,7 +206,7 @@ double myDouble (decimal parameter1) {
 ### Conditional Blocks (Branches)
 
 #### If
-If block is implemented exactly as C#.
+`if` block is implemented exactly as C#.
 
 ```csharp
 if (condition) {
@@ -218,7 +219,7 @@ if (condition) {
 ```
 
 #### Switch Case
-Switch case block is implemented exactly as C#.
+`switch case` block is implemented exactly as C#.
 
 ```csharp
 switch (value1) {
@@ -252,7 +253,7 @@ switch (value1) {
 There are four loops in ShellScript.
 
 #### for
-for syntax used to iterate using a condition and an optional counter:
+`for` syntax used to iterate using a condition and an optional counter:
 ```csharp
 for (int i = 0; i < 10; i++) {
     echo ("Line: " + i);
@@ -260,7 +261,7 @@ for (int i = 0; i < 10; i++) {
 ```
 
 #### foreach
-foreach syntax used to iterate over an array:
+`foreach` syntax used to iterate over an array:
 ```csharp
 foreach (int age in GetAges()) {
     echo ("Age is: " + age);
@@ -268,7 +269,7 @@ foreach (int age in GetAges()) {
 ```
 
 #### while
-while syntax used to iterate using a condition:
+`while` syntax used to iterate using a condition:
 ```csharp
 while (_continue) {
     echo ($"Continue is {_continue}");
@@ -276,7 +277,7 @@ while (_continue) {
 ```
 
 #### do while
-do while syntax used to iterate at least once using a condition:
+`do while` syntax used to iterate at least once using a condition:
 ```csharp
 do {
     echo ("Going to check the condition.");
