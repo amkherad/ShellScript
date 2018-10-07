@@ -40,7 +40,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return base.FormatExpression(p, dataType, expression, template);
         }
 
-        public override string FormatSubExpression(ExpressionBuilderParams p, string expression,
+        public override string FormatSubExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
             EvaluationStatement template)
         {
             if (template is LogicalEvaluationStatement)
@@ -48,7 +48,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 return expression;
             }
 
-            return base.FormatSubExpression(p, expression, template);
+            return base.FormatSubExpression(p, dataType, expression, template);
         }
 
         public override string FormatLogicalExpression(ExpressionBuilderParams p,
@@ -60,53 +60,56 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
             string opStr;
 
-            if (!leftDataType.IsString() && !rightDataType.IsString())
+            if (leftDataType.IsString() || rightDataType.IsString())
             {
-                switch (op)
-                {
-                    case EqualOperator _:
-                    {
-                        opStr = "-eq";
-                        break;
-                    }
-                    case NotEqualOperator _:
-                    {
-                        opStr = "-ne";
-                        break;
-                    }
-                    case GreaterOperator _:
-                    {
-                        opStr = "-gt";
-                        break;
-                    }
-                    case GreaterEqualOperator _:
-                    {
-                        opStr = "-ge";
-                        break;
-                    }
-                    case LessOperator _:
-                    {
-                        opStr = "-lt";
-                        break;
-                    }
-                    case LessEqualOperator _:
-                    {
-                        opStr = "-le";
-                        break;
-                    }
-                    default:
-                        opStr = op.ToString();
-                        break;
-                }
+                return base.FormatLogicalExpression(p, leftDataType, left, op, rightDataType, right, template);
             }
-            else
+
+            if (leftDataType.IsNumericOrFloat() || rightDataType.IsNumericOrFloat())
             {
-                opStr = op.ToString();
+                return base.FormatLogicalExpression(p, leftDataType, left, op, rightDataType, right, template);
+            }
+
+            switch (op)
+            {
+                case EqualOperator _:
+                {
+                    opStr = "-eq";
+                    break;
+                }
+                case NotEqualOperator _:
+                {
+                    opStr = "-ne";
+                    break;
+                }
+                case GreaterOperator _:
+                {
+                    opStr = "-gt";
+                    break;
+                }
+                case GreaterEqualOperator _:
+                {
+                    opStr = "-ge";
+                    break;
+                }
+                case LessOperator _:
+                {
+                    opStr = "-lt";
+                    break;
+                }
+                case LessEqualOperator _:
+                {
+                    opStr = "-le";
+                    break;
+                }
+                default:
+                    opStr = op.ToString();
+                    break;
             }
 
             left = _createBoolExpression(leftDataType, left, logicalEvaluationStatement.Left);
             right = _createBoolExpression(rightDataType, right, logicalEvaluationStatement.Right);
-            
+
             return $"{left} {opStr} {right}";
         }
 
@@ -119,7 +122,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
             if (statement is VariableAccessStatement _)
             {
-                return exp;
+                return $"[ {exp} -ne 0 ]";
             }
 
             if (statement is LogicalEvaluationStatement)
@@ -148,7 +151,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         public override (DataTypes, string, EvaluationStatement) CreateExpression(ExpressionBuilderParams p,
             EvaluationStatement statement)
         {
-            var(dataType, exp, template) = base.CreateExpression(p, statement);
+            var (dataType, exp, template) = base.CreateExpression(p, statement);
             if (dataType != DataTypes.Boolean)
             {
                 throw new TypeMismatchCompilerException(dataType, DataTypes.Boolean, statement.Info);

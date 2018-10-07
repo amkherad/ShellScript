@@ -11,7 +11,8 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
 
         public override IApiFunc[] Functions { get; } =
         {
-            new Awk(),
+            new Call(),
+            new CallDecimal(),
         };
     }
 }

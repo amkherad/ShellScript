@@ -36,7 +36,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.File
                 var (dataType, expression, template) = transpiler.GetInline(p.Context, p.Scope, p.MetaWriter,
                     p.NonInlinePartWriter, null, parameter);
 
-                return (dataType, $"[ -{_testCharacter} {expression} ]", template);
+                return (DataType, $"[ -{_testCharacter} {expression} ]", functionCallStatement);
             }
         }
     }

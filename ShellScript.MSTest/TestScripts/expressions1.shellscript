@@ -9,8 +9,12 @@ number total = ((coffeePrice * coffeeCount) + (pizzaPrice * pizzaCount));//133.9
 
 double taxPercentage = 7.2;
 
-total = total - (total * taxPercentage / 100); //124.32416
+//total = total - (total * taxPercentage / 100); //124.32416
 
-string totalStr = "Total: " + (total - (total * taxPercentage / 100)); //124.32416
+string totalCaption = "Total";
+string totalStr1 = totalCaption + ": " + (total - (total * taxPercentage / 100)); //124.32416
 
-echo total;
+string totalStr2 = "Total: " + (total - (total * taxPercentage / 100)); //124.32416
+
+echo totalStr1;
+echo totalStr2;

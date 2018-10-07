@@ -5,6 +5,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.File
         public class Exists : FileTestBase
         {
             public override string Name => "Exists";
+            public override string Summary => "Checks whether a file exists.";
             
             public Exists() : base("e") { }
         }

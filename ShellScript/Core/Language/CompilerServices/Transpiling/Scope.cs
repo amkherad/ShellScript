@@ -212,9 +212,24 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             }
             
             var varName = "h_" + nameHint;
-            while (IsIdentifierExists(varName))
+
+            if (Context.Flags.PreferRandomHelperVariableNames)
             {
-                varName = "h_" + _generateRandomString(12);
+                while (IsIdentifierExists(varName))
+                {
+                    varName = "h_" + _generateRandomString(12);
+                }
+            }
+            else
+            {
+                var index = 0;
+                var bufName = varName;
+                while (IsIdentifierExists(bufName))
+                {
+                    bufName = bufName + ++index;
+                }
+
+                varName = bufName;
             }
 
             _identifiers.Add(varName);

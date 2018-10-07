@@ -16,6 +16,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
             private const string ApiMathAbsBashMethodName = "Abs_Bash";
 
             public override string Name => "Abs";
+            public override string Summary => "Returns the absolute value of the number.";
             public override string ClassName => ClassAccessName;
             public override DataTypes DataType => DataTypes.Numeric;
 

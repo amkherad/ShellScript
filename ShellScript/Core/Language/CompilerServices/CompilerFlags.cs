@@ -43,6 +43,8 @@ namespace ShellScript.Core.Language.CompilerServices
         public bool CommentParameterInfos { get; set; }
         
         public bool UseSegments { get; set; }
+        
+        public bool PreferRandomHelperVariableNames { get; set; }
 
         
         //==========================

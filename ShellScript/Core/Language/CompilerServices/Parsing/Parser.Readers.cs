@@ -153,123 +153,154 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     }
                 }
 
-                if (op is BitwiseOperator bitwiseOperator)
+                switch (op)
                 {
-                    if (op is BitwiseNotOperator bitwiseNotOperator)
+                    case BitwiseOperator bitwiseOperator:
                     {
-                        var operandNode = node.Next;
-                        var operand = operandNode?.Value as EvaluationStatement;
-                        if (operand == null)
+                        if (op is BitwiseNotOperator bitwiseNotOperator)
                         {
-                            throw UnexpectedSyntax(token, info);
-                        }
-
-                        var stt = BitwiseEvaluationStatement.CreateNot(bitwiseNotOperator, operand,
-                            CreateStatementInfo(info, token));
-
-                        operand.ParentStatement = stt;
-                        node.Value = stt;
-
-                        statements.Remove(operandNode);
-                    }
-                    else
-                    {
-                        var leftNode = node.Previous;
-                        var left = leftNode?.Value as EvaluationStatement;
-                        var rightNode = node.Next;
-                        var right = rightNode?.Value as EvaluationStatement;
-
-                        if (left == null || right == null)
-                        {
-                            throw UnexpectedSyntax(token, info);
-                        }
-
-                        var stt = new BitwiseEvaluationStatement(left, bitwiseOperator, right,
-                            CreateStatementInfo(info, token));
-
-                        left.ParentStatement = stt;
-                        right.ParentStatement = stt;
-                        node.Value = stt;
-
-                        statements.Remove(leftNode);
-                        statements.Remove(rightNode);
-                    }
-                }
-                else if (op is LogicalOperator logicalOperator)
-                {
-                    if (op is NotOperator notOperator)
-                    {
-                        var operandNode = node.Next;
-                        var operand = operandNode?.Value as EvaluationStatement;
-                        if (operand == null)
-                        {
-                            throw UnexpectedSyntax(token, info);
-                        }
-
-                        var stt = LogicalEvaluationStatement.CreateNot(notOperator, operand,
-                            CreateStatementInfo(info, token));
-
-                        operand.ParentStatement = stt;
-                        node.Value = stt;
-
-                        statements.Remove(operandNode);
-                    }
-                    else
-                    {
-                        var leftNode = node.Previous;
-                        var left = leftNode?.Value as EvaluationStatement;
-                        var rightNode = node.Next;
-                        var right = rightNode?.Value as EvaluationStatement;
-
-                        if (left == null || right == null)
-                        {
-                            throw UnexpectedSyntax(token, info);
-                        }
-
-                        var stt = new LogicalEvaluationStatement(left, logicalOperator, right,
-                            CreateStatementInfo(info, token));
-
-                        left.ParentStatement = stt;
-                        right.ParentStatement = stt;
-                        node.Value = stt;
-
-                        statements.Remove(leftNode);
-                        statements.Remove(rightNode);
-                    }
-                }
-                else if (op is ArithmeticOperator arithmeticOperator)
-                {
-                    if (op is IncrementOperator || op is DecrementOperator)
-                    {
-                        var operandNode = node.Previous;
-                        var operand = operandNode?.Value as VariableAccessStatement;
-
-                        EvaluationStatement statement;
-                        if (operand == null)
-                        {
-                            operandNode = node.Next;
-                            operand = operandNode?.Value as VariableAccessStatement;
-
+                            var operandNode = node.Next;
+                            var operand = operandNode?.Value as EvaluationStatement;
                             if (operand == null)
                             {
                                 throw UnexpectedSyntax(token, info);
                             }
 
-                            statement = ArithmeticEvaluationStatement.CreatePrefix(arithmeticOperator, operand,
+                            var stt = BitwiseEvaluationStatement.CreateNot(bitwiseNotOperator, operand,
                                 CreateStatementInfo(info, token));
+
+                            operand.ParentStatement = stt;
+                            node.Value = stt;
+
+                            statements.Remove(operandNode);
                         }
                         else
                         {
-                            statement = ArithmeticEvaluationStatement.CreatePostfix(arithmeticOperator, operand,
+                            var leftNode = node.Previous;
+                            var left = leftNode?.Value as EvaluationStatement;
+                            var rightNode = node.Next;
+                            var right = rightNode?.Value as EvaluationStatement;
+
+                            if (left == null || right == null)
+                            {
+                                throw UnexpectedSyntax(token, info);
+                            }
+
+                            var stt = new BitwiseEvaluationStatement(left, bitwiseOperator, right,
                                 CreateStatementInfo(info, token));
+
+                            left.ParentStatement = stt;
+                            right.ParentStatement = stt;
+                            node.Value = stt;
+
+                            statements.Remove(leftNode);
+                            statements.Remove(rightNode);
                         }
 
-                        operand.ParentStatement = statement;
-                        node.Value = statement;
-
-                        statements.Remove(operandNode);
+                        break;
                     }
-                    else
+                    case LogicalOperator logicalOperator:
+                    {
+                        if (op is NotOperator notOperator)
+                        {
+                            var operandNode = node.Next;
+                            var operand = operandNode?.Value as EvaluationStatement;
+                            if (operand == null)
+                            {
+                                throw UnexpectedSyntax(token, info);
+                            }
+
+                            var stt = LogicalEvaluationStatement.CreateNot(notOperator, operand,
+                                CreateStatementInfo(info, token));
+
+                            operand.ParentStatement = stt;
+                            node.Value = stt;
+
+                            statements.Remove(operandNode);
+                        }
+                        else
+                        {
+                            var leftNode = node.Previous;
+                            var left = leftNode?.Value as EvaluationStatement;
+                            var rightNode = node.Next;
+                            var right = rightNode?.Value as EvaluationStatement;
+
+                            if (left == null || right == null)
+                            {
+                                throw UnexpectedSyntax(token, info);
+                            }
+
+                            var stt = new LogicalEvaluationStatement(left, logicalOperator, right,
+                                CreateStatementInfo(info, token));
+
+                            left.ParentStatement = stt;
+                            right.ParentStatement = stt;
+                            node.Value = stt;
+
+                            statements.Remove(leftNode);
+                            statements.Remove(rightNode);
+                        }
+
+                        break;
+                    }
+                    case ArithmeticOperator arithmeticOperator:
+                    {
+                        if (op is IncrementOperator || op is DecrementOperator)
+                        {
+                            var operandNode = node.Previous;
+                            var operand = operandNode?.Value as VariableAccessStatement;
+
+                            EvaluationStatement statement;
+                            if (operand == null)
+                            {
+                                operandNode = node.Next;
+                                operand = operandNode?.Value as VariableAccessStatement;
+
+                                if (operand == null)
+                                {
+                                    throw UnexpectedSyntax(token, info);
+                                }
+
+                                statement = ArithmeticEvaluationStatement.CreatePrefix(arithmeticOperator, operand,
+                                    CreateStatementInfo(info, token));
+                            }
+                            else
+                            {
+                                statement = ArithmeticEvaluationStatement.CreatePostfix(arithmeticOperator, operand,
+                                    CreateStatementInfo(info, token));
+                            }
+
+                            operand.ParentStatement = statement;
+                            node.Value = statement;
+
+                            statements.Remove(operandNode);
+                        }
+                        else
+                        {
+                            var leftNode = node.Previous;
+                            var left = leftNode?.Value as EvaluationStatement;
+                            var rightNode = node.Next;
+                            var right = rightNode?.Value as EvaluationStatement;
+
+                            if (left == null || right == null)
+                            {
+                                throw UnexpectedSyntax(token, info);
+                            }
+
+                            var stt = new ArithmeticEvaluationStatement(left, arithmeticOperator, right,
+                                CreateStatementInfo(info, token));
+                            node.Value = stt;
+
+                            left.ParentStatement = stt;
+                            right.ParentStatement = stt;
+
+                            statements.Remove(leftNode);
+                            statements.Remove(rightNode);
+                        }
+
+                        break;
+                    }
+                    case AssignmentOperator assignmentOperator:
                     {
                         var leftNode = node.Previous;
                         var left = leftNode?.Value as EvaluationStatement;
@@ -281,8 +312,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             throw UnexpectedSyntax(token, info);
                         }
 
-                        var stt = new ArithmeticEvaluationStatement(left, arithmeticOperator, right,
-                            CreateStatementInfo(info, token));
+                        var stt = new AssignmentStatement(left, right, CreateStatementInfo(info, token));
                         node.Value = stt;
 
                         left.ParentStatement = stt;
@@ -290,11 +320,13 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
                         statements.Remove(leftNode);
                         statements.Remove(rightNode);
+                        
+                        break;
                     }
-                }
-                else
-                {
-                    throw UnexpectedSyntax(token, info); //WTF!
+                    default:
+                    {
+                        throw UnexpectedSyntax(token, info); //WTF!
+                    }
                 }
             }
 
@@ -500,6 +532,11 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     case TokenType.OrLogical:
                     {
                         statements.AddLast(new LogicalOrOperator(CreateStatementInfo(info, token)));
+                        break;
+                    }
+                    case TokenType.Assignment:
+                    {
+                        statements.AddLast(new AssignmentOperator(CreateStatementInfo(info, token)));
                         break;
                     }
 

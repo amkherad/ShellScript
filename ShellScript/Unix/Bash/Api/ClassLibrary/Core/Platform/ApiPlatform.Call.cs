@@ -7,35 +7,30 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
 {
     public partial class ApiPlatform
     {
-        public class Awk : BashFunction
+        public class Call : BashFunction
         {
-            private const string ApiMathAbsBashMethodName = "Awk_Bash";
-
-            public override string Name => "Awk";
+            public override string Name => "Call";
+            public override string Summary => "Takes a string and execute it as a void-result platform-dependent shell command.";
             public override string ClassName => ClassAccessName;
-            public override DataTypes DataType => DataTypes.Numeric;
+            public override DataTypes DataType => DataTypes.Void;
 
             public override bool IsStatic => true;
             public override bool AllowDynamicParams => false;
 
             public override FunctionParameterDefinitionStatement[] Parameters { get; } =
             {
-                null,
+                new FunctionParameterDefinitionStatement(DataTypes.String, "RawCommand", null, null),
             };
 
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
-                AssertExpressionParameters(functionCallStatement.Parameters);
+                AssertParameters(functionCallStatement.Parameters);
 
                 var parameter = functionCallStatement.Parameters[0];
 
-                var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
-                var (dataType, exp, template) = transpiler.GetInline(p.Context, p.Scope, p.MetaWriter,
-                    p.NonInlinePartWriter, p.UsageContext, parameter);
-
-                return new ApiMethodBuilderRawResult(dataType,
-                    $"`awk \"BEGIN {exp}\"`", template);
+                return new ApiMethodBuilderRawResult(DataTypes.Void,
+                    $"`CALLL `", functionCallStatement);
             }
         }
     }

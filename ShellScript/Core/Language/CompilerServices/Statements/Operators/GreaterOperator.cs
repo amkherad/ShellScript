@@ -11,5 +11,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements.Operators
         {
             Info = info;
         }
+
+        public override string ToString() => ">";
     }
 }

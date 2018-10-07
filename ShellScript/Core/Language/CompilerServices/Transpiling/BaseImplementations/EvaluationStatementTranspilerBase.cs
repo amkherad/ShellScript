@@ -889,6 +889,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                     }
                 }
 
+                case AssignmentStatement assignmentStatement:
+                {
+                    throw new NotImplementedException();
+                    break;
+                }
+
                 case FunctionCallStatement functionCallStatement:
                 {
                     if (scope.TryGetFunctionInfo(functionCallStatement, out var functionInfo))

@@ -208,6 +208,19 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                 return a;
             }
 
+            if (a.IsDecimal())
+            {
+                if (b.IsDecimal())
+                {
+                    return DataTypes.Decimal;
+                }
+
+                if (b.IsNumericOrFloat())
+                {
+                    return DataTypes.Numeric;
+                }
+            }
+
             if (a.IsNumber())
             {
                 if (b.IsNumber())
@@ -330,7 +343,14 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                 return true;
             }
 
-            if (destination == DataTypes.Numeric || destination == DataTypes.Float)
+            if (destination == DataTypes.Numeric)
+            {
+                if (source.IsNumber())
+                {
+                    return true;
+                }
+            }
+            else if (destination == DataTypes.Float)
             {
                 if (source == DataTypes.Decimal)
                 {
@@ -462,7 +482,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             isTrue = false;
             return false;
         }
-        
+
         public static bool IsAbsoluteBooleanValue(IStatement statement, out bool isTrue)
         {
             if (statement is ConstantValueStatement constantValueStatement &&

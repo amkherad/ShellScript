@@ -170,16 +170,6 @@ There are four places for assignments:
   while ((that = that.Parent) != null) { }
   ```
 
-##### Notices
-* Assignments doesn't have any result, so these are incorrect:
-  ```csharp
-  y = x = 2;
-  //--------
-  if ((buf = value) != 0) {
-
-  }
-  ```
-
 ### Function Definition
 ShellScript use same syntax for function definition as C#.  
 
@@ -431,7 +421,7 @@ Pre-processors are checked before the compilation begins, so you can make statem
 ```csharp
 #if (Bash)
 echo ("Welcome bash users");
-#elseif (Bath)
+#elseif (Batch)
 echo ("Welcome batch users");
 #else
 echo ("Welcome everyone");

@@ -58,7 +58,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string FormatSubExpression(ExpressionBuilderParams p, string expression,
+        public virtual string FormatSubExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
             EvaluationStatement template)
         {
             if (template is ConstantValueStatement)
@@ -177,8 +177,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         constantValueStatement.DataType,
                         FormatConstantExpression(p,
                             constantValueStatement.IsBoolean()
-                            ? constantValueStatement.Value.ToLower()
-                            : constantValueStatement.Value,
+                                ? constantValueStatement.Value.ToLower()
+                                : constantValueStatement.Value,
                             constantValueStatement
                         ),
                         constantValueStatement
@@ -230,6 +230,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         }
 
                         exp = FormatSubExpression(p,
+                            dataType,
                             exp,
                             template
                         );
@@ -237,16 +238,22 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         exp = $"~{exp}";
 
                         //can't have constant as the operand.
-                        return
-                        (
-                            DataTypes.Decimal,
-                            FormatBitwiseExpression(p,
-                                exp,
-                                template
-                            ),
-                            new BitwiseEvaluationStatement(null, bitwiseEvaluationStatement.Operator, template,
-                                bitwiseEvaluationStatement.Info)
-                        );
+                        {
+                            var newTemp = new BitwiseEvaluationStatement(null, bitwiseEvaluationStatement.Operator,
+                                template, bitwiseEvaluationStatement.Info);
+
+                            template.ParentStatement = newTemp;
+
+                            return
+                            (
+                                DataTypes.Decimal,
+                                FormatBitwiseExpression(p,
+                                    exp,
+                                    newTemp
+                                ),
+                                newTemp
+                            );
+                        }
                     }
 
                     var left = bitwiseEvaluationStatement.Left;
@@ -275,10 +282,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     }
 
                     leftExp = FormatSubExpression(p,
+                        leftDataType,
                         leftExp,
                         left
                     );
                     rightExp = FormatSubExpression(p,
+                        rightDataType,
                         rightExp,
                         right
                     );
@@ -305,20 +314,27 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 //                            );
 //                    }
 
-                    return
-                    (
-                        leftDataType,
-                        FormatBitwiseExpression(p,
+                    {
+                        var newTemp = new BitwiseEvaluationStatement(leftTemplate, bitwiseEvaluationStatement.Operator,
+                            rightTemplate, bitwiseEvaluationStatement.Info);
+
+                        leftTemplate.ParentStatement = newTemp;
+                        rightTemplate.ParentStatement = newTemp;
+
+                        return
+                        (
                             leftDataType,
-                            leftExp,
-                            bitwiseEvaluationStatement.Operator,
-                            rightDataType,
-                            rightExp,
-                            bitwiseEvaluationStatement
-                        ),
-                        new BitwiseEvaluationStatement(leftTemplate, bitwiseEvaluationStatement.Operator, rightTemplate,
-                            bitwiseEvaluationStatement.Info)
-                    );
+                            FormatBitwiseExpression(p,
+                                leftDataType,
+                                leftExp,
+                                bitwiseEvaluationStatement.Operator,
+                                rightDataType,
+                                rightExp,
+                                newTemp
+                            ),
+                            newTemp
+                        );
+                    }
                 }
                 case LogicalEvaluationStatement logicalEvaluationStatement:
                 {
@@ -334,6 +350,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         }
 
                         exp = FormatSubExpression(p,
+                            dataType,
                             exp,
                             operand
                         );
@@ -360,16 +377,22 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             );
                         }
 
-                        return
-                        (
-                            DataTypes.Boolean,
-                            FormatLogicalExpression(p,
-                                exp,
-                                logicalEvaluationStatement
-                            ),
-                            new LogicalEvaluationStatement(null, logicalEvaluationStatement.Operator, template,
-                                logicalEvaluationStatement.Info)
-                        );
+                        {
+                            var newTemp = new LogicalEvaluationStatement(null, logicalEvaluationStatement.Operator,
+                                template, logicalEvaluationStatement.Info);
+
+                            template.ParentStatement = newTemp;
+
+                            return
+                            (
+                                DataTypes.Boolean,
+                                FormatLogicalExpression(p,
+                                    exp,
+                                    newTemp
+                                ),
+                                newTemp
+                            );
+                        }
                     }
 
                     var left = logicalEvaluationStatement.Left;
@@ -392,6 +415,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                     if (leftDataType != rightDataType)
                     {
+                        //TODO: fix if you want to support string comparison or etc.
                         if (!(leftDataType.IsNumber() && rightDataType.IsNumber()))
                         {
                             throw new InvalidStatementCompilerException(logicalEvaluationStatement,
@@ -400,10 +424,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     }
 
                     leftExp = FormatSubExpression(p,
+                        leftDataType,
                         leftExp,
                         left
                     );
                     rightExp = FormatSubExpression(p,
+                        rightDataType,
                         rightExp,
                         right
                     );
@@ -434,20 +460,28 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         );
                     }
 
-                    return
-                    (
-                        DataTypes.Boolean,
-                        FormatLogicalExpression(p,
-                            leftDataType,
-                            leftExp,
-                            logicalEvaluationStatement.Operator,
-                            rightDataType,
-                            rightExp,
-                            logicalEvaluationStatement
-                        ),
-                        new LogicalEvaluationStatement(leftTemplate, logicalEvaluationStatement.Operator,
-                            rightTemplate, logicalEvaluationStatement.Info)
-                    );
+                    {
+                        var newTemp = new LogicalEvaluationStatement(leftTemplate, logicalEvaluationStatement.Operator,
+                            rightTemplate, logicalEvaluationStatement.Info);
+
+                        leftTemplate.ParentStatement = newTemp;
+                        rightTemplate.ParentStatement = newTemp;
+
+
+                        return
+                        (
+                            DataTypes.Boolean,
+                            FormatLogicalExpression(p,
+                                leftDataType,
+                                leftExp,
+                                logicalEvaluationStatement.Operator,
+                                rightDataType,
+                                rightExp,
+                                newTemp
+                            ),
+                            newTemp
+                        );
+                    }
                 }
                 case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
                 {
@@ -511,19 +545,25 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             );
                         }
 
-                        return
-                        (
-                            dt,
-                            FormatArithmeticExpression(p,
-                                exp,
-                                arithmeticEvaluationStatement
-                            ),
-                            arithmeticEvaluationStatement.Left == null
+                        {
+                            var newTemp = arithmeticEvaluationStatement.Left == null
                                 ? new ArithmeticEvaluationStatement(null, arithmeticEvaluationStatement.Operator,
                                     template, arithmeticEvaluationStatement.Info)
                                 : new ArithmeticEvaluationStatement(template, arithmeticEvaluationStatement.Operator,
-                                    null, arithmeticEvaluationStatement.Info)
-                        );
+                                    null, arithmeticEvaluationStatement.Info);
+
+                            template.ParentStatement = newTemp;
+
+                            return
+                            (
+                                dt,
+                                FormatArithmeticExpression(p,
+                                    exp,
+                                    newTemp
+                                ),
+                                newTemp
+                            );
+                        }
                     }
 
                     if (op is DecrementOperator)
@@ -585,19 +625,25 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             );
                         }
 
-                        return
-                        (
-                            dt,
-                            FormatArithmeticExpression(p,
-                                exp,
-                                arithmeticEvaluationStatement
-                            ),
-                            arithmeticEvaluationStatement.Left == null
+                        {
+                            var newTemp = arithmeticEvaluationStatement.Left == null
                                 ? new ArithmeticEvaluationStatement(null, arithmeticEvaluationStatement.Operator,
                                     template, arithmeticEvaluationStatement.Info)
                                 : new ArithmeticEvaluationStatement(template, arithmeticEvaluationStatement.Operator,
-                                    null, arithmeticEvaluationStatement.Info)
-                        );
+                                    null, arithmeticEvaluationStatement.Info);
+
+                            template.ParentStatement = newTemp;
+
+                            return
+                            (
+                                dt,
+                                FormatArithmeticExpression(p,
+                                    exp,
+                                    newTemp
+                                ),
+                                newTemp
+                            );
+                        }
                     }
 
                     if (op is NegativeNumberOperator)
@@ -613,6 +659,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         }
 
                         exp = FormatSubExpression(p,
+                            dt,
                             exp,
                             operand
                         );
@@ -640,16 +687,22 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             );
                         }
 
-                        return
-                        (
-                            dt,
-                            FormatArithmeticExpression(p,
-                                exp,
-                                arithmeticEvaluationStatement
-                            ),
-                            new ArithmeticEvaluationStatement(null, arithmeticEvaluationStatement.Operator,
-                                template, arithmeticEvaluationStatement.Info)
-                        );
+                        {
+                            var newTemp = new ArithmeticEvaluationStatement(null,
+                                arithmeticEvaluationStatement.Operator, template, arithmeticEvaluationStatement.Info);
+
+                            template.ParentStatement = newTemp;
+
+                            return
+                            (
+                                dt,
+                                FormatArithmeticExpression(p,
+                                    exp,
+                                    newTemp
+                                ),
+                                newTemp
+                            );
+                        }
                     }
 
                     var left = arithmeticEvaluationStatement.Left;
@@ -659,14 +712,24 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     var (rightDataType, rightExp, rightTemplate) =
                         CreateExpressionRecursive(p, right);
 
+                    if (leftDataType.IsString() || rightDataType.IsString() &&
+                        !(arithmeticEvaluationStatement.Operator is AdditionOperator))
+                    {
+                        throw new InvalidOperatorForTypeCompilerException(
+                            arithmeticEvaluationStatement.Operator.GetType(), leftDataType, rightDataType,
+                            arithmeticEvaluationStatement.Info);
+                    }
+
                     var dataType = StatementHelpers.OperateDataTypes(arithmeticEvaluationStatement.Operator,
                         leftDataType, rightDataType);
 
                     leftExp = FormatSubExpression(p,
+                        leftDataType,
                         leftExp,
                         left
                     );
                     rightExp = FormatSubExpression(p,
+                        rightDataType,
                         rightExp,
                         right
                     );
@@ -702,7 +765,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                     leftTemplate.ParentStatement = newTmp;
                     rightTemplate.ParentStatement = newTmp;
-                    
+
                     return
                     (
                         dataType,
@@ -717,11 +780,24 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         newTmp
                     );
                 }
+
+                case AssignmentStatement assignmentStatement:
+                {
+                    throw new NotImplementedException();
+                    break;
+                }
+
                 case FunctionCallStatement functionCallStatement: //functions are always not-inlined.
                 {
                     if (!p.Scope.TryGetFunctionInfo(functionCallStatement, out var funcInfo))
                     {
                         throw new IdentifierNotFoundCompilerException(functionCallStatement.FunctionName,
+                            functionCallStatement.Info);
+                    }
+
+                    if (funcInfo.DataType == DataTypes.Void)
+                    {
+                        throw new UsageOfVoidTypeInNonVoidContextCompilerException(functionCallStatement,
                             functionCallStatement.Info);
                     }
 
@@ -774,7 +850,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     var newTmp = new FunctionCallStatement(functionCallStatement.ObjectName,
                         functionCallStatement.FunctionName,
                         functionCallStatement.DataType, paramsArray, functionCallStatement.Info);
-                    
+
                     foreach (var param in paramsArray)
                     {
                         param.ParentStatement = newTmp;

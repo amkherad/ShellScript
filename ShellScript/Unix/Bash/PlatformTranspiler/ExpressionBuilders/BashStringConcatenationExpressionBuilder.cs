@@ -12,18 +12,16 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
     {
         public new static BashStringConcatenationExpressionBuilder Instance { get; } =
             new BashStringConcatenationExpressionBuilder();
-
-        public override string FormatVariableAccessExpression(ExpressionBuilderParams p, string expression,
+        
+        public override string FormatSubExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
             EvaluationStatement template)
         {
-            var parentStatement = template.ParentStatement;
-            if (parentStatement != null &&
-                !(parentStatement is EvaluationStatement))
+            if (dataType == DataTypes.String)
             {
-                return base.FormatVariableAccessExpression(p, expression, template);
+                return expression;
             }
             
-            return $"${{{expression}}}";
+            return base.FormatSubExpression(p, dataType, expression, template);
         }
 
         public override string FormatConstantExpression(ExpressionBuilderParams p, string expression,
@@ -56,7 +54,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                         );
                     }
 
-                    return (DataTypes.String, constantValueStatement.Value, constantValueStatement);
+                    return (constantValueStatement.DataType, constantValueStatement.Value, constantValueStatement);
                 }
                 case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
                 {
@@ -70,34 +68,49 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                 var right = arithmeticEvaluationStatement.Right;
 
                                 var np = new ExpressionBuilderParams(p, nonInlinePartWriterPinned);
-
+                                
                                 var (leftDataType, leftExp, leftTemplate) = CreateExpressionRecursive(np, left);
                                 var (rightDataType, rightExp, rightTemplate) = CreateExpressionRecursive(np, right);
 
                                 if (leftDataType.IsString() || rightDataType.IsString())
                                 {
-                                    leftExp = FormatSubExpression(p,
-                                        leftExp,
-                                        left
-                                    );
-                                    rightExp = FormatSubExpression(p,
-                                        rightExp,
-                                        right
-                                    );
+                                    if (leftTemplate is VariableAccessStatement)
+                                    {
+                                        leftExp = FormatStringConcatenationVariableAccess(leftExp);
+                                    }
+                                    if (rightTemplate is VariableAccessStatement)
+                                    {
+                                        rightExp = FormatStringConcatenationVariableAccess(rightExp);
+                                    }
+                                    
 
-                                    var exp = $"{leftExp}{rightExp}";
+                                    if (leftDataType != DataTypes.String && !(leftTemplate is VariableAccessStatement))
+                                    {
+                                        leftExp = $"$(({leftExp}))";
+                                    }
+                                    if (rightDataType != DataTypes.String && !(rightTemplate is VariableAccessStatement))
+                                    {
+                                        rightExp = $"$(({rightExp}))";
+                                    }
+
+                                    var concatExp = $"{leftExp}{rightExp}";
 
                                     p.NonInlinePartWriter.Write(nonInlinePartWriterPinned);
 
+                                    var newTemp = new ArithmeticEvaluationStatement(
+                                        leftTemplate,
+                                        arithmeticEvaluationStatement.Operator,
+                                        rightTemplate,
+                                        arithmeticEvaluationStatement.Info
+                                    );
+
+                                    leftTemplate.ParentStatement = newTemp;
+                                    rightTemplate.ParentStatement = newTemp;
+
                                     return (
                                         DataTypes.String,
-                                        exp,
-                                        new ArithmeticEvaluationStatement(
-                                            leftTemplate,
-                                            arithmeticEvaluationStatement.Operator,
-                                            rightTemplate,
-                                            arithmeticEvaluationStatement.Info
-                                        )
+                                        concatExp,
+                                        newTemp
                                     );
                                 }
                             }

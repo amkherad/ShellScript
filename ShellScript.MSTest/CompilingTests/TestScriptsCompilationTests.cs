@@ -49,13 +49,18 @@ namespace ShellScript.MSTest.CompilingTests
                 foreach (var platform in platforms)
                 {
                     var ext = platform.Name.ToLower();
-                    var assertionFile = Path.Combine(Path.GetFileNameWithoutExtension(file), ext);
-                    var outputFile = Path.Combine(Path.GetFileNameWithoutExtension(file), ext);
+                    var assertionFile = $"{Path.GetFileNameWithoutExtension(file)}.{ext}";
+                    var outputFile = $"{Path.GetFileNameWithoutExtension(file)}.{ext}";
 
+                    assertionFile = Path.Combine(testScriptsRoot, assertionFile);
+                    outputFile = Path.Combine(tempOutputRoot, outputFile);
+                    
                     if (File.Exists(assertionFile))
                     {
                         using (var logWriter = new StringWriter())
                         {
+                            Directory.CreateDirectory(tempOutputRoot);
+                            
                             Compiler.CompileFromSource(file, tempOutputRoot, outputFile,
                                 platform, compilerFlags, logWriter, logWriter, logWriter);
 

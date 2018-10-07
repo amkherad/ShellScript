@@ -24,7 +24,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         string FormatExpression(ExpressionBuilderParams p, DataTypes expressionDataType,
             string expression, EvaluationStatement template);
 
-        string FormatSubExpression(ExpressionBuilderParams p, string expression, EvaluationStatement template);
+        string FormatSubExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
+            EvaluationStatement template);
 
         string FormatFunctionCallParameterSubExpression(ExpressionBuilderParams p, DataTypes dataType,
             string expression, EvaluationStatement template);

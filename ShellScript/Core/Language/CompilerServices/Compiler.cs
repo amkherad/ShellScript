@@ -37,14 +37,14 @@ namespace ShellScript.Core.Language.CompilerServices
 
                 flags = platform.ReviseFlags(flags);
 
-                var outputPath = Path.Combine(Path.GetDirectoryName(outputFilePath), "obj");
+                var outputObjPath = Path.Combine(Path.GetDirectoryName(outputFilePath), "obj");
 
-                if (!Directory.Exists(outputPath))
+                if (!Directory.Exists(outputObjPath))
                 {
-                    Directory.CreateDirectory(outputPath);
+                    Directory.CreateDirectory(outputObjPath);
                 }
 
-                CompileFromSource(sourceCodePath, outputPath, outputFilePath, platform, flags, errorWriter,
+                CompileFromSource(sourceCodePath, outputObjPath, outputFilePath, platform, flags, errorWriter,
                     warningWriter, logWriter);
 
                 return new CompilationResult(true);
@@ -59,13 +59,13 @@ namespace ShellScript.Core.Language.CompilerServices
             }
         }
 
-        public static void CompileFromSource(string sourceCodePath, string outputPath, string outputFilePath,
+        public static void CompileFromSource(string sourceCodePath, string outputObjPath, string outputFilePath,
             IPlatform platform, CompilerFlags flags, TextWriter errorWriter, TextWriter warningWriter,
             TextWriter logWriter)
         {
-            var tempSrcPath = Path.Combine(outputPath,
+            var tempSrcPath = Path.Combine(outputObjPath,
                 Path.GetFileNameWithoutExtension(outputFilePath) + ".src" + Path.GetExtension(outputFilePath) + ".bin");
-            var tempMetaPath = Path.Combine(outputPath,
+            var tempMetaPath = Path.Combine(outputObjPath,
                 Path.GetFileNameWithoutExtension(outputFilePath) + ".meta" + Path.GetExtension(outputFilePath) +
                 ".bin");
 

@@ -13,6 +13,7 @@ namespace ShellScript.Core.Language.Library
     public abstract class ApiBaseFunction : IApiFunc
     {
         public abstract string Name { get; }
+        public abstract string Summary { get; }
         public abstract string ClassName { get; }
         public abstract DataTypes DataType { get; }
         public abstract bool IsStatic { get; }

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.CompilerServices.Statements.Operators;
 using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 
@@ -27,11 +28,25 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             ExpressionBuilderParams p, EvaluationStatement template,
             DataTypes left, EvaluationStatement leftTemplate, DataTypes right, EvaluationStatement rightTemplate)
         {
-            var test = right.IsNumericOrFloat() || left.IsNumericOrFloat();
-            if (test)
+            if (left.IsNumericOrFloat() || right.IsNumericOrFloat())
             {
-                return
-                    template.ParentStatement is FunctionCallStatement;
+                if (template is LogicalEvaluationStatement)
+                    return true;
+                
+                var parent = template.ParentStatement;
+                
+                if (parent is VariableDefinitionStatement)
+                    return false;
+                
+                if (parent is ArithmeticEvaluationStatement arithmeticEvaluationStatement &&
+                    arithmeticEvaluationStatement.Operator is AdditionOperator)
+                    return arithmeticEvaluationStatement.Left.GetDataType(p.Context, p.Scope).IsString() ||
+                           arithmeticEvaluationStatement.Right.GetDataType(p.Context, p.Scope).IsString();
+
+                if (parent is FunctionCallStatement)
+                    return true;
+                
+                return !(parent is EvaluationStatement);
             }
 
             return false;
@@ -84,7 +99,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                     expression = expression.Replace('"', '\'');
                 }
 
-                return $"`awk \"BEGIN {{print {expression}}}\"`";
+                return $"`awk \"BEGIN {{print ({expression})}}\"`";
             }
 
             return base.FormatExpression(p, expression, template);
@@ -113,7 +128,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                     expression = expression.Replace('"', '\'');
                 }
 
-                return $"`awk \"BEGIN {{print {expression}}}\"`";
+                return $"`awk \"BEGIN {{print ({expression})}}\"`";
             }
 
             return base.FormatExpression(p, dataType, expression, template);
@@ -125,7 +140,6 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         {
             return '$' + expression;
         }
-        
 
         public override string PinExpressionToVariable(
             ExpressionBuilderParams p,
@@ -161,7 +175,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         {
             var variableName = p.Scope.NewHelperVariable(dataTypes, nameHint);
 
-            expression = $"`awk \"BEGIN {{print {expression}}}\"`";
+            expression = $"`awk \"BEGIN {{print ({expression})}}\"`";
 
             BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(
                 p.Context,
@@ -175,6 +189,18 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 variableName,
                 template
             );
+        }
+        
+        
+
+        protected static string FormatStringConcatenationVariableAccess(string exp)
+        {
+            if (exp.StartsWith('$'))
+            {
+                return $"${{{exp.Substring(1)}}}";
+            }
+            
+            return $"${{{exp}}}";
         }
     }
 }

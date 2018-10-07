@@ -5,6 +5,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.File
         public class CanExecute : FileTestBase
         {
             public override string Name => "CanExecute";
+            public override string Summary => "Checks whether a file has execute permission.";
             
             public CanExecute() : base("x") { }
         }
