@@ -9,8 +9,11 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
     {
         public class Call : BashFunction
         {
-            public override string Name => "Call";
-            public override string Summary => "Takes a string and execute it as a void-result platform-dependent shell command.";
+            public override string Name => nameof(Call);
+
+            public override string Summary =>
+                "Takes a string and execute it as a void-result platform-dependent shell command.";
+
             public override string ClassName => ClassAccessName;
             public override DataTypes DataType => DataTypes.Void;
 
@@ -28,9 +31,13 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
                 AssertParameters(functionCallStatement.Parameters);
 
                 var parameter = functionCallStatement.Parameters[0];
+                
+                p.FormatString = false;
+                
+                var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
+                var (dataType, exp, template) = transpiler.GetExpression(p, parameter);
 
-                return new ApiMethodBuilderRawResult(DataTypes.Void,
-                    $"`CALLL `", functionCallStatement);
+                return new ApiMethodBuilderRawResult(DataType, $"`{exp}`", template);
             }
         }
     }

@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Statements.Operators;
+using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.PlatformTranspiler;
 
@@ -69,13 +69,19 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
         public abstract string PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter,
             TextWriter pinCodeWriter, EvaluationStatement statement);
 
-        public abstract (DataTypes, string, EvaluationStatement) GetInline(Context context, Scope scope,
-            TextWriter metaWriter,
-            TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
+        public abstract (DataTypes, string, EvaluationStatement) GetExpression(ExpressionBuilderParams p,
+            EvaluationStatement statement);
 
-        public abstract (DataTypes, string, EvaluationStatement) GetInlineConditional(Context context, Scope scope,
-            TextWriter metaWriter,
-            TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
+        public abstract (DataTypes, string, EvaluationStatement) GetExpression(Context context, Scope scope,
+            TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext,
+            EvaluationStatement statement);
+
+        public abstract (DataTypes, string, EvaluationStatement) GetConditionalExpression(ExpressionBuilderParams p,
+            EvaluationStatement statement);
+
+        public abstract (DataTypes, string, EvaluationStatement) GetConditionalExpression(Context context, Scope scope,
+            TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext,
+            EvaluationStatement statement);
 
 
         public static EvaluationStatement ProcessEvaluation(Context context, Scope scope,
@@ -341,13 +347,13 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                                 ? singleConstantPair.Item2
                                                 : singleConstantPair.Item1;
                                         }
-                                        
+
                                         //LogicalOrOperator
                                         return boolVal
                                             ? singleConstantPair.Item1
                                             : singleConstantPair.Item2;
                                     }
-                                    
+
                                     throw new InvalidStatementStructureCompilerException(singleConstantPair.Item1,
                                         singleConstantPair.Item1.Info);
                                 }

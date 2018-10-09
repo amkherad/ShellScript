@@ -37,6 +37,36 @@ namespace ShellScript.Core.Language.Library
             return new ApiMethodBuilderInlineResult(statement);
         }
 
+        public static IApiMethodBuilderResult RecursiveCompileResource<TFunc>(
+            TFunc func, ExpressionBuilderParams p, string resourceName, FunctionInfo functionInfo,
+            EvaluationStatement[] parameters, StatementInfo statementInfo)
+            where TFunc : ApiBaseFunction
+        {
+//            if (p.Scope.TryGetFunctionInfo(functionInfo, out var funcInfo))
+//            {
+//                return Inline(new FunctionCallStatement(funcInfo.ObjectName, funcInfo.Name, funcInfo.DataType,
+//                    parameters, statementInfo));
+//            }
+//
+//            using (var file = Assembly.GetCallingAssembly()
+//                .GetManifestResourceStream(typeof(TFunc), resourceName))
+//            using (var reader = new StreamReader(file))
+//            {
+//                string line;
+//                while ((line = reader.ReadLine()) != null)
+//                {
+//                    p.MetaWriter.WriteLine(line);
+//                }
+//
+//                p.MetaWriter.WriteLine();
+//            }
+//
+//            p.Context.GeneralScope.ReserveNewFunction(functionInfo);
+
+            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.DataType,
+                parameters, statementInfo));
+        }
+
         public static IApiMethodBuilderResult UseNativeResourceMethod<TFunc>(
             TFunc func, ExpressionBuilderParams p, string resourceName, FunctionInfo functionInfo,
             EvaluationStatement[] parameters, StatementInfo statementInfo)

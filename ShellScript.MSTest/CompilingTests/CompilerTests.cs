@@ -48,7 +48,7 @@ namespace ShellScript.MSTest.CompilingTests
                 var definitionStt = (DefinitionStatement) stt.First();
 
                 var transpiler = context.GetEvaluationTranspilerForStatement(definitionStt.DefaultValue);
-                var (dataType, exp, template) = transpiler.GetInline(context, context.GeneralScope, metaWriter,
+                var (dataType, exp, template) = transpiler.GetExpression(context, context.GeneralScope, metaWriter,
                     codeWriter, definitionStt, definitionStt.DefaultValue);
 
                 Assert.AreEqual("4", exp);
@@ -69,7 +69,7 @@ namespace ShellScript.MSTest.CompilingTests
                 var definitionStt = (DefinitionStatement) stt.First();
 
                 var transpiler = context.GetEvaluationTranspilerForStatement(definitionStt.DefaultValue);
-                var (dataType, exp, template) = transpiler.GetInline(context, context.GeneralScope, metaWriter,
+                var (dataType, exp, template) = transpiler.GetExpression(context, context.GeneralScope, metaWriter,
                     codeWriter, definitionStt, definitionStt.DefaultValue);
 
                 Assert.AreEqual("true", exp);

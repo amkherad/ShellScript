@@ -18,7 +18,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             {
                 return expression;
             }
-            
+
             return base.FormatSubExpression(p, dataType, expression, template);
         }
 
@@ -47,7 +47,9 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                     {
                         return (
                             DataTypes.String,
-                            BashTranspilerHelpers.ToBashString(constantValueStatement.Value, true, false),
+                            p.FormatString
+                                ? BashTranspilerHelpers.ToBashString(constantValueStatement.Value, true, false)
+                                : BashTranspilerHelpers.StandardizeString(constantValueStatement.Value, true),
                             constantValueStatement
                         );
                     }
@@ -66,7 +68,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                 var right = arithmeticEvaluationStatement.Right;
 
                                 var np = new ExpressionBuilderParams(p, nonInlinePartWriterPinned);
-                                
+
                                 var (leftDataType, leftExp, leftTemplate) = CreateExpressionRecursive(np, left);
                                 var (rightDataType, rightExp, rightTemplate) = CreateExpressionRecursive(np, right);
 
@@ -76,17 +78,20 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                     {
                                         leftExp = FormatStringConcatenationVariableAccess(leftExp);
                                     }
+
                                     if (rightTemplate is VariableAccessStatement)
                                     {
                                         rightExp = FormatStringConcatenationVariableAccess(rightExp);
                                     }
-                                    
+
 
                                     if (leftDataType != DataTypes.String && !(leftTemplate is VariableAccessStatement))
                                     {
                                         leftExp = $"$(({leftExp}))";
                                     }
-                                    if (rightDataType != DataTypes.String && !(rightTemplate is VariableAccessStatement))
+
+                                    if (rightDataType != DataTypes.String &&
+                                        !(rightTemplate is VariableAccessStatement))
                                     {
                                         rightExp = $"$(({rightExp}))";
                                     }

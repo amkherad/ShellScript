@@ -255,9 +255,43 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             return false;
         }
 
+        public bool TryGetVariableInfo(VariableAccessStatement variableAccessStatement, out VariableInfo variableInfo)
+        {
+            var varInfo = new VariableInfo(variableAccessStatement.VariableName);
+
+            var that = this;
+            do
+            {
+                if (that._variables.TryGetValue(varInfo, out variableInfo))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
+
         public bool TryGetConstantInfo(string constantName, out ConstantInfo constantInfo)
         {
             var constInfo = new ConstantInfo(constantName);
+
+            var that = this;
+            do
+            {
+                if (that._constants.TryGetValue(constInfo, out constantInfo))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
+
+        public bool TryGetConstantInfo(VariableAccessStatement variableAccessStatement, out ConstantInfo constantInfo)
+        {
+            var constInfo = new ConstantInfo(variableAccessStatement.VariableName);
 
             var that = this;
             do

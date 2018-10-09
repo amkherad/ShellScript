@@ -35,7 +35,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
                 var transpiler = context.GetEvaluationTranspilerForStatement(stt);
 
-                var (dataType, expression, template) = transpiler.GetInline(context, scope, metaWriter, writer, null, stt);
+                var (dataType, expression, template) = transpiler.GetExpression(context, scope, metaWriter, writer, null, stt);
                 paramExp.Append(expression);
             }
 

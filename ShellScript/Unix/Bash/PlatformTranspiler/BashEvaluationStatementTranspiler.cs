@@ -16,39 +16,35 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
     public class BashEvaluationStatementTranspiler : EvaluationStatementTranspilerBase
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (DataTypes, string, EvaluationStatement) CreateBashExpression(Context context, Scope scope,
-            TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement evalStt)
+        public static (DataTypes, string, EvaluationStatement) CreateBashExpression(ExpressionBuilderParams p,
+            EvaluationStatement evalStt)
         {
-            evalStt = ProcessEvaluation(context, scope, evalStt);
+            evalStt = ProcessEvaluation(p.Context, p.Scope, evalStt);
 
-            var structure = StatementHelpers.TraverseTreeAndGetExpressionTypes(context, scope, evalStt);
+            var structure = StatementHelpers.TraverseTreeAndGetExpressionTypes(p.Context, p.Scope, evalStt);
 
             IExpressionBuilder expressionBuilder = structure.Types.Contains(DataTypes.String)
                 ? BashStringConcatenationExpressionBuilder.Instance
                 : BashDefaultExpressionBuilder.Instance;
 
-            var parameters = new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter, usageContext);
-
-            return expressionBuilder.CreateExpression(parameters, evalStt);
+            return expressionBuilder.CreateExpression(p, evalStt);
         }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (DataTypes, string, EvaluationStatement) CreateBashConditionalExpression(Context context, Scope scope,
-            TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement evalStt)
-        {
-            evalStt = ProcessEvaluation(context, scope, evalStt);
 
-            var structure = StatementHelpers.TraverseTreeAndGetExpressionTypes(context, scope, evalStt);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static (DataTypes, string, EvaluationStatement) CreateBashConditionalExpression(
+            ExpressionBuilderParams p, EvaluationStatement evalStt)
+        {
+            evalStt = ProcessEvaluation(p.Context, p.Scope, evalStt);
+
+            var structure = StatementHelpers.TraverseTreeAndGetExpressionTypes(p.Context, p.Scope, evalStt);
 
             IExpressionBuilder expressionBuilder = structure.Types.Contains(DataTypes.String)
                 ? BashConditionalStringConcatenationExpressionBuilder.Instance
                 : BashConditionalExpressionBuilder.Instance;
 
-            var parameters = new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter, usageContext);
-
-            return expressionBuilder.CreateExpression(parameters, evalStt);
+            return expressionBuilder.CreateExpression(p, evalStt);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IExpressionBuilder GetBashExpressionBuilder(Context context, Scope scope,
             ref EvaluationStatement evalStt)
@@ -63,7 +59,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             return expressionBuilder;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IExpressionBuilder GetBashConditionalExpressionBuilder(Context context, Scope scope,
             ref EvaluationStatement evalStt)
@@ -84,7 +80,9 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is EvaluationStatement evalStt)) throw new InvalidOperationException();
 
-            var expression = CreateBashExpression(context, scope, metaWriter, nonInlinePartWriter, null, evalStt);
+            var parameters = new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter, null);
+
+            var expression = CreateBashExpression(parameters, evalStt);
 
             writer.Write(expression);
         }
@@ -109,12 +107,24 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             return expressionBuilder.PinExpressionToVariable(parameters, dataType, null, expression, statement);
         }
 
-        public override (DataTypes, string, EvaluationStatement) GetInline(Context context, Scope scope, TextWriter metaWriter,
-            TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement) =>
-            CreateBashExpression(context, scope, metaWriter, nonInlinePartWriter, usageContext, statement);
+        public override (DataTypes, string, EvaluationStatement) GetExpression(ExpressionBuilderParams p,
+            EvaluationStatement statement) =>
+            CreateBashExpression(p, statement);
 
-        public override (DataTypes, string, EvaluationStatement) GetInlineConditional(Context context, Scope scope, TextWriter metaWriter,
-            TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement) =>
-            CreateBashConditionalExpression(context, scope, metaWriter, nonInlinePartWriter, usageContext, statement);
+        public override (DataTypes, string, EvaluationStatement) GetExpression(Context context, Scope scope,
+            TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext,
+            EvaluationStatement statement) =>
+            CreateBashExpression(
+                new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter, usageContext), statement);
+
+        public override (DataTypes, string, EvaluationStatement) GetConditionalExpression(ExpressionBuilderParams p,
+            EvaluationStatement statement) =>
+            CreateBashConditionalExpression(p, statement);
+
+        public override (DataTypes, string, EvaluationStatement) GetConditionalExpression(Context context, Scope scope,
+            TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext,
+            EvaluationStatement statement) =>
+            CreateBashConditionalExpression(
+                new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter, usageContext), statement);
     }
 }

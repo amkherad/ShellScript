@@ -13,6 +13,10 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
         {
             new Call(),
             new CallDecimal(),
+            new CallFloat(),
+            new CallNumeric(),
+            new CallString(),
+            new CallArray(),
         };
     }
 }

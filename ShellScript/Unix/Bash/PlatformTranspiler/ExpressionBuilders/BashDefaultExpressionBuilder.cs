@@ -10,7 +10,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
     {
         public static BashDefaultExpressionBuilder Instance { get; } = new BashDefaultExpressionBuilder();
 
-        
+
         public override bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p,
             DataTypes dataType, EvaluationStatement template)
         {
@@ -32,12 +32,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             {
                 if (template is LogicalEvaluationStatement)
                     return true;
-                
+
                 var parent = template.ParentStatement;
-                
+
                 if (parent is VariableDefinitionStatement)
                     return false;
-                
+
                 if (parent is ArithmeticEvaluationStatement arithmeticEvaluationStatement &&
                     arithmeticEvaluationStatement.Operator is AdditionOperator)
                     return arithmeticEvaluationStatement.Left.GetDataType(p.Context, p.Scope).IsString() ||
@@ -45,20 +45,20 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
                 if (parent is FunctionCallStatement)
                     return true;
-                
+
                 return !(parent is EvaluationStatement);
             }
 
             return false;
         }
-        
-        
+
+
         public override string FormatFunctionCallExpression(ExpressionBuilderParams p, string expression,
             EvaluationStatement template)
         {
             return expression; //$"{expression}";
         }
-        
+
         public override string FormatFunctionCallParameterSubExpression(ExpressionBuilderParams p, DataTypes dataType,
             string expression, EvaluationStatement template)
         {
@@ -73,17 +73,22 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             {
                 return expression;
             }
-            
+
             return $"$(({expression}))";
         }
 
-        public override string FormatExpression(ExpressionBuilderParams p, string expression, EvaluationStatement template)
+        public override string FormatExpression(ExpressionBuilderParams p, string expression,
+            EvaluationStatement template)
         {
             if (template is ConstantValueStatement constantValueStatement)
             {
                 if (constantValueStatement.IsString())
-                    return $"\"{expression}\"";
-                
+                {
+                    if (p.FormatString)
+                        return $"\"{expression}\"";
+                    return expression;
+                }
+
                 return expression;
             }
 
@@ -111,8 +116,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             if (template is ConstantValueStatement)
             {
                 if (dataType.IsString())
-                    return $"\"{expression}\"";
-                
+                {
+                    if (p.FormatString)
+                        return $"\"{expression}\"";
+                    return expression;
+                }
+
                 return expression;
             }
 
@@ -133,7 +142,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
             return base.FormatExpression(p, dataType, expression, template);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string FormatVariableAccessExpression(ExpressionBuilderParams p, string expression,
             EvaluationStatement template)
@@ -190,8 +199,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 template
             );
         }
-        
-        
+
 
         protected static string FormatStringConcatenationVariableAccess(string exp)
         {
@@ -199,7 +207,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             {
                 return $"${{{exp.Substring(1)}}}";
             }
-            
+
             return $"${{{exp}}}";
         }
     }

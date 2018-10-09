@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
@@ -39,7 +40,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
             if (expressionDataType.IsString())
             {
-                return $"\"{expression}\"";
+                if (p.FormatString)
+                    return $"\"{expression}\"";
+                return expression;
             }
 
             return expression;
@@ -51,7 +54,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         {
             if (expressionDataType.IsString())
             {
-                return $"\"{expression}\"";
+                if (p.FormatString)
+                    return $"\"{expression}\"";
+                return expression;
             }
 
             return expression;
@@ -162,7 +167,11 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
             EvaluationStatement statement)
         {
             var (dataType, exp, template) = CreateExpressionRecursive(p, statement);
-            return (dataType, FormatExpression(p, dataType, exp, statement), template);
+            return (
+                dataType,
+                FormatExpression(p, dataType, exp, statement),
+                template
+            );
         }
 
         protected virtual (DataTypes, string, EvaluationStatement) CreateExpressionRecursive(ExpressionBuilderParams p,
@@ -186,7 +195,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                 }
                 case VariableAccessStatement variableAccessStatement:
                 {
-                    if (p.Scope.TryGetVariableInfo(variableAccessStatement.VariableName, out var varInfo))
+                    if (p.Scope.TryGetVariableInfo(variableAccessStatement, out var varInfo))
                     {
                         return
                         (
@@ -199,7 +208,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         );
                     }
 
-                    if (p.Scope.TryGetConstantInfo(variableAccessStatement.VariableName, out var constInfo))
+                    if (p.Scope.TryGetConstantInfo(variableAccessStatement, out var constInfo))
                     {
                         //should be impossible to reach.
                         return
@@ -797,8 +806,11 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                     if (funcInfo.DataType == DataTypes.Void)
                     {
-                        throw new UsageOfVoidTypeInNonVoidContextCompilerException(functionCallStatement,
-                            functionCallStatement.Info);
+                        if (!(p.UsageContext is BlockStatement))
+                        {
+                            throw new UsageOfVoidTypeInNonVoidContextCompilerException(functionCallStatement,
+                                functionCallStatement.Info);
+                        }
                     }
 
                     if (funcInfo is ApiFunctionInfo apiFunctionInfo)
@@ -820,6 +832,32 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                                 throw new InvalidOperationException();
                         }
                     }
+
+
+                    if (funcInfo.InlinedStatement != null && p.Context.Flags.UseInlining)
+                    {
+                        var inlined = FunctionInfo.UnWrapInlinedStatement(p.Context, p.Scope, funcInfo);
+
+                        if (inlined is EvaluationStatement evaluationStatement)
+                        {
+                            return CreateExpressionRecursive(p, evaluationStatement);
+                        }
+
+                        if (inlined is ReturnStatement returnStatement)
+                        {
+                            return CreateExpressionRecursive(p, returnStatement.Result);
+                        }
+
+                        //function calls only allowed in blocks, not in evaluation expressions.
+                        if (p.UsageContext is BlockStatement)
+                        {
+                            var transpiler = p.Context.GetTranspilerForStatement(inlined);
+                            transpiler.WriteBlock(p.Context, p.Scope, p.NonInlinePartWriter, p.MetaWriter, inlined);
+                        }
+
+                        throw new InvalidStatementStructureCompilerException(inlined, inlined.Info);
+                    }
+
 
                     var call = new StringBuilder(20); //`myfunc 0 "test"`
                     call.Append('`');

@@ -131,7 +131,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             var expressionBuilder = context.GetEvaluationTranspilerForStatement(statement);
 
-            var (dataType, expression, template) = expressionBuilder.GetInlineConditional(context, scope, metaWriter,
+            var (dataType, expression, template) = expressionBuilder.GetConditionalExpression(context, scope, metaWriter,
                 nonInlinePartWriter, ifElseStatement, statement);
 
             if (dataType != DataTypes.Boolean)

@@ -32,7 +32,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             if (result != null)
             {
                 var transpiler = context.GetEvaluationTranspilerForStatement(result);
-                var (dataType, expression, template) = transpiler.GetInline(context, scope, metaWriter, writer, null, result);
+                var (dataType, expression, template) = transpiler.GetExpression(context, scope, metaWriter, writer, null, result);
 
                 writer.Write("echo ");
                 writer.Write(expression);

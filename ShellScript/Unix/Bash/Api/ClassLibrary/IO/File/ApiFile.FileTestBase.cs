@@ -33,7 +33,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.File
                 var parameter = functionCallStatement.Parameters[0];
 
                 var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
-                var (dataType, expression, template) = transpiler.GetInline(p.Context, p.Scope, p.MetaWriter,
+                var (dataType, expression, template) = transpiler.GetExpression(p.Context, p.Scope, p.MetaWriter,
                     p.NonInlinePartWriter, null, parameter);
 
                 return (DataType, $"[ -{_testCharacter} {expression} ]", functionCallStatement);

@@ -73,7 +73,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     //becomes:
                     //myFuncResult=myFunc()
                     //x=$((34 * myFuncResult))
-                    var (dataType, expression, template) = transpiler.GetInline(context, scope, metaWriter, writer, null, def);
+                    var (dataType, expression, template) = transpiler.GetExpression(context, scope, metaWriter, writer, null, def);
 
                     if (!StatementHelpers.IsAssignableFrom(varDefStt.DataType, dataType))
                     {

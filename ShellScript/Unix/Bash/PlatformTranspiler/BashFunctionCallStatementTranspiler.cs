@@ -5,6 +5,8 @@ using ShellScript.Core.Language.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
+using ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations;
+using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
@@ -15,16 +17,23 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
         public override bool CanInline(Context context, Scope scope, IStatement statement)
         {
-            return true;
-        }
+            if (!(statement is FunctionCallStatement functionCallStatement)) throw new InvalidOperationException();
 
+            if (scope.TryGetFunctionInfo(functionCallStatement, out var funcInfo))
+            {
+                return funcInfo.DataType != DataTypes.Void;
+            }
+            
+            return false;
+        }
+        
         public override void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement statement)
         {
             if (!(statement is FunctionCallStatement functionCallStatement)) throw new InvalidOperationException();
 
-            var (dataType, exp, template) = CreateBashExpression(context, scope, metaWriter, nonInlinePartWriter, statement,
-                functionCallStatement);
+            EvaluationStatement evalStt = functionCallStatement;
+            var (dataType, exp, template) = GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evalStt);
 
             writer.Write(exp);
         }
@@ -34,85 +43,20 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is FunctionCallStatement functionCallStatement)) throw new InvalidOperationException();
 
-            if (!scope.TryGetFunctionInfo(functionCallStatement, out var funcInfo))
-            {
-                throw new IdentifierNotFoundCompilerException(functionCallStatement.FunctionName,
-                    functionCallStatement.Info);
-            }
-
-            CheckParameters(context, scope, functionCallStatement, funcInfo);
-
+            var blockUsageContext = new BlockStatement(new [] {statement}, statement.Info);
+            
             var resultVar = context.GetLastFunctionCallStorageVariable(metaWriter);
 
-            if (funcInfo.InlinedStatement != null && context.Flags.UseInlining)
+            EvaluationStatement evalStt = functionCallStatement;
+            var (dataType, exp, template) = GetExpression(context, scope, metaWriter, writer, blockUsageContext, evalStt);
+
+            if (dataType == DataTypes.Void && !(template is FunctionCallStatement))
             {
-                var inlined = FunctionInfo.UnWrapInlinedStatement(context, scope, funcInfo);
-                var transpiler = context.GetTranspilerForStatement(inlined);
-                transpiler.WriteBlock(context, scope, writer, metaWriter, inlined);
+                writer.WriteLine(exp);
             }
             else
             {
-                var paramExp = new StringBuilder();
-
-                foreach (var stt in functionCallStatement.Parameters)
-                {
-                    paramExp.Append(' ');
-
-                    var transpiler = context.GetEvaluationTranspilerForStatement(stt);
-                    var (dataType, expression, template) =
-                        transpiler.GetInline(context, scope, metaWriter, writer, functionCallStatement, stt);
-
-                    paramExp.Append(expression);
-                }
-
-                writer.Write($"{resultVar}=`{funcInfo.Name}");
-                writer.Write(paramExp);
-                writer.WriteLine('`');
-            }
-        }
-
-        public static void CheckParameters(Context context, Scope scope, FunctionCallStatement functionCallStatement,
-            FunctionInfo funcInfo)
-        {
-            if (funcInfo.IsParams || funcInfo.ByPassParameterValidation)
-                return;
-
-            var funcInfoParameters = funcInfo.Parameters;
-            var funcCallParameters = functionCallStatement.Parameters;
-
-            var funcInfoParametersCount = funcInfoParameters?.Length ?? 0;
-            var funcCallParametersCount = funcCallParameters?.Length ?? 0;
-
-            if (funcInfoParametersCount != funcCallParametersCount)
-            {
-                throw new MethodParameterMismatchCompilerException(functionCallStatement.FunctionName,
-                    functionCallStatement.Info);
-            }
-
-            if (funcCallParametersCount == 0)
-            {
-                return;
-            }
-
-            for (var i = 0; i < funcInfo.Parameters.Length; i++)
-            {
-                var schema = funcInfo.Parameters[i];
-                if (schema == null) continue;
-                var passed = functionCallStatement.Parameters[i];
-
-                var dataType = passed.GetDataType(context, scope);
-
-                if (dataType != schema.DataType)
-                {
-                    if ((schema.DataType == DataTypes.Numeric || schema.DataType == DataTypes.Float) &&
-                        dataType == DataTypes.Decimal)
-                    {
-                        continue;
-                    }
-
-                    throw new MethodParameterMismatchCompilerException(functionCallStatement.FunctionName,
-                        functionCallStatement.Info);
-                }
+                writer.WriteLine($"{resultVar}={exp}");
             }
         }
     }

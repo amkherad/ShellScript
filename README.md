@@ -8,7 +8,7 @@
 Cross-platform intermediate shell scripting language.  
 A transpiler to generate native OS shell commands from a shared code base with a powerfull class library and rich language features.
 
-Learning all of the shell scripting languages with all those details could be so fraustating and it can be forgotten so easily due to tons of details and special cases, the idea of ShellScript is to create an intermediate language that can be transpiled (source to source compilation) into any shell language with use of paltform-dependent utilities.
+Learning all of the shell scripting languages with all those details could be so frustrating and it can be forgotten so easily due to tons of details and special cases, the idea of ShellScript is to create an intermediate language that can be transpiled (source to source compilation) into any shell language with use of paltform-dependent utilities.
 
 ## Installing
 

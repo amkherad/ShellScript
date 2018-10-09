@@ -32,7 +32,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
 
             private IDictionary<string, string> _absUtilityExpressions = new Dictionary<string, string>
             {
-                {AwkUtilityName, "awk \"BEGIN {if ($1 < 0) { print -($1) } else { print $1 }}\""},
+                {AwkUtilityName, "awk \"BEGIN {if ($1 < 0) { print (-($1)) } else { print ($1) }}\""},
                 {BcUtilityName, "echo \"define abs(i) { if (i < 0) return (-i) return (i) } abs($1)\" | bc"},
             };
 

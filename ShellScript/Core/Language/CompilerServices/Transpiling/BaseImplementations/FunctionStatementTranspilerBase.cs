@@ -1,7 +1,10 @@
 using System;
+using System.IO;
 using System.Linq;
+using System.Text;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations

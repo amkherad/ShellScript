@@ -12,6 +12,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         public TextWriter MetaWriter { get; }
         public TextWriter NonInlinePartWriter { get; }
 
+        public bool FormatString { get; set; } = true;
+        
         [CanBeNull]
         public IStatement UsageContext { get; }
 
