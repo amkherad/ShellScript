@@ -1,18 +1,14 @@
-using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
 
 namespace ShellScript.Core.Language.Library
 {
     public class ApiMethodBuilderRawResult : IApiMethodBuilderResult
     {
-        public DataTypes DataType { get; }
-        public string Expression { get; }
-        public EvaluationStatement Template { get; }
+        public ExpressionResult Result { get; }
 
-        public ApiMethodBuilderRawResult(DataTypes dataType, string expression, EvaluationStatement template)
+        public ApiMethodBuilderRawResult(ExpressionResult result)
         {
-            DataType = dataType;
-            Expression = expression;
-            Template = template;
+            Result = result;
         }
     }
 }

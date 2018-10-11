@@ -1,8 +1,6 @@
 using System.IO;
-using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Statements.Operators;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 
@@ -13,15 +11,30 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         public new static BashStringConcatenationExpressionBuilder Instance { get; } =
             new BashStringConcatenationExpressionBuilder();
 
-        public override string FormatSubExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
-            EvaluationStatement template)
+        public override string FormatSubExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            if (dataType == DataTypes.String)
+            if (result.DataType == DataTypes.String)
             {
-                return expression;
+                return result.Expression;
             }
 
-            return base.FormatSubExpression(p, dataType, expression, template);
+            return base.FormatSubExpression(p, result);
+        }
+
+        public override string FormatConstantExpression(ExpressionBuilderParams p, ExpressionResult result)
+        {
+            if (result.Template is ConstantValueStatement constantValueStatement)
+            {
+                if (constantValueStatement.IsString())
+                {
+                    if (p.FormatString)
+                        return BashTranspilerHelpers.ToBashString(constantValueStatement.Value, true, false);
+                    
+                    return base.FormatConstantExpression(p, result);
+                }
+            }
+
+            return base.FormatConstantExpression(p, result);
         }
 
         public override string FormatConstantExpression(ExpressionBuilderParams p, string expression,
@@ -33,6 +46,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 {
                     if (p.FormatString)
                         return BashTranspilerHelpers.ToBashString(constantValueStatement.Value, true, false);
+                    
                     return base.FormatConstantExpression(p, expression, template);
                 }
             }
@@ -40,7 +54,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return base.FormatConstantExpression(p, expression, template);
         }
 
-        protected override (DataTypes, string, EvaluationStatement) CreateExpressionRecursive(ExpressionBuilderParams p,
+        protected override ExpressionResult CreateExpressionRecursive(ExpressionBuilderParams p,
             EvaluationStatement statement)
         {
             switch (statement)
@@ -49,7 +63,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 {
                     if (constantValueStatement.IsString())
                     {
-                        return (
+                        return new ExpressionResult(
                             DataTypes.String,
                             p.FormatString
                                 ? BashTranspilerHelpers.ToBashString(constantValueStatement.Value, true, false)
@@ -58,7 +72,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                         );
                     }
 
-                    return (constantValueStatement.DataType, constantValueStatement.Value, constantValueStatement);
+                    return new ExpressionResult(
+                        constantValueStatement.DataType,
+                        constantValueStatement.Value,
+                        constantValueStatement
+                    );
                 }
                 case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
                 {
@@ -68,34 +86,35 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                         {
                             using (var nonInlinePartWriterPinned = new StringWriter())
                             {
-                                var left = arithmeticEvaluationStatement.Left;
-                                var right = arithmeticEvaluationStatement.Right;
-
                                 var np = new ExpressionBuilderParams(p, nonInlinePartWriterPinned);
 
-                                var (leftDataType, leftExp, leftTemplate) = CreateExpressionRecursive(np, left);
-                                var (rightDataType, rightExp, rightTemplate) = CreateExpressionRecursive(np, right);
+                                var leftResult = CreateExpressionRecursive(np, arithmeticEvaluationStatement.Left);
+                                var rightResult = CreateExpressionRecursive(np, arithmeticEvaluationStatement.Right);
 
-                                if (leftDataType.IsString() || rightDataType.IsString())
+                                if (leftResult.DataType.IsString() || rightResult.DataType.IsString())
                                 {
-                                    if (leftTemplate is VariableAccessStatement)
+                                    var leftExp = leftResult.Expression;
+                                    var rightExp = rightResult.Expression;
+                                    
+                                    if (leftResult.Template is VariableAccessStatement)
                                     {
                                         leftExp = FormatStringConcatenationVariableAccess(leftExp);
                                     }
 
-                                    if (rightTemplate is VariableAccessStatement)
+                                    if (rightResult.Template is VariableAccessStatement)
                                     {
                                         rightExp = FormatStringConcatenationVariableAccess(rightExp);
                                     }
 
 
-                                    if (leftDataType != DataTypes.String && !(leftTemplate is VariableAccessStatement))
+                                    if (leftResult.DataType != DataTypes.String &&
+                                        !(leftResult.Template is VariableAccessStatement))
                                     {
                                         leftExp = $"$(({leftExp}))";
                                     }
 
-                                    if (rightDataType != DataTypes.String &&
-                                        !(rightTemplate is VariableAccessStatement))
+                                    if (rightResult.DataType != DataTypes.String &&
+                                        !(rightResult.Template is VariableAccessStatement))
                                     {
                                         rightExp = $"$(({rightExp}))";
                                     }
@@ -105,16 +124,16 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                     p.NonInlinePartWriter.Write(nonInlinePartWriterPinned);
 
                                     var newTemp = new ArithmeticEvaluationStatement(
-                                        leftTemplate,
+                                        leftResult.Template,
                                         arithmeticEvaluationStatement.Operator,
-                                        rightTemplate,
+                                        rightResult.Template,
                                         arithmeticEvaluationStatement.Info
                                     );
 
-                                    leftTemplate.ParentStatement = newTemp;
-                                    rightTemplate.ParentStatement = newTemp;
+                                    leftResult.Template.ParentStatement = newTemp;
+                                    rightResult.Template.ParentStatement = newTemp;
 
-                                    return (
+                                    return new ExpressionResult(
                                         DataTypes.String,
                                         concatExp,
                                         newTemp

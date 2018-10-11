@@ -38,7 +38,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         {
             {typeof(ConstantValueStatement), typeof(EvaluationStatement)},
             {typeof(ArithmeticEvaluationStatement), typeof(EvaluationStatement)},
-            {typeof(AssignmentStatement), typeof(EvaluationStatement)},
+            //{typeof(AssignmentStatement), typeof(EvaluationStatement)},
             {typeof(BitwiseEvaluationStatement), typeof(EvaluationStatement)},
             {typeof(DecrementStatement), typeof(EvaluationStatement)},
             //{typeof(DoWhileStatement), typeof(ConditionalBlockStatement)},

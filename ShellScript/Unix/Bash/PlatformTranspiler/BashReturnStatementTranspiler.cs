@@ -27,15 +27,15 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is ReturnStatement returnStatement)) throw new InvalidOperationException();
 
-            var result = returnStatement.Result;
+            var returnResult = returnStatement.Result;
 
-            if (result != null)
+            if (returnResult != null)
             {
-                var transpiler = context.GetEvaluationTranspilerForStatement(result);
-                var (dataType, expression, template) = transpiler.GetExpression(context, scope, metaWriter, writer, null, result);
+                var transpiler = context.GetEvaluationTranspilerForStatement(returnResult);
+                var result = transpiler.GetExpression(context, scope, metaWriter, writer, null, returnResult);
 
                 writer.Write("echo ");
-                writer.Write(expression);
+                writer.Write(result.Expression);
                 writer.WriteLine();
             }
 

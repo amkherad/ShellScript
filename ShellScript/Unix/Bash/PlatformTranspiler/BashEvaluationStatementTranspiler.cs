@@ -16,7 +16,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
     public class BashEvaluationStatementTranspiler : EvaluationStatementTranspilerBase
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (DataTypes, string, EvaluationStatement) CreateBashExpression(ExpressionBuilderParams p,
+        public static ExpressionResult CreateBashExpression(ExpressionBuilderParams p,
             EvaluationStatement evalStt)
         {
             evalStt = ProcessEvaluation(p.Context, p.Scope, evalStt);
@@ -31,7 +31,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (DataTypes, string, EvaluationStatement) CreateBashConditionalExpression(
+        public static ExpressionResult CreateBashConditionalExpression(
             ExpressionBuilderParams p, EvaluationStatement evalStt)
         {
             evalStt = ProcessEvaluation(p.Context, p.Scope, evalStt);
@@ -102,26 +102,26 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             var parameters = new ExpressionBuilderParams(context, scope, metaWriter, pinCodeWriter, null);
 
-            var (dataType, expression, template) = expressionBuilder.CreateExpression(parameters, statement);
+            var result = expressionBuilder.CreateExpression(parameters, statement);
 
-            return expressionBuilder.PinExpressionToVariable(parameters, dataType, null, expression, statement);
+            return expressionBuilder.PinExpressionToVariable(parameters, null, result);
         }
 
-        public override (DataTypes, string, EvaluationStatement) GetExpression(ExpressionBuilderParams p,
+        public override ExpressionResult GetExpression(ExpressionBuilderParams p,
             EvaluationStatement statement) =>
             CreateBashExpression(p, statement);
 
-        public override (DataTypes, string, EvaluationStatement) GetExpression(Context context, Scope scope,
+        public override ExpressionResult GetExpression(Context context, Scope scope,
             TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext,
             EvaluationStatement statement) =>
             CreateBashExpression(
                 new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter, usageContext), statement);
 
-        public override (DataTypes, string, EvaluationStatement) GetConditionalExpression(ExpressionBuilderParams p,
+        public override ExpressionResult GetConditionalExpression(ExpressionBuilderParams p,
             EvaluationStatement statement) =>
             CreateBashConditionalExpression(p, statement);
 
-        public override (DataTypes, string, EvaluationStatement) GetConditionalExpression(Context context, Scope scope,
+        public override ExpressionResult GetConditionalExpression(Context context, Scope scope,
             TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext,
             EvaluationStatement statement) =>
             CreateBashConditionalExpression(

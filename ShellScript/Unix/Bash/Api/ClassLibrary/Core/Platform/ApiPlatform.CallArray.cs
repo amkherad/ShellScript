@@ -13,7 +13,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
             public override string Summary { get; }
             public override DataTypes DataType => DataTypes.Decimal;
 
-            
+
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
@@ -22,11 +22,14 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
                 var parameter = functionCallStatement.Parameters[0];
 
                 var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
-                var (dataType, exp, template) = transpiler.GetExpression(p.Context, p.Scope, p.MetaWriter,
-                    p.NonInlinePartWriter, p.UsageContext, parameter);
+                var result = transpiler.GetExpression(p.Context, p.Scope, p.MetaWriter, p.NonInlinePartWriter,
+                    p.UsageContext, parameter);
 
-                return new ApiMethodBuilderRawResult(dataType,
-                    $"`awk \"BEGIN {exp}\"`", template);
+                return new ApiMethodBuilderRawResult(new ExpressionResult(
+                    DataType,
+                    $"`awk \"BEGIN {result.Expression}\"`",
+                    result.Template
+                ));
             }
         }
     }

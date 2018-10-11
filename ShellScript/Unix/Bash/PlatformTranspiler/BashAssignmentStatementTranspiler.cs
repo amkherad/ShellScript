@@ -3,11 +3,10 @@ using System.IO;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
-using ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
-    public class BashAssignmentStatementTranspiler : StatementTranspilerBase
+    public class BashAssignmentStatementTranspiler : BashEvaluationStatementTranspiler
     {
         public override Type StatementType => typeof(AssignmentStatement);
 
@@ -57,25 +56,25 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     assignmentStatement.LeftSide.Info);
             }
 
-            var evaluation = assignmentStatement.RightSide as EvaluationStatement;
+            var evaluation = assignmentStatement.RightSide;
             if (evaluation == null)
             {
                 throw new InvalidStatementStructureCompilerException(
                     "Unknown right side of an assignment found.", assignmentStatement.RightSide.Info);
             }
 
-            if (!scope.TryGetVariableInfo(target.VariableName, out var varInfo))
+            if (!scope.TryGetVariableInfo(target, out var varInfo))
             {
-                throw new IdentifierNotFoundCompilerException(target.VariableName, target.Info);
+                throw new IdentifierNotFoundCompilerException(target);
             }
 
             var transpiler = context.GetEvaluationTranspilerForStatement(evaluation);
 
-            var (dataType, expression, template) =
+            var result =
                 transpiler.GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
 
             writer.Write($"{varInfo.AccessName}=");
-            writer.Write(expression);
+            writer.Write(result.Expression);
         }
     }
 }

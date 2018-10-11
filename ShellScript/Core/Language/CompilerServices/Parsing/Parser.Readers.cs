@@ -469,7 +469,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     }
                     case TokenType.Reminder:
                     {
-                        statements.AddLast(new ReminderOperator(CreateStatementInfo(info, token)));
+                        statements.AddLast(new ModulusOperator(CreateStatementInfo(info, token)));
                         break;
                     }
 

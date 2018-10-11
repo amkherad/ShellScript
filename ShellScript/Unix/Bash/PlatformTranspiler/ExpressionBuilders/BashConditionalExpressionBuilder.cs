@@ -12,43 +12,40 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         public new static BashConditionalExpressionBuilder Instance { get; } = new BashConditionalExpressionBuilder();
 
 
-        public override string FormatExpression(ExpressionBuilderParams p, string expression,
-            EvaluationStatement template)
+        public override string FormatExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            if (template is LogicalEvaluationStatement)
+            if (result.DataType.IsBoolean() || result.Template is LogicalEvaluationStatement)
             {
-                if (expression[0] != '[' && expression[expression.Length - 1] != ']')
+                if (result.Expression[0] != '[' && result.Expression[result.Expression.Length - 1] != ']')
                 {
-                    return $"[ {expression} ]";
+                    return $"[ {result.Expression} ]";
                 }
             }
 
-            return base.FormatExpression(p, expression, template);
+            return base.FormatExpression(p, result);
         }
 
-        public override string FormatExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
-            EvaluationStatement template)
+
+        public override string FormatSubExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            if (dataType.IsBoolean() || template is LogicalEvaluationStatement)
+            if (result.Template is LogicalEvaluationStatement)
             {
-                if (expression[0] != '[' && expression[expression.Length - 1] != ']')
-                {
-                    return $"[ {expression} ]";
-                }
+                return result.Expression;
             }
 
-            return base.FormatExpression(p, dataType, expression, template);
+            return base.FormatSubExpression(p, result);
         }
 
-        public override string FormatSubExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
+
+        public override string FormatLogicalExpression(ExpressionBuilderParams p, ExpressionResult left, IOperator op,
+            ExpressionResult right,
             EvaluationStatement template)
         {
-            if (template is LogicalEvaluationStatement)
-            {
-                return expression;
-            }
-
-            return base.FormatSubExpression(p, dataType, expression, template);
+            return FormatLogicalExpression(p,
+                left.DataType, left.Expression,
+                op,
+                right.DataType, right.Expression,
+                template);
         }
 
         public override string FormatLogicalExpression(ExpressionBuilderParams p,
@@ -148,16 +145,16 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return $"$(({exp}))";
         }
 
-        public override (DataTypes, string, EvaluationStatement) CreateExpression(ExpressionBuilderParams p,
+        public override ExpressionResult CreateExpression(ExpressionBuilderParams p,
             EvaluationStatement statement)
         {
-            var (dataType, exp, template) = base.CreateExpression(p, statement);
-            if (dataType != DataTypes.Boolean)
+            var result = base.CreateExpression(p, statement);
+            if (result.DataType != DataTypes.Boolean)
             {
-                throw new TypeMismatchCompilerException(dataType, DataTypes.Boolean, statement.Info);
+                throw new TypeMismatchCompilerException(result.DataType, DataTypes.Boolean, statement.Info);
             }
 
-            return (dataType, exp, template);
+            return result;
         }
     }
 }

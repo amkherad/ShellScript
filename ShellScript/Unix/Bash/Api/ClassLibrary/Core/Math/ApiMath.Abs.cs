@@ -15,13 +15,10 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
         {
             private const string ApiMathAbsBashMethodName = "Abs_Bash";
 
-            public override string Name => "Abs";
+            public override string Name => nameof(Abs);
             public override string Summary => "Returns the absolute value of the number.";
             public override string ClassName => ClassAccessName;
             public override DataTypes DataType => DataTypes.Numeric;
-
-            public override bool IsStatic => true;
-            public override bool AllowDynamicParams => false;
 
             public override FunctionParameterDefinitionStatement[] Parameters { get; } =
             {
@@ -58,11 +55,15 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                     }
                     case VariableAccessStatement variableAccessStatement:
                     {
-                        if (p.Scope.TryGetVariableInfo(variableAccessStatement.VariableName, out var varInfo))
+                        if (p.Scope.TryGetVariableInfo(variableAccessStatement, out var varInfo))
                         {
                             if (varInfo.DataType.IsDecimal())
                             {
-                                return new ApiMethodBuilderRawResult(varInfo.DataType, $"${{{varInfo.AccessName}#-}}", variableAccessStatement);
+                                return new ApiMethodBuilderRawResult(new ExpressionResult(
+                                    varInfo.DataType,
+                                    $"${{{varInfo.AccessName}#-}}",
+                                    variableAccessStatement
+                                ));
                             }
 
                             return CreateNativeMethodWithUtilityExpressionSelector(this, p, _absFunctionInfo,
@@ -70,7 +71,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                                 functionCallStatement.Info);
                         }
 
-                        if (p.Scope.TryGetConstantInfo(variableAccessStatement.VariableName, out var constInfo))
+                        if (p.Scope.TryGetConstantInfo(variableAccessStatement, out var constInfo))
                         {
                             return InlineConstant(constInfo.DataType, constInfo.Value, variableAccessStatement);
                         }

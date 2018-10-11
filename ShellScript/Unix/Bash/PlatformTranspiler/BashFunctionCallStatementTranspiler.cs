@@ -33,9 +33,9 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             if (!(statement is FunctionCallStatement functionCallStatement)) throw new InvalidOperationException();
 
             EvaluationStatement evalStt = functionCallStatement;
-            var (dataType, exp, template) = GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evalStt);
+            var result = GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evalStt);
 
-            writer.Write(exp);
+            writer.Write(result.Expression);
         }
 
         public override void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
@@ -48,15 +48,15 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             var resultVar = context.GetLastFunctionCallStorageVariable(metaWriter);
 
             EvaluationStatement evalStt = functionCallStatement;
-            var (dataType, exp, template) = GetExpression(context, scope, metaWriter, writer, blockUsageContext, evalStt);
+            var result = GetExpression(context, scope, metaWriter, writer, blockUsageContext, evalStt);
 
-            if (dataType == DataTypes.Void && !(template is FunctionCallStatement))
+            if (result.DataType == DataTypes.Void && !(result.Template is FunctionCallStatement))
             {
-                writer.WriteLine(exp);
+                writer.WriteLine(result.Expression);
             }
             else
             {
-                writer.WriteLine($"{resultVar}={exp}");
+                writer.WriteLine($"{resultVar}={result.Expression}");
             }
         }
     }

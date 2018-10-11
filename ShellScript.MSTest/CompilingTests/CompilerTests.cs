@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -34,6 +35,23 @@ namespace ShellScript.MSTest.CompilingTests
             GC.KeepAlive(result);
         }
 
+        class XXX
+        {
+            public IEnumerator<string> GetEnumerator()
+            {
+                return new List<string>().GetEnumerator();
+            }
+        }
+
+        public void TestXXX()
+        {
+            var x = new XXX();
+            foreach (string name in x)
+            {
+                
+            }
+        }
+
         [TestMethod]
         public void TestDecimalCalculationEvaluation()
         {
@@ -48,10 +66,10 @@ namespace ShellScript.MSTest.CompilingTests
                 var definitionStt = (DefinitionStatement) stt.First();
 
                 var transpiler = context.GetEvaluationTranspilerForStatement(definitionStt.DefaultValue);
-                var (dataType, exp, template) = transpiler.GetExpression(context, context.GeneralScope, metaWriter,
+                var result = transpiler.GetExpression(context, context.GeneralScope, metaWriter,
                     codeWriter, definitionStt, definitionStt.DefaultValue);
 
-                Assert.AreEqual("4", exp);
+                Assert.AreEqual("4", result.Expression);
             }
         }
 
@@ -69,10 +87,10 @@ namespace ShellScript.MSTest.CompilingTests
                 var definitionStt = (DefinitionStatement) stt.First();
 
                 var transpiler = context.GetEvaluationTranspilerForStatement(definitionStt.DefaultValue);
-                var (dataType, exp, template) = transpiler.GetExpression(context, context.GeneralScope, metaWriter,
+                var result = transpiler.GetExpression(context, context.GeneralScope, metaWriter,
                     codeWriter, definitionStt, definitionStt.DefaultValue);
 
-                Assert.AreEqual("true", exp);
+                Assert.AreEqual("true", result.Expression);
             }
         }
     }

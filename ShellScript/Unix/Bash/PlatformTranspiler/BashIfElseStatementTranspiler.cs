@@ -131,15 +131,15 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             var expressionBuilder = context.GetEvaluationTranspilerForStatement(statement);
 
-            var (dataType, expression, template) = expressionBuilder.GetConditionalExpression(context, scope, metaWriter,
-                nonInlinePartWriter, ifElseStatement, statement);
+            var result = expressionBuilder.GetConditionalExpression(context, scope, metaWriter, nonInlinePartWriter,
+                ifElseStatement, statement);
 
-            if (dataType != DataTypes.Boolean)
+            if (result.DataType != DataTypes.Boolean)
             {
                 throw new InvalidStatementStructureCompilerException(statement, statement.Info);
             }
 
-            writer.Write(expression);
+            writer.Write(result.Expression);
         }
     }
 }

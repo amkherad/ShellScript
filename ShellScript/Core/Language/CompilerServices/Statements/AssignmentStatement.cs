@@ -5,11 +5,11 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public override bool CanBeEmbedded => false;
         public override StatementInfo Info { get; }
 
-        public IStatement LeftSide { get; }
-        public IStatement RightSide { get; }
+        public EvaluationStatement LeftSide { get; }
+        public EvaluationStatement RightSide { get; }
 
 
-        public AssignmentStatement(IStatement leftSide, IStatement rightSide,
+        public AssignmentStatement(EvaluationStatement leftSide, EvaluationStatement rightSide,
             StatementInfo info)
         {
             LeftSide = leftSide;

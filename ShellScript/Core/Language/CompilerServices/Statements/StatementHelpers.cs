@@ -10,6 +10,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     public static class StatementHelpers
     {
+        public static readonly IStatement[] EmptyStatements = new IStatement[0];
+        
         public static IStatement[] CreateChildren(params IStatement[] children)
         {
             var result = new List<IStatement>(children.Length);
@@ -149,7 +151,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                 }
                 case VariableAccessStatement variableAccessStatement:
                 {
-                    if (scope.TryGetVariableInfo(variableAccessStatement.VariableName, out VariableInfo varInfo))
+                    if (scope.TryGetVariableInfo(variableAccessStatement, out VariableInfo varInfo))
                     {
                         types.Add(varInfo.DataType);
                     }
@@ -259,7 +261,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                 }
                 case VariableAccessStatement variableAccessStatement:
                 {
-                    if (!scope.TryGetVariableInfo(variableAccessStatement.VariableName, out var variableInfo))
+                    if (!scope.TryGetVariableInfo(variableAccessStatement, out var variableInfo))
                     {
                         throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
                             variableAccessStatement.Info);
@@ -318,7 +320,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                         case SubtractionOperator _:
                         case MultiplicationOperator _:
                         case DivisionOperator _:
-                        case ReminderOperator _:
+                        //case ReminderOperator _:
                         case ModulusOperator _:
                         {
                             return OperateDataTypes(

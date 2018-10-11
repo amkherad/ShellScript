@@ -26,6 +26,34 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override bool ShouldBePinnedToFloatingPointVariable(
             ExpressionBuilderParams p, EvaluationStatement template,
+            ExpressionResult left, ExpressionResult right)
+        {
+            if (left.DataType.IsNumericOrFloat() || right.DataType.IsNumericOrFloat())
+            {
+                if (template is LogicalEvaluationStatement)
+                    return true;
+
+                var parent = template.ParentStatement;
+
+                if (parent is VariableDefinitionStatement)
+                    return false;
+
+                if (parent is ArithmeticEvaluationStatement arithmeticEvaluationStatement &&
+                    arithmeticEvaluationStatement.Operator is AdditionOperator)
+                    return arithmeticEvaluationStatement.Left.GetDataType(p.Context, p.Scope).IsString() ||
+                           arithmeticEvaluationStatement.Right.GetDataType(p.Context, p.Scope).IsString();
+
+                if (parent is FunctionCallStatement)
+                    return true;
+
+                return !(parent is EvaluationStatement);
+            }
+
+            return false;
+        }
+
+        public override bool ShouldBePinnedToFloatingPointVariable(
+            ExpressionBuilderParams p, EvaluationStatement template,
             DataTypes left, EvaluationStatement leftTemplate, DataTypes right, EvaluationStatement rightTemplate)
         {
             if (left.IsNumericOrFloat() || right.IsNumericOrFloat())
@@ -59,88 +87,59 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return expression; //$"{expression}";
         }
 
-        public override string FormatFunctionCallParameterSubExpression(ExpressionBuilderParams p, DataTypes dataType,
-            string expression, EvaluationStatement template)
+        public override string FormatFunctionCallParameterSubExpression(ExpressionBuilderParams p,
+            ExpressionResult result)
         {
-            if (template is ConstantValueStatement)
-                return expression;
-            if (template is VariableAccessStatement)
-                return expression;
-            if (template is FunctionCallStatement)
-                return expression;
+            if (result.Template is ConstantValueStatement)
+                return result.Expression;
+            if (result.Template is VariableAccessStatement)
+                return result.Expression;
+            if (result.Template is FunctionCallStatement)
+                return result.Expression;
 
-            if (dataType.IsNumericOrFloat())
+            if (result.DataType.IsNumericOrFloat())
             {
-                return expression;
+                return result.Expression;
             }
 
-            return $"$(({expression}))";
+            return $"$(({result.Expression}))";
         }
 
-        public override string FormatExpression(ExpressionBuilderParams p, string expression,
-            EvaluationStatement template)
+        public override string FormatExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            if (template is ConstantValueStatement constantValueStatement)
+            if (result.Template is ConstantValueStatement)
             {
-                if (constantValueStatement.IsString())
+                if (result.DataType.IsString())
                 {
                     if (p.FormatString)
-                        return $"\"{expression}\"";
-                    return expression;
+                        return $"\"{result.Expression}\"";
+                    return result.Expression;
                 }
 
-                return expression;
+                return result.Expression;
             }
 
-            if (template is VariableAccessStatement)
-                return expression;
-            if (template is FunctionCallStatement)
-                return expression;
+            if (result.Template is VariableAccessStatement)
+                return result.Expression;
+            if (result.Template is FunctionCallStatement)
+                return result.Expression;
 
-            if (template.GetDataType(p.Context, p.Scope).IsNumericOrFloat())
+            if (result.DataType.IsNumericOrFloat())
             {
-                if (expression.Contains("\""))
+                string expression;
+                if (result.Expression.Contains("\""))
                 {
-                    expression = expression.Replace('"', '\'');
+                    expression = result.Expression.Replace('"', '\'');
+                }
+                else
+                {
+                    expression = result.Expression;
                 }
 
                 return $"`awk \"BEGIN {{print ({expression})}}\"`";
             }
 
-            return base.FormatExpression(p, expression, template);
-        }
-
-        public override string FormatExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
-            EvaluationStatement template)
-        {
-            if (template is ConstantValueStatement)
-            {
-                if (dataType.IsString())
-                {
-                    if (p.FormatString)
-                        return $"\"{expression}\"";
-                    return expression;
-                }
-
-                return expression;
-            }
-
-            if (template is VariableAccessStatement)
-                return expression;
-            if (template is FunctionCallStatement)
-                return expression;
-
-            if (dataType.IsNumericOrFloat())
-            {
-                if (expression.Contains("\""))
-                {
-                    expression = expression.Replace('"', '\'');
-                }
-
-                return $"`awk \"BEGIN {{print ({expression})}}\"`";
-            }
-
-            return base.FormatExpression(p, dataType, expression, template);
+            return base.FormatExpression(p, result);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,6 +147,28 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             EvaluationStatement template)
         {
             return '$' + expression;
+        }
+
+
+        public override string PinExpressionToVariable(ExpressionBuilderParams p, string nameHint,
+            ExpressionResult result)
+        {
+            var variableName = p.Scope.NewHelperVariable(result.DataType, nameHint);
+
+            var expression = $"${{{result.Expression}}}";
+
+            BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(
+                p.Context,
+                p.Scope,
+                p.NonInlinePartWriter,
+                variableName,
+                expression
+            );
+
+            return FormatVariableAccessExpression(p,
+                variableName,
+                result.Template
+            );
         }
 
         public override string PinExpressionToVariable(
@@ -172,6 +193,27 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return FormatVariableAccessExpression(p,
                 variableName,
                 template
+            );
+        }
+
+        public override string PinFloatingPointExpressionToVariable(ExpressionBuilderParams p, string nameHint,
+            ExpressionResult result)
+        {
+            var variableName = p.Scope.NewHelperVariable(result.DataType, nameHint);
+
+            var expression = $"`awk \"BEGIN {{print ({result.Expression})}}\"`";
+
+            BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(
+                p.Context,
+                p.Scope,
+                p.NonInlinePartWriter,
+                variableName,
+                expression
+            );
+
+            return FormatVariableAccessExpression(p,
+                variableName,
+                result.Template
             );
         }
 

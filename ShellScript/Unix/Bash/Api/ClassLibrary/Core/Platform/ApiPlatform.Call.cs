@@ -31,13 +31,17 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
                 AssertParameters(functionCallStatement.Parameters);
 
                 var parameter = functionCallStatement.Parameters[0];
-                
-                p.FormatString = false;
-                
-                var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
-                var (dataType, exp, template) = transpiler.GetExpression(p, parameter);
 
-                return new ApiMethodBuilderRawResult(DataType, $"`{exp}`", template);
+                p.FormatString = false;
+
+                var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
+                var result = transpiler.GetExpression(p, parameter);
+
+                return new ApiMethodBuilderRawResult(new ExpressionResult(
+                    DataType,
+                    $"`{result.Expression}`",
+                    result.Template
+                ));
             }
         }
     }

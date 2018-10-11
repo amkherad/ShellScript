@@ -2,12 +2,12 @@ namespace ShellScript.Core.Language.CompilerServices.Statements.Operators
 {
     public class AssignmentOperator : IOperator
     {
-        public int Order { get; }
+        public int Order => 20;
         public StatementInfo Info { get; }
-        public OperatorAssociativity Associativity => OperatorAssociativity.LeftToRight;
+        public OperatorAssociativity Associativity => OperatorAssociativity.RightToLeft;
         public bool CanBeEmbedded => false;
         
-        public IStatement[] TraversableChildren => new IStatement[0];
+        public IStatement[] TraversableChildren => StatementHelpers.EmptyStatements;
         
         
         public AssignmentOperator(StatementInfo info)

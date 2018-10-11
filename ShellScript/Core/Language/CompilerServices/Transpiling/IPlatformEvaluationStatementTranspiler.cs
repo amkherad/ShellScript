@@ -10,17 +10,14 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         string PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter, TextWriter pinCodeWriter,
             EvaluationStatement statement);
 
-        (DataTypes, string, EvaluationStatement)
-            GetExpression(ExpressionBuilderParams p, EvaluationStatement statement);
+        ExpressionResult GetExpression(ExpressionBuilderParams p, EvaluationStatement statement);
 
-        (DataTypes, string, EvaluationStatement) GetExpression(Context context, Scope scope, TextWriter metaWriter,
+        ExpressionResult GetExpression(Context context, Scope scope, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
 
-        (DataTypes, string, EvaluationStatement) GetConditionalExpression(ExpressionBuilderParams p,
-            EvaluationStatement statement);
+        ExpressionResult GetConditionalExpression(ExpressionBuilderParams p, EvaluationStatement statement);
 
-        (DataTypes, string, EvaluationStatement) GetConditionalExpression(Context context, Scope scope,
-            TextWriter metaWriter,
+        ExpressionResult GetConditionalExpression(Context context, Scope scope, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
     }
 }

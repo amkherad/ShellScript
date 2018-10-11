@@ -7,6 +7,6 @@ namespace ShellScript.Core.Language.CompilerServices.Statements.Operators
         public abstract OperatorAssociativity Associativity { get; }
         public abstract int Order { get; }
         
-        public IStatement[] TraversableChildren => new IStatement[0];
+        public IStatement[] TraversableChildren => StatementHelpers.EmptyStatements;
     }
 }

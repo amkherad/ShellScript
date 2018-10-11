@@ -69,17 +69,17 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
         public abstract string PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter,
             TextWriter pinCodeWriter, EvaluationStatement statement);
 
-        public abstract (DataTypes, string, EvaluationStatement) GetExpression(ExpressionBuilderParams p,
+        public abstract ExpressionResult GetExpression(ExpressionBuilderParams p,
             EvaluationStatement statement);
 
-        public abstract (DataTypes, string, EvaluationStatement) GetExpression(Context context, Scope scope,
+        public abstract ExpressionResult GetExpression(Context context, Scope scope,
             TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext,
             EvaluationStatement statement);
 
-        public abstract (DataTypes, string, EvaluationStatement) GetConditionalExpression(ExpressionBuilderParams p,
+        public abstract ExpressionResult GetConditionalExpression(ExpressionBuilderParams p,
             EvaluationStatement statement);
 
-        public abstract (DataTypes, string, EvaluationStatement) GetConditionalExpression(Context context, Scope scope,
+        public abstract ExpressionResult GetConditionalExpression(Context context, Scope scope,
             TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext,
             EvaluationStatement statement);
 
@@ -125,12 +125,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
                 case VariableAccessStatement variableAccessStatement:
                 {
-                    if (scope.TryGetVariableInfo(variableAccessStatement.VariableName, out _))
+                    if (scope.TryGetVariableInfo(variableAccessStatement, out _))
                     {
                         return variableAccessStatement;
                     }
 
-                    if (scope.TryGetConstantInfo(variableAccessStatement.VariableName, out var constInfo))
+                    if (scope.TryGetConstantInfo(variableAccessStatement, out var constInfo))
                     {
                         return new ConstantValueStatement(constInfo.DataType, constInfo.Value,
                             variableAccessStatement.Info);
@@ -639,7 +639,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             {
                                 case VariableAccessStatement variableAccessStatement:
                                 {
-                                    if (scope.TryGetVariableInfo(variableAccessStatement.VariableName, out _))
+                                    if (scope.TryGetVariableInfo(variableAccessStatement, out _))
                                     {
                                         variableAccessStatement.ParentStatement =
                                             arithmeticEvaluationStatement.ParentStatement;
@@ -647,7 +647,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         return variableAccessStatement;
                                     }
 
-                                    if (scope.TryGetConstantInfo(variableAccessStatement.VariableName, out _))
+                                    if (scope.TryGetConstantInfo(variableAccessStatement, out _))
                                     {
                                         throw new InvalidOperatorForTypeCompilerException(
                                             InvalidOperatorForTypeCompilerException.CreateMessageForConstant(
@@ -723,7 +723,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         case MultiplicationOperator _:
                         case DivisionOperator _:
                         case ModulusOperator _:
-                        case ReminderOperator _:
+                        //case ReminderOperator _:
                         {
                             var left = ProcessEvaluation(context, scope, arithmeticEvaluationStatement.Left);
                             var right = ProcessEvaluation(context, scope, arithmeticEvaluationStatement.Right);
@@ -753,11 +753,11 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                                 resultVal = leftDecimal / rightDecimal;
                                                 break;
                                             case ModulusOperator _:
-                                                resultVal = leftDecimal / rightDecimal;
-                                                break;
-                                            case ReminderOperator _:
                                                 resultVal = leftDecimal % rightDecimal;
                                                 break;
+                                            //case ReminderOperator _:
+                                            //    resultVal = leftDecimal % rightDecimal;
+                                            //    break;
                                             default:
                                                 throw new InvalidOperationException();
                                         }
@@ -790,11 +790,11 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                                 resultVal = leftFloat / rightFloat;
                                                 break;
                                             case ModulusOperator _:
-                                                resultVal = leftFloat / rightFloat;
-                                                break;
-                                            case ReminderOperator _:
                                                 resultVal = leftFloat % rightFloat;
                                                 break;
+                                            //case ReminderOperator _:
+                                            //    resultVal = leftFloat % rightFloat;
+                                            //    break;
                                             default:
                                                 throw new InvalidOperationException();
                                         }
@@ -897,8 +897,25 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
                 case AssignmentStatement assignmentStatement:
                 {
-                    throw new NotImplementedException();
-                    break;
+                    if (!(assignmentStatement.LeftSide is VariableAccessStatement variableAccessStatement))
+                    {
+                        throw new InvalidStatementStructureCompilerException(assignmentStatement,
+                            assignmentStatement.Info);
+                    }
+
+                    if (!scope.TryGetVariableInfo(variableAccessStatement, out var varInfo))
+                    {
+                        throw new IdentifierNotFoundCompilerException(variableAccessStatement);
+                    }
+
+                    var right = ProcessEvaluation(context, scope, assignmentStatement.RightSide);
+
+                    var result = new AssignmentStatement(variableAccessStatement, right, assignmentStatement.Info);
+
+                    variableAccessStatement.ParentStatement = result;
+                    right.ParentStatement = result;
+
+                    return result;
                 }
 
                 case FunctionCallStatement functionCallStatement:

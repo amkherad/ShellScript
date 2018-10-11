@@ -73,15 +73,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     //becomes:
                     //myFuncResult=myFunc()
                     //x=$((34 * myFuncResult))
-                    var (dataType, expression, template) = transpiler.GetExpression(context, scope, metaWriter, writer, null, def);
+                    var result = transpiler.GetExpression(context, scope, metaWriter, writer, null, def);
 
-                    if (!StatementHelpers.IsAssignableFrom(varDefStt.DataType, dataType))
+                    if (!StatementHelpers.IsAssignableFrom(varDefStt.DataType, result.DataType))
                     {
-                        throw new TypeMismatchCompilerException(dataType, varDefStt.DataType,
-                            varDefStt.Info);
+                        throw new TypeMismatchCompilerException(result.DataType, varDefStt.DataType, varDefStt.Info);
                     }
                     
-                    WriteVariableDefinition(context, scope, writer, varDefStt.Name, expression);
+                    WriteVariableDefinition(context, scope, writer, varDefStt.Name, result.Expression);
                 }
                 else
                 {

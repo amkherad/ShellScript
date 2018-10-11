@@ -27,6 +27,16 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             return value.Replace(@"\r\n", @"\n");
         }
 
+        public static string GetString(string value)
+        {
+            if (value[0] == '"' && value[value.Length - 1] == '"')
+            {
+                value = value.Substring(1, value.Length - 2);
+            }
+
+            return value;//.Replace(@"\r\n", @"\n");
+        }
+
         public static string ToBashString(string value, bool dequote, bool enquote)
         {
             value = StandardizeString(value, dequote);
