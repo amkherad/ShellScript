@@ -17,6 +17,8 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
             new CallNumeric(),
             new CallString(),
             new CallArray(),
+            
+            new IsSuperUser(),
         };
     }
 }

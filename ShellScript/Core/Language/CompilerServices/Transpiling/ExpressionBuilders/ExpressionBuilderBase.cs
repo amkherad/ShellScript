@@ -177,8 +177,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string FormatVariableAccessExpression(ExpressionBuilderParams p, string expression,
-            EvaluationStatement template)
+        public virtual string FormatVariableAccessExpression(ExpressionBuilderParams p, DataTypes dataType,
+            string expression, EvaluationStatement template)
         {
             return expression;
         }
@@ -190,8 +190,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string FormatFunctionCallExpression(ExpressionBuilderParams p, string expression,
-            EvaluationStatement template)
+        public virtual string FormatFunctionCallExpression(ExpressionBuilderParams p, DataTypes dataType,
+            string expression, EvaluationStatement template)
         {
             return expression;
         }
@@ -204,6 +204,11 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                 if (constantValueStatement.IsString())
                 {
                     var value = constantValueStatement.Value;
+                    if (p.FormatString)
+                    {
+                        value = BashTranspilerHelpers.ToBashString(value, true, false);
+                    }
+
                     if (value[0] == '"' && value[value.Length - 1] == '"')
                     {
                         return value;
@@ -217,7 +222,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string FormatConstantExpression(ExpressionBuilderParams p, string expression,
+        public virtual string FormatConstantExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
             EvaluationStatement template)
         {
             if (template is ConstantValueStatement constantValueStatement)
@@ -225,6 +230,11 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                 if (constantValueStatement.IsString())
                 {
                     var value = constantValueStatement.Value;
+                    if (p.FormatString)
+                    {
+                        value = BashTranspilerHelpers.ToBashString(value, true, false);
+                    }
+                    
                     if (value[0] == '"' && value[value.Length - 1] == '"')
                     {
                         return value;
@@ -292,6 +302,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     return new ExpressionResult(
                         constantValueStatement.DataType,
                         FormatConstantExpression(p,
+                            constantValueStatement.DataType,
                             constantValueStatement.IsBoolean()
                                 ? constantValueStatement.Value.ToLower()
                                 : constantValueStatement.Value,
@@ -307,6 +318,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         return new ExpressionResult(
                             varInfo.DataType,
                             FormatVariableAccessExpression(p,
+                                varInfo.DataType,
                                 varInfo.AccessName,
                                 variableAccessStatement
                             ),
@@ -320,6 +332,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         return new ExpressionResult(
                             constInfo.DataType,
                             FormatVariableAccessExpression(p,
+                                constInfo.DataType,
                                 constInfo.AccessName,
                                 variableAccessStatement
                             ),
@@ -858,9 +871,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     var transpiler = p.Context.GetTranspilerForStatement(assignmentStatement);
                     transpiler.WriteBlock(p.Context, p.Scope, p.NonInlinePartWriter, p.MetaWriter, assignmentStatement);
 
+                    variableAccessStatement.ParentStatement = assignmentStatement.ParentStatement;
+
                     return new ExpressionResult(
                         varInfo.DataType,
-                        FormatVariableAccessExpression(p, varInfo.AccessName, variableAccessStatement),
+                        FormatVariableAccessExpression(p, varInfo.DataType, varInfo.AccessName,
+                            variableAccessStatement),
                         variableAccessStatement,
                         PinRequiredNotice
                     );
@@ -949,6 +965,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                     var callExp = FormatFunctionCallExpression(
                         p,
+                        funcInfo.DataType,
                         call.ToString(),
                         functionCallStatement
                     );
@@ -956,7 +973,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     var paramsArray = paramTemplates.ToArray();
                     var newTmp = new FunctionCallStatement(functionCallStatement.ObjectName,
                         functionCallStatement.FunctionName,
-                        functionCallStatement.DataType, paramsArray, functionCallStatement.Info);
+                        funcInfo.DataType, paramsArray, functionCallStatement.Info);
 
                     foreach (var param in paramsArray)
                     {
@@ -964,7 +981,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     }
 
                     return new ExpressionResult(
-                        functionCallStatement.DataType,
+                        funcInfo.DataType,
                         callExp,
                         newTmp
                     );

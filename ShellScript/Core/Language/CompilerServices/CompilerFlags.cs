@@ -50,6 +50,8 @@ namespace ShellScript.Core.Language.CompilerServices
         //==========================
         // Info
         //==========================
+        public bool WriteShellScriptVersion { get; set; }
+        
         public string Author { get; set; }
         public string ContactInfo { get; set; }
         public string WikiUrl { get; set; }
@@ -75,6 +77,8 @@ namespace ShellScript.Core.Language.CompilerServices
                 CommentParameterInfos = true,
                 
                 UseSegments = true,
+                
+                WriteShellScriptVersion = true,
             };
         }
     }

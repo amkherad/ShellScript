@@ -401,7 +401,7 @@ int myFunction (int param1) {
     return 10;
 }
 ```
-This code will transpile to the following script in unix bash:
+This code will transpile to the following script in unix-bash:
 ```bash
 function myFunction () {
     echo "Hello World" > /dev/tty

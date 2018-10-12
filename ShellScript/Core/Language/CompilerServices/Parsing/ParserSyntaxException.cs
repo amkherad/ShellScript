@@ -10,7 +10,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
 
         public ParserSyntaxException(string message,
             int lineNumber, int columnNumber, ParserInfo info)
-            : base($"{message} in '{info?.File}' at {lineNumber}:{columnNumber}")
+            : base($"{message} '{info}' at {lineNumber}:{columnNumber}")
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;
@@ -20,7 +20,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         public ParserSyntaxException(string message,
             int lineNumber, int columnNumber, ParserInfo info,
             Exception innerException)
-            : base($"{message} in '{info?.File}' at {lineNumber}:{columnNumber}", innerException)
+            : base($"{message} '{info}' at {lineNumber}:{columnNumber}", innerException)
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;
@@ -28,7 +28,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         }
         
         public ParserSyntaxException(int lineNumber, int columnNumber, ParserInfo info)
-            : base($"Parse exception in '{info?.File}' at {lineNumber}:{columnNumber}")
+            : base($"Parse exception '{info}' at {lineNumber}:{columnNumber}")
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;

@@ -1208,8 +1208,11 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     var elseBlock = ReadBlockStatement(token, enumerator, info);
 
                     var sttInfo = CreateStatementInfo(info, token);
-                    return new IfElseStatement(new ConditionalBlockStatement(condition, block, sttInfo),
-                        elseIfBlocks.ToArray(), elseBlock, sttInfo);
+
+                    var conditionalBlock = new ConditionalBlockStatement(condition, block, sttInfo);
+                    condition.ParentStatement = conditionalBlock;
+                    
+                    return new IfElseStatement(conditionalBlock, elseIfBlocks.ToArray(), elseBlock, sttInfo);
                 }
 
                 if (!enumerator.TryPeek(out peek) || peek.Type != TokenType.Else) //else or else if

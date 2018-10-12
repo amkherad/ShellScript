@@ -65,18 +65,18 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
         string FormatVariableAccessExpression(ExpressionBuilderParams p, ExpressionResult result);
 
-        string FormatVariableAccessExpression(ExpressionBuilderParams p, string expression,
+        string FormatVariableAccessExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
             EvaluationStatement template);
 
 
         string FormatFunctionCallExpression(ExpressionBuilderParams p, ExpressionResult result);
 
-        string FormatFunctionCallExpression(ExpressionBuilderParams p, string expression, EvaluationStatement template);
+        string FormatFunctionCallExpression(ExpressionBuilderParams p, DataTypes dataType, string expression, EvaluationStatement template);
 
 
         string FormatConstantExpression(ExpressionBuilderParams p, ExpressionResult result);
 
-        string FormatConstantExpression(ExpressionBuilderParams p, string expression, EvaluationStatement template);
+        string FormatConstantExpression(ExpressionBuilderParams p, DataTypes dataType, string expression, EvaluationStatement template);
 
 
         ExpressionResult CreateExpression(ExpressionBuilderParams p, EvaluationStatement statement);

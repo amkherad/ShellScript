@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Statements.Operators;
@@ -47,6 +48,36 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 right.DataType, right.Expression,
                 template);
         }
+
+        public override string FormatVariableAccessExpression(ExpressionBuilderParams p, ExpressionResult result)
+        {
+            if (result.DataType.IsBoolean() && result.Template.ParentStatement is ConditionalBlockStatement)
+            {
+                return _formatBoolVariable(
+                    base.FormatVariableAccessExpression(p, result)
+                    );
+            }
+
+            return base.FormatVariableAccessExpression(p, result);
+        }
+
+        public override string FormatVariableAccessExpression(ExpressionBuilderParams p, DataTypes dataType,
+            string expression, EvaluationStatement template)
+        {
+            if (dataType.IsBoolean() && template.ParentStatement is ConditionalBlockStatement)
+            {
+                return _formatBoolVariable(
+                    base.FormatVariableAccessExpression(p, dataType, expression, template)
+                    );
+            }
+
+            return base.FormatVariableAccessExpression(p, dataType, expression, template);
+        }
+
+//        public override string FormatLogicalExpression(ExpressionBuilderParams p, ExpressionResult result)
+//        {
+//            return base.FormatLogicalExpression(p, result);
+//        }
 
         public override string FormatLogicalExpression(ExpressionBuilderParams p,
             DataTypes leftDataType, string left, IOperator op, DataTypes rightDataType, string right,
@@ -110,19 +141,25 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return $"{left} {opStr} {right}";
         }
 
-        private string _createBoolExpression(DataTypes dataType, string exp, IStatement statement)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string _formatBoolVariable(string exp)
         {
-            if (statement is ConstantValueStatement _)
+            return $"[ {exp} -ne 0 ]";
+        }
+
+        private string _createBoolExpression(DataTypes dataType, string exp, IStatement template)
+        {
+            if (template is ConstantValueStatement _)
             {
                 return exp;
             }
 
-            if (statement is VariableAccessStatement _)
+            if (template is VariableAccessStatement _)
             {
-                return $"[ {exp} -ne 0 ]";
+                return _formatBoolVariable(exp);
             }
 
-            if (statement is LogicalEvaluationStatement)
+            if (template is LogicalEvaluationStatement)
             {
                 if (exp[0] != '[' && exp[exp.Length - 1] != ']')
                 {

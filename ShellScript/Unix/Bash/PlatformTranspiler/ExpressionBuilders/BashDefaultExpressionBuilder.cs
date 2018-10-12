@@ -81,8 +81,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         }
 
 
-        public override string FormatFunctionCallExpression(ExpressionBuilderParams p, string expression,
-            EvaluationStatement template)
+        public override string FormatFunctionCallExpression(ExpressionBuilderParams p, DataTypes dataType,
+            string expression, EvaluationStatement template)
         {
             return expression; //$"{expression}";
         }
@@ -112,7 +112,16 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 if (result.DataType.IsString())
                 {
                     if (p.FormatString)
-                        return $"\"{result.Expression}\"";
+                    {
+                        var value = result.Expression;
+                        if (value[0] == '"' && value[value.Length - 1] == '"')
+                        {
+                            return value;
+                        }
+                        
+                        return $"\"{value}\"";
+                    }
+
                     return result.Expression;
                 }
 
@@ -143,8 +152,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override string FormatVariableAccessExpression(ExpressionBuilderParams p, string expression,
-            EvaluationStatement template)
+        public override string FormatVariableAccessExpression(ExpressionBuilderParams p, DataTypes dataType,
+            string expression, EvaluationStatement template)
         {
             return '$' + expression;
         }
@@ -166,6 +175,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             );
 
             return FormatVariableAccessExpression(p,
+                result.DataType,
                 variableName,
                 result.Template
             );
@@ -173,12 +183,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override string PinExpressionToVariable(
             ExpressionBuilderParams p,
-            DataTypes dataTypes,
+            DataTypes dataType,
             string nameHint,
             string expression,
             EvaluationStatement template)
         {
-            var variableName = p.Scope.NewHelperVariable(dataTypes, nameHint);
+            var variableName = p.Scope.NewHelperVariable(dataType, nameHint);
 
             expression = $"${{{expression}}}";
 
@@ -191,6 +201,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             );
 
             return FormatVariableAccessExpression(p,
+                dataType,
                 variableName,
                 template
             );
@@ -212,6 +223,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             );
 
             return FormatVariableAccessExpression(p,
+                result.DataType,
                 variableName,
                 result.Template
             );
@@ -219,12 +231,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override string PinFloatingPointExpressionToVariable(
             ExpressionBuilderParams p,
-            DataTypes dataTypes,
+            DataTypes dataType,
             string nameHint,
             string expression,
             EvaluationStatement template)
         {
-            var variableName = p.Scope.NewHelperVariable(dataTypes, nameHint);
+            var variableName = p.Scope.NewHelperVariable(dataType, nameHint);
 
             expression = $"`awk \"BEGIN {{print ({expression})}}\"`";
 
@@ -237,6 +249,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             );
 
             return FormatVariableAccessExpression(p,
+                dataType,
                 variableName,
                 template
             );

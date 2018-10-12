@@ -29,22 +29,22 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
 
             token = enumerator.Current;
             if (token.Type != TokenType.OpenParenthesis)
-                throw UnexpectedToken(token, info);
-            
+                throw UnexpectedToken(token, info, true);
+
             if (!enumerator.MoveNext()) //read the first eval token
                 throw EndOfFile(token, info);
 
             token = enumerator.Current;
-            
+
             var evalStatement = Parser.ReadEvaluationStatement(token, enumerator, info);
-            
+
             if (!enumerator.MoveNext()) //read the close parenthesis
                 throw EndOfFile(token, info);
 
             token = enumerator.Current;
             if (token.Type != TokenType.CloseParenthesis)
                 throw UnexpectedToken(token, info);
- 
+
             if (parseCondition)
             {
                 try
@@ -81,17 +81,23 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
 
         private static PreProcessorException EndOfFile(Token token, ParserInfo info)
         {
-            return new PreProcessorException("");
+            return new PreProcessorException(
+                $"Unexpected end of file reached {info} at {token.LineNumber}:{token.ColumnNumber}");
         }
 
-        private static PreProcessorException UnexpectedToken(Token token, ParserInfo info)
+        private static PreProcessorException UnexpectedToken(Token token, ParserInfo info, bool isInCondition = false)
         {
-            return new PreProcessorException("");
+            if (isInCondition)
+                return new PreProcessorException(
+                    $"Unexpected token {token.Type}('{token.Value}') found (parentheses are required) {info} at {token.LineNumber}:{token.ColumnNumber}");
+            return new PreProcessorException(
+                $"Unexpected token {token.Type}('{token.Value}') found {info} at {token.LineNumber}:{token.ColumnNumber}");
         }
 
         private static PreProcessorException PreProcessorNotExited(Token token, ParserInfo info)
         {
-            return new PreProcessorException("");
+            return new PreProcessorException(
+                $"#endif does not match any corresponding #if {info} at {token.LineNumber}:{token.ColumnNumber}");
         }
 
 
@@ -193,7 +199,7 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
                                 !preProcessor.ConditionTaken);
 
                         skipToken = !condition;
-                        
+
                         if (preProcessor.ConditionTaken)
                             continue;
 
@@ -207,7 +213,7 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
                         }
 
                         skipToken = false;
-                        
+
                         if (preProcessor.ConditionTaken)
                             continue;
                     }

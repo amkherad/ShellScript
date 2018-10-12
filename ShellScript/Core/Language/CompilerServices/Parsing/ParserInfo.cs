@@ -29,5 +29,10 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             FileName = fileName;
             FilePath = filePath;
         }
+
+        public override string ToString()
+        {
+            return $"\"in {File}\"";
+        }
     }
 }

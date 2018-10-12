@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using ShellScript.Core.Language;
 using ShellScript.Core.Language.CompilerServices;
@@ -7,6 +8,8 @@ using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations;
+using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
+using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
@@ -20,6 +23,20 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 writer.WriteLine($"{name}={expression}");
             else
                 writer.WriteLine($"local {name}={expression}");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string WriteLastStatusCodeStoreVariableDefinition(Context context, Scope scope, TextWriter writer,
+            string nameHint)
+        {
+            var name = scope.NewHelperVariable(DataTypes.Decimal, nameHint);
+            
+            if (scope.IsRootScope)
+                writer.WriteLine($"{name}=$?");
+            else
+                writer.WriteLine($"local {name}=$?");
+
+            return name;
         }
 
 
@@ -79,7 +96,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     {
                         throw new TypeMismatchCompilerException(result.DataType, varDefStt.DataType, varDefStt.Info);
                     }
-                    
+
                     WriteVariableDefinition(context, scope, writer, varDefStt.Name, result.Expression);
                 }
                 else

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api.ClassLibrary.IO.File;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math;
@@ -35,6 +36,13 @@ namespace ShellScript.Unix.Bash.Api
         public UnixBashApi()
         {
             Utilities = new Dictionary<string, IThirdPartyUtility>(_utilities.ToDictionary(key => key.Name));
+        }
+
+        public override void InitializeContext(Context context)
+        {
+            base.InitializeContext(context);
+            
+            context.GeneralScope.ReserveNewVariable(DataTypes.Decimal, "?");
         }
 
         public override string Name => "Unix-Bash";

@@ -238,22 +238,22 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             return varName;
         }
 
-//        public bool TryGetVariableInfo(string variableName, out VariableInfo variableInfo)
-//        {
-//            var varInfo = new VariableInfo(variableName);
-//
-//            var that = this;
-//            do
-//            {
-//                if (that._variables.TryGetValue(varInfo, out variableInfo))
-//                {
-//                    return true;
-//                }
-//                
-//            } while ((that = that.Parent) != null);
-//
-//            return false;
-//        }
+        public bool TryGetVariableInfo(string variableName, out VariableInfo variableInfo)
+        {
+            var varInfo = new VariableInfo(variableName);
+
+            var that = this;
+            do
+            {
+                if (that._variables.TryGetValue(varInfo, out variableInfo))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
 
         public bool TryGetVariableInfo(VariableAccessStatement variableAccessStatement, out VariableInfo variableInfo)
         {

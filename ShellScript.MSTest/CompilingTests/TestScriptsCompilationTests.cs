@@ -21,6 +21,7 @@ namespace ShellScript.MSTest.CompilingTests
                 new UnixBashPlatform()
             };
             var compilerFlags = CompilerFlags.CreateDefault();
+            compilerFlags.WriteShellScriptVersion = false;
 
             string testScriptsRoot = null;
             string tempOutputRoot = null;

@@ -4,10 +4,11 @@
         <OutputType>Exe</OutputType>
         <LangVersion>7.2</LangVersion>
         <TargetFramework>netcoreapp2.1</TargetFramework>
-        <Version>0.1.1.2018</Version>
+        <Version>0.1.2.2018</Version>
     </PropertyGroup>
 
     <ItemGroup>
+      <Folder Include="Unix\Bash\Api\ClassLibrary\Core\User" />
       <Folder Include="Windows.Batch" />
     </ItemGroup>
 

@@ -10,6 +10,8 @@ namespace ShellScript.Unix.Bash
 {
     public class UnixBashPlatform : IPlatform
     {
+        public const string LastStatusCodeStoreVariableName = "?";
+        
         public string Name => "Unix-Bash";
 
         public ValueTuple<DataTypes, string, string>[] CompilerConstants { get; } =
