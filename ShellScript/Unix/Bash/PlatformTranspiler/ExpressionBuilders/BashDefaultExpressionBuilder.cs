@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Statements.Operators;
 using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
@@ -81,6 +82,40 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         }
 
 
+        public override string FormatConstantExpression(ExpressionBuilderParams p, ExpressionResult result)
+        {
+            if (result.DataType.IsBoolean() &&
+                result.Template is ConstantValueStatement constantValueStatement)
+            {
+                if (!StatementHelpers.TryParseBooleanFromString(constantValueStatement.Value, out var boolResult))
+                {
+                    throw new InvalidStatementStructureCompilerException(result.Template, result.Template.Info);
+                }
+
+                return boolResult ? "1" : "0";
+            }
+            
+            return base.FormatConstantExpression(p, result);
+        }
+
+        public override string FormatConstantExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
+            EvaluationStatement template)
+        {
+            if (dataType.IsBoolean() &&
+                template is ConstantValueStatement constantValueStatement)
+            {
+                if (!StatementHelpers.TryParseBooleanFromString(constantValueStatement.Value, out var boolResult))
+                {
+                    throw new InvalidStatementStructureCompilerException(template, template.Info);
+                }
+
+                return boolResult ? "1" : "0";
+            }
+
+            
+            return base.FormatConstantExpression(p, dataType, expression, template);
+        }
+
         public override string FormatFunctionCallExpression(ExpressionBuilderParams p, DataTypes dataType,
             string expression, EvaluationStatement template)
         {
@@ -147,8 +182,29 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
                 return $"`awk \"BEGIN {{print ({expression})}}\"`";
             }
+            
+            if (result.DataType.IsString())
+            {
+                if (p.FormatString)
+                {
+                    var value = result.Expression;
+                    if (value[0] == '"' && value[value.Length - 1] == '"')
+                    {
+                        return value;
+                    }
+                    
+                    return $"\"{value}\"";
+                }
 
-            return base.FormatExpression(p, result);
+                return result.Expression;
+            }
+            
+            return FormatEvaluationExpression(p, result);
+        }
+
+        protected virtual string FormatEvaluationExpression(ExpressionBuilderParams p, ExpressionResult result)
+        {
+            return $"$(({result.Expression}))";
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

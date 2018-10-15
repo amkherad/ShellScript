@@ -56,7 +56,16 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
             if (result.DataType.IsString())
             {
                 if (p.FormatString)
-                    return $"\"{result.Expression}\"";
+                {
+                    var value = result.Expression;
+                    if (value[0] == '"' && value[value.Length - 1] == '"')
+                    {
+                        return value;
+                    }
+                        
+                    return $"\"{value}\"";
+                }
+
                 return result.Expression;
             }
 
@@ -84,11 +93,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         }
 
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string FormatArithmeticExpression(ExpressionBuilderParams p, ExpressionResult result)
-        {
-            return result.Expression;
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatArithmeticExpression(ExpressionBuilderParams p, string expression,
@@ -115,12 +119,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string FormatBitwiseExpression(ExpressionBuilderParams p, ExpressionResult result)
-        {
-            return result.Expression;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatBitwiseExpression(ExpressionBuilderParams p, string expression,
             EvaluationStatement template)
         {
@@ -141,12 +139,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
             return $"{left.Expression} {op} {right.Expression}";
         }
 
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string FormatLogicalExpression(ExpressionBuilderParams p, ExpressionResult result)
-        {
-            return result.Expression;
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatLogicalExpression(ExpressionBuilderParams p, string expression,

@@ -26,6 +26,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return base.FormatExpression(p, result);
         }
 
+        protected override string FormatEvaluationExpression(ExpressionBuilderParams p, ExpressionResult result)
+        {
+            return result.Expression;
+        }
 
         public override string FormatSubExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
@@ -55,7 +59,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             {
                 return _formatBoolVariable(
                     base.FormatVariableAccessExpression(p, result)
-                    );
+                );
             }
 
             return base.FormatVariableAccessExpression(p, result);
@@ -68,7 +72,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             {
                 return _formatBoolVariable(
                     base.FormatVariableAccessExpression(p, dataType, expression, template)
-                    );
+                );
             }
 
             return base.FormatVariableAccessExpression(p, dataType, expression, template);
@@ -97,6 +101,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             {
                 return base.FormatLogicalExpression(p, leftDataType, left, op, rightDataType, right, template);
             }
+
+            var operatorNeedsToEvaluate = false;
 
             switch (op)
             {
@@ -132,11 +138,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 }
                 default:
                     opStr = op.ToString();
+                    operatorNeedsToEvaluate = true;
                     break;
             }
 
-            left = _createBoolExpression(leftDataType, left, logicalEvaluationStatement.Left);
-            right = _createBoolExpression(rightDataType, right, logicalEvaluationStatement.Right);
+            left = _createBoolExpression(leftDataType, left, logicalEvaluationStatement.Left, operatorNeedsToEvaluate);
+            right = _createBoolExpression(rightDataType, right, logicalEvaluationStatement.Right,
+                operatorNeedsToEvaluate);
 
             return $"{left} {opStr} {right}";
         }
@@ -147,7 +155,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return $"[ {exp} -ne 0 ]";
         }
 
-        private string _createBoolExpression(DataTypes dataType, string exp, IStatement template)
+        private string _createBoolExpression(DataTypes dataType, string exp, IStatement template,
+            bool operatorNeedsToEvaluate)
         {
             if (template is ConstantValueStatement _)
             {
@@ -156,7 +165,9 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
             if (template is VariableAccessStatement _)
             {
-                return _formatBoolVariable(exp);
+                return operatorNeedsToEvaluate
+                    ? _formatBoolVariable(exp)
+                    : exp;
             }
 
             if (template is LogicalEvaluationStatement)
@@ -177,6 +188,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 }
 
                 return exp;
+            }
+
+            if (exp[0] == '(' && exp[exp.Length - 1] == ')')
+            {
+                return $"$(({exp.Substring(1, exp.Length - 2)}))";
             }
 
             return $"$(({exp}))";
