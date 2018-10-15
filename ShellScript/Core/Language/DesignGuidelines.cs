@@ -19,7 +19,7 @@ namespace ShellScript.Core.Language
                 case DataTypes.Array:
                     return "null";
                 case DataTypes.Boolean:
-                    return "false";
+                    return "0";
                 case DataTypes.Decimal:
                 case DataTypes.Float:
                 case DataTypes.Numeric:

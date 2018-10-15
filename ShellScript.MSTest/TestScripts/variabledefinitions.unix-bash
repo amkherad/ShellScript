@@ -11,5 +11,5 @@ doubleVar=0
 doubleVarVal=0.2
 strVar=""
 strVarVal="Hello World"
-boolVar=false
-boolVarVal=true
+boolVar=0
+boolVarVal=1

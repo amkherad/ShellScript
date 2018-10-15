@@ -90,7 +90,7 @@ namespace ShellScript.MSTest.CompilingTests
                 var result = transpiler.GetExpression(context, context.GeneralScope, metaWriter,
                     codeWriter, definitionStt, definitionStt.DefaultValue);
 
-                Assert.AreEqual("true", result.Expression);
+                Assert.AreEqual("1", result.Expression);
             }
         }
     }
