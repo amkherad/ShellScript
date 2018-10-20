@@ -13,9 +13,8 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
 
         private static readonly Dictionary<TokenType, string> TokenPatterns = new Dictionary<TokenType, string>
         {
-            {TokenType.StringValue1, "^'[^']*'"},
-            {TokenType.StringValue2, "^\"[^\"]*\""},
-
+            {TokenType.StringValue1, "^(\"|\')(?:\\\\\\1|[^\\1])*?\\1"},
+            
             {TokenType.OpenParenthesis, @"^\("},
             {TokenType.CloseParenthesis, @"^\)"},
 

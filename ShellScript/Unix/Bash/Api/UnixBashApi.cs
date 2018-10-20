@@ -2,10 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.Library;
+using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Locale;
 using ShellScript.Unix.Bash.Api.ClassLibrary.IO.File;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.String;
+using ShellScript.Unix.Bash.Api.ClassLibrary.Core.User;
 using ShellScript.Unix.Utilities;
 
 namespace ShellScript.Unix.Bash.Api
@@ -21,8 +23,11 @@ namespace ShellScript.Unix.Bash.Api
             new ApiString(),
             
             new ApiPlatform(),
+            new ApiUser(),
 
             new ApiFile(),
+            
+            new ApiLocale(),
         };
 
         private IThirdPartyUtility[] _utilities =

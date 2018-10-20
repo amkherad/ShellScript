@@ -43,17 +43,27 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             if (value.Contains('"'))
             {
-                value = value.Replace("\"", "\\x22");
+                value = value.Replace("\"", "\\\"");
             }
 
-            if (value.Contains('\''))
+            if (value.Contains('\\'))
             {
-                value = value.Replace("'", "\\x27");
+                value = value.Replace("\\", "\\\\");
             }
 
-            if (value.Contains(@"\r\n"))
+            if (value.Contains('\r'))
             {
-                value = value.Replace(@"\r\n", @"\n");
+                value = value.Replace("\r", "\\r");
+            }
+
+            if (value.Contains('\n'))
+            {
+                value = value.Replace("\n", "\\n");
+            }
+
+            if (value.Contains('$'))
+            {
+                value = value.Replace("$", "\\$");
             }
 
             return enquote

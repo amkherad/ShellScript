@@ -787,7 +787,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                     HandleNotices(p, ref leftResult, ref rightResult);
 
-                    if (leftResult.DataType.IsString() || rightResult.DataType.IsString() &&
+                    if ((leftResult.DataType.IsString() || rightResult.DataType.IsString()) &&
                         !(arithmeticEvaluationStatement.Operator is AdditionOperator))
                     {
                         throw new InvalidOperatorForTypeCompilerException(

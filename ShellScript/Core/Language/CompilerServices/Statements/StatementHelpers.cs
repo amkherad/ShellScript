@@ -365,6 +365,45 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string UnEscapeString(string str)
+        {
+            if (str[0] == '"' && str[str.Length - 1] == '"')
+            {
+                str = str.Substring(1, str.Length - 2);
+            }
+            
+            if (str.Contains("\\\""))
+            {
+                str = str.Replace("\\\"", "\"");
+            }
+            
+            if (str.Contains("\\\'"))
+            {
+                str = str.Replace("\\\'", "\'");
+            }
+            
+            
+            if (str.Contains("\\r"))
+            {
+                str = str.Replace("\\r", "\r");
+            }
+
+            if (str.Contains("\\n"))
+            {
+                str = str.Replace("\\n", "\n");
+            }
+
+            if (str.Contains("\\\\"))
+            {
+                str = str.Replace("\\\\", "\\");
+            }
+            
+
+            return str;
+        }
+        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNumber(this DataTypes dataType)
         {
             return dataType == DataTypes.Decimal || dataType == DataTypes.Numeric || dataType == DataTypes.Float;

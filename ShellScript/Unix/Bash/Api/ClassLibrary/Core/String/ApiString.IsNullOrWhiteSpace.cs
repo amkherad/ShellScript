@@ -26,14 +26,6 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
                 StringParameter
             };
 
-            private FunctionInfo _functionInfo;
-
-            public IsNullOrWhiteSpace()
-            {
-                _functionInfo = new FunctionInfo(DataTypes.Numeric, ApiMathAbsBashMethodName,
-                    null, ClassAccessName, false, Parameters, null);
-            }
-
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {

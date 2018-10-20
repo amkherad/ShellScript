@@ -85,7 +85,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                         throw new InvalidOperationException();
                     }
 
-                    //it pins the non-inlinable values to a helper variable:
+                    //it pins non-inlinable values to a helper variable:
                     //int x = 34 * myFunc();
                     //becomes:
                     //myFuncResult=myFunc()

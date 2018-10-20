@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using ShellScript.Core.Language.CompilerServices;
+using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
@@ -62,6 +66,36 @@ namespace ShellScript.Core.Language.Library
 //            }
 //
 //            p.Context.GeneralScope.ReserveNewFunction(functionInfo);
+
+            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.DataType,
+                parameters, statementInfo));
+        }
+
+        public static IApiMethodBuilderResult WriteNativeMethod<TFunc>(
+            TFunc func, ExpressionBuilderParams p, string methodBody, FunctionInfo functionInfo,
+            EvaluationStatement[] parameters, StatementInfo statementInfo)
+            where TFunc : ApiBaseFunction
+        {
+            if (p.Scope.TryGetFunctionInfo(functionInfo, out var funcInfo))
+            {
+                return Inline(new FunctionCallStatement(funcInfo.ObjectName, funcInfo.Name, funcInfo.DataType,
+                    parameters, statementInfo));
+            }
+
+            using (var funcWriter = new StringWriter())
+            {
+                funcWriter.Write("function ");
+                funcWriter.Write(functionInfo.Fqn);
+                funcWriter.WriteLine("() {");
+
+                funcWriter.WriteLine(methodBody);
+                
+                funcWriter.WriteLine("}");
+
+                p.MetaWriter.Write(funcWriter);
+            }
+
+            p.Context.GeneralScope.ReserveNewFunction(functionInfo);
 
             return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.DataType,
                 parameters, statementInfo));
@@ -187,12 +221,45 @@ namespace ShellScript.Core.Language.Library
         }
 
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected static ExpressionResult CreateVariableAccess(DataTypes dataType, string name, StatementInfo info)
+        {
+            return new ExpressionResult(
+                dataType,
+                $"${name}",
+                new VariableAccessStatement(name, info)
+            );
+        }
+
+
         public void AssertParameters(EvaluationStatement[] parameters)
         {
+            var passedCount = parameters?.Length ?? 0;
+            var expectedCount = Parameters?.Length ?? 0;
+            
+            if (passedCount != expectedCount)
+            {
+                throw new InvalidFunctionCallParametersCompilerException(expectedCount, passedCount, null);
+            }
+            
+            
         }
         
         public void AssertExpressionParameters(EvaluationStatement[] parameters)
         {
+            //TODO: assert
+        }
+
+        protected Exception ThrowInvalidParameterType(DataTypes dataType, string name)
+        {
+            //TODO: return correct exception.
+            return new Exception();
+        }
+
+        protected Exception ThrowInvalidParameterType(ExpressionResult result)
+        {
+            //TODO: return correct exception.
+            return new Exception();
         }
     }
 }

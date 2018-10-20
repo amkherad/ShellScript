@@ -142,7 +142,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override string FormatExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            if (result.Template is ConstantValueStatement)
+            if (result.Template is ConstantValueStatement || result.Template is VariableAccessStatement)
             {
                 if (result.DataType.IsString())
                 {
@@ -163,8 +163,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 return result.Expression;
             }
 
-            if (result.Template is VariableAccessStatement)
-                return result.Expression;
+            //if (result.Template is VariableAccessStatement)
+            //    return result.Expression;
             if (result.Template is FunctionCallStatement)
                 return result.Expression;
 
@@ -316,6 +316,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         {
             if (exp.StartsWith('$'))
             {
+                if (exp.Length > 2 && exp[1] == '{')
+                {
+                    return exp;
+                }
+                
                 return $"${{{exp.Substring(1)}}}";
             }
 

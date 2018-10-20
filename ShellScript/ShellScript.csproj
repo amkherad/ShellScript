@@ -8,7 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Unix\Bash\Api\ClassLibrary\Core\User" />
       <Folder Include="Windows.Batch" />
     </ItemGroup>
 

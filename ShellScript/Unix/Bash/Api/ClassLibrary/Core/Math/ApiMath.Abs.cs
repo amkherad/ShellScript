@@ -25,7 +25,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                 new FunctionParameterDefinitionStatement(DataTypes.Numeric, "Number", null, null),
             };
 
-            private FunctionInfo _absFunctionInfo;
+            private FunctionInfo _functionInfo;
 
             private IDictionary<string, string> _absUtilityExpressions = new Dictionary<string, string>
             {
@@ -35,7 +35,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
 
             public Abs()
             {
-                _absFunctionInfo = new FunctionInfo(DataTypes.Numeric, ApiMathAbsBashMethodName,
+                _functionInfo = new FunctionInfo(DataTypes.Numeric, ApiMathAbsBashMethodName,
                     null, ClassAccessName, false, Parameters, null);
             }
 
@@ -66,7 +66,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                                 ));
                             }
 
-                            return CreateNativeMethodWithUtilityExpressionSelector(this, p, _absFunctionInfo,
+                            return CreateNativeMethodWithUtilityExpressionSelector(this, p, _functionInfo,
                                 _absUtilityExpressions, functionCallStatement.Parameters,
                                 functionCallStatement.Info);
                         }
@@ -80,7 +80,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                     }
                     default:
                     {
-                        return CreateNativeMethodWithUtilityExpressionSelector(this, p, _absFunctionInfo,
+                        return CreateNativeMethodWithUtilityExpressionSelector(this, p, _functionInfo,
                             _absUtilityExpressions, functionCallStatement.Parameters, functionCallStatement.Info);
                     }
                 }

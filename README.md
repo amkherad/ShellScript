@@ -1,8 +1,8 @@
 # ShellScript
 
-| Linux Build (Travis-CI) |
-|-------------------------|
-| [![Build Status](https://travis-ci.com/amkherad/ShellScript.svg?branch=master)](https://travis-ci.com/amkherad/ShellScript) |
+| Linux Build (Travis-CI) | Code Coverage |
+|-------------------------|---------------|
+| [![Build Status](https://travis-ci.com/amkherad/ShellScript.svg?branch=master)](https://travis-ci.com/amkherad/ShellScript) | [![Coverage Status](https://coveralls.io/repos/github/amkherad/ShellScript/badge.svg?branch=master)](https://coveralls.io/github/amkherad/ShellScript?branch=master) |
 
 [Work In Progress]  
 Cross-platform intermediate shell scripting language.  

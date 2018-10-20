@@ -37,6 +37,11 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
                 var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
                 var result = transpiler.GetExpression(p, parameter);
 
+                if (result.DataType != DataTypes.String)
+                {
+                    throw ThrowInvalidParameterType(result);
+                }
+
                 return new ApiMethodBuilderRawResult(new ExpressionResult(
                     DataType,
                     $"`{result.Expression}`",

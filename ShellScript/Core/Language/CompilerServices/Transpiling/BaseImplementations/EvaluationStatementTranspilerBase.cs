@@ -120,6 +120,13 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             constantValueStatement);
                     }
 
+                    if (constantValueStatement.IsString())
+                    {
+                        var str = StatementHelpers.UnEscapeString(constantValueStatement.Value);
+                        
+                        return new ConstantValueStatement(DataTypes.String, str, constantValueStatement.Info);
+                    }
+
                     return constantValueStatement;
                 }
 
