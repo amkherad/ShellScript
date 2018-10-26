@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using ShellScript.Core.Language.CompilerServices.CompilerErrors;
 using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Statements.Operators;
+using ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.PlatformTranspiler;
 
@@ -36,17 +38,17 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
             return false;
         }
 
-        public abstract string PinExpressionToVariable(ExpressionBuilderParams p, string nameHint,
+        public abstract PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p, string nameHint,
             ExpressionResult result);
 
-        public abstract string PinExpressionToVariable(ExpressionBuilderParams p, DataTypes dataTypes, string nameHint,
+        public abstract PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p, DataTypes dataTypes, string nameHint,
             string expression, EvaluationStatement template);
 
 
-        public abstract string PinFloatingPointExpressionToVariable(ExpressionBuilderParams p, string nameHint,
+        public abstract PinnedVariableResult PinFloatingPointExpressionToVariable(ExpressionBuilderParams p, string nameHint,
             ExpressionResult result);
 
-        public abstract string PinFloatingPointExpressionToVariable(ExpressionBuilderParams p, DataTypes dataTypes,
+        public abstract PinnedVariableResult PinFloatingPointExpressionToVariable(ExpressionBuilderParams p, DataTypes dataTypes,
             string nameHint, string expression, EvaluationStatement template);
 
 
@@ -62,7 +64,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     {
                         return value;
                     }
-                        
+
                     return $"\"{value}\"";
                 }
 
@@ -91,7 +93,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         {
             return result.Expression;
         }
-
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -226,7 +227,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     {
                         value = BashTranspilerHelpers.ToBashString(value, true, false);
                     }
-                    
+
                     if (value[0] == '"' && value[value.Length - 1] == '"')
                     {
                         return value;
@@ -242,6 +243,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         public virtual ExpressionResult CreateExpression(ExpressionBuilderParams p, EvaluationStatement statement)
         {
             var result = CreateExpressionRecursive(p, statement);
+
+            if (result.IsEmptyResult)
+            {
+                return result;
+            }
+
             return new ExpressionResult(
                 result.DataType,
                 FormatExpression(p, result),
@@ -269,9 +276,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                             var varName = PinExpressionToVariable(p, null, left);
 
-                            var template = new VariableAccessStatement(varName, left.Template.Info);
+                            var template = new VariableAccessStatement(varName.Name, left.Template.Info);
 
-                            left = new ExpressionResult(left.DataType, varName, template);
+                            left = new ExpressionResult(left.DataType, varName.Expression, template);
 
                             template.ParentStatement = left.Template.ParentStatement;
 
@@ -469,9 +476,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                                 logicalEvaluationStatement
                             );
                             return new ExpressionResult(
-                                result.DataType,
-                                varName,
-                                new VariableAccessStatement(varName, logicalEvaluationStatement.Info)
+                                varName.DataType,
+                                varName.Expression,
+                                varName.Template
                             );
                         }
 
@@ -524,7 +531,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                     if (ShouldBePinnedToFloatingPointVariable(p, logicalEvaluationStatement, leftResult, rightResult))
                     {
-                        var varName = PinFloatingPointExpressionToVariable(
+                        return PinFloatingPointExpressionToVariable(
                             p,
                             DataTypes.Boolean,
                             "logical",
@@ -535,12 +542,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                                 logicalEvaluationStatement
                             ),
                             logicalEvaluationStatement
-                        );
-
-                        return new ExpressionResult(
-                            DataTypes.Boolean,
-                            varName,
-                            new VariableAccessStatement(varName, logicalEvaluationStatement.Info)
                         );
                     }
 
@@ -575,25 +576,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         var operand = arithmeticEvaluationStatement.Left ?? arithmeticEvaluationStatement.Right;
                         if (!(operand is VariableAccessStatement))
                         {
-                            var isError = true;
-                            if (operand is FunctionCallStatement functionCallStatement)
-                            {
-                                if (p.Scope.TryGetFunctionInfo(functionCallStatement, out var funcInfo))
-                                {
-                                    var inline = FunctionInfo.UnWrapInlinedStatement(p.Context, p.Scope, funcInfo);
-                                    if (inline is EvaluationStatement evalStatement)
-                                    {
-                                        operand = evalStatement;
-                                        isError = false;
-                                    }
-                                }
-                            }
-
-                            if (isError)
-                            {
-                                throw new InvalidStatementCompilerException(arithmeticEvaluationStatement,
-                                    arithmeticEvaluationStatement.Info);
-                            }
+                            throw new InvalidStatementCompilerException(arithmeticEvaluationStatement,
+                                arithmeticEvaluationStatement.Info);
                         }
 
                         var result = CreateExpressionRecursive(p, operand);
@@ -610,7 +594,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                         if (ShouldBePinnedToFloatingPointVariable(p, result.DataType, arithmeticEvaluationStatement))
                         {
-                            var varName = PinFloatingPointExpressionToVariable(
+                            return PinFloatingPointExpressionToVariable(
                                 p,
                                 result.DataType,
                                 null,
@@ -619,12 +603,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                                     arithmeticEvaluationStatement
                                 ),
                                 arithmeticEvaluationStatement
-                            );
-
-                            return new ExpressionResult(
-                                result.DataType,
-                                varName,
-                                new VariableAccessStatement(varName, arithmeticEvaluationStatement.Info)
                             );
                         }
 
@@ -654,25 +632,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         var operand = arithmeticEvaluationStatement.Left ?? arithmeticEvaluationStatement.Right;
                         if (!(operand is VariableAccessStatement))
                         {
-                            var isError = true;
-                            if (operand is FunctionCallStatement functionCallStatement)
-                            {
-                                if (p.Scope.TryGetFunctionInfo(functionCallStatement, out var funcInfo))
-                                {
-                                    var inline = FunctionInfo.UnWrapInlinedStatement(p.Context, p.Scope, funcInfo);
-                                    if (inline is EvaluationStatement evalStatement)
-                                    {
-                                        operand = evalStatement;
-                                        isError = false;
-                                    }
-                                }
-                            }
-
-                            if (isError)
-                            {
-                                throw new InvalidStatementCompilerException(arithmeticEvaluationStatement,
-                                    arithmeticEvaluationStatement.Info);
-                            }
+                            throw new InvalidStatementCompilerException(arithmeticEvaluationStatement,
+                                arithmeticEvaluationStatement.Info);
                         }
 
                         var result = CreateExpressionRecursive(p, operand);
@@ -689,7 +650,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                         if (ShouldBePinnedToFloatingPointVariable(p, result.DataType, arithmeticEvaluationStatement))
                         {
-                            var varName = PinFloatingPointExpressionToVariable(
+                            return PinFloatingPointExpressionToVariable(
                                 p,
                                 result.DataType,
                                 null,
@@ -698,12 +659,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                                     arithmeticEvaluationStatement
                                 ),
                                 arithmeticEvaluationStatement
-                            );
-
-                            return new ExpressionResult(
-                                result.DataType,
-                                varName,
-                                new VariableAccessStatement(varName, arithmeticEvaluationStatement.Info)
                             );
                         }
 
@@ -746,7 +701,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                         if (ShouldBePinnedToFloatingPointVariable(p, result.DataType, arithmeticEvaluationStatement))
                         {
-                            var varName = PinFloatingPointExpressionToVariable(
+                            return PinFloatingPointExpressionToVariable(
                                 p,
                                 result.DataType,
                                 null,
@@ -755,12 +710,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                                     arithmeticEvaluationStatement
                                 ),
                                 arithmeticEvaluationStatement
-                            );
-
-                            return new ExpressionResult(
-                                result.DataType,
-                                varName,
-                                new VariableAccessStatement(varName, arithmeticEvaluationStatement.Info)
                             );
                         }
 
@@ -804,7 +753,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     if (ShouldBePinnedToFloatingPointVariable(p, arithmeticEvaluationStatement, leftResult,
                         rightResult))
                     {
-                        var varName = PinFloatingPointExpressionToVariable(
+                        return PinFloatingPointExpressionToVariable(
                             p,
                             dataType,
                             "arithmetic",
@@ -817,12 +766,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                                 arithmeticEvaluationStatement
                             ),
                             arithmeticEvaluationStatement
-                        );
-
-                        return new ExpressionResult(
-                            dataType,
-                            varName,
-                            new VariableAccessStatement(varName, arithmeticEvaluationStatement.Info)
                         );
                     }
 
@@ -914,7 +857,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                     if (funcInfo.InlinedStatement != null && p.Context.Flags.UseInlining)
                     {
-                        var inlined = FunctionInfo.UnWrapInlinedStatement(p.Context, p.Scope, funcInfo);
+                        var inlined = UnWrapInlinedStatement(p, funcInfo, functionCallStatement);
 
                         if (inlined is EvaluationStatement evaluationStatement)
                         {
@@ -931,6 +874,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         {
                             var transpiler = p.Context.GetTranspilerForStatement(inlined);
                             transpiler.WriteBlock(p.Context, p.Scope, p.NonInlinePartWriter, p.MetaWriter, inlined);
+
+                            return ExpressionResult.EmptyResult;
                         }
 
                         throw new InvalidStatementStructureCompilerException(inlined, inlined.Info);
@@ -938,7 +883,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
 
                     var call = new StringBuilder(20); //`myfunc 0 "test"`
-                    call.Append('`');
+                    if (!p.VoidFunctionCall)
+                    {
+                        call.Append('`');
+                    }
 
                     call.Append(funcInfo.AccessName);
 
@@ -953,7 +901,10 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         paramTemplates.Add(result.Template);
                     }
 
-                    call.Append('`');
+                    if (!p.VoidFunctionCall)
+                    {
+                        call.Append('`');
+                    }
 
                     var callExp = FormatFunctionCallExpression(
                         p,
@@ -982,6 +933,69 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                 default:
                     throw new InvalidOperationException();
             }
+        }
+
+        protected virtual IStatement UnWrapInlinedStatement(ExpressionBuilderParams p, FunctionInfo functionInfo,
+            FunctionCallStatement functionCallStatement)
+        {
+            var inlined = functionInfo.InlinedStatement;
+
+            if (inlined == null)
+            {
+                return null;
+            }
+
+            var schemeParameters = functionInfo.Parameters;
+
+            if (schemeParameters != null && schemeParameters.Length > 0)
+            {
+                var nameMapping = new Dictionary<string, EvaluationStatement>();
+
+                for (var i = 0; i < schemeParameters.Length; i++)
+                {
+                    var param = FunctionStatementTranspilerBase.GetSchemeParameterValueByIndex(p.Context, p.Scope,
+                        functionInfo, functionCallStatement, i);
+
+                    switch (param)
+                    {
+                        case ConstantValueStatement _:
+                        case VariableAccessStatement _:
+                            break;
+                        default:
+                        {
+                            var pName = schemeParameters[i].Name;
+                            
+                            if (inlined.TreeCount(x =>
+                                x is VariableAccessStatement variableAccessStatement &&
+                                variableAccessStatement.VariableName == pName) > 1)
+                            {
+                                var result = CreateExpression(p, param);
+
+                                var varName = PinExpressionToVariable(p, schemeParameters[i].Name, result);
+                                
+                                param = varName.Template;
+                            }
+                            
+                            break;
+                        }
+                    }
+                    
+                    nameMapping.Add(schemeParameters[i].Name, param);
+                }
+
+                FunctionStatementTranspilerBase.ReplaceEvaluation(inlined, key => nameMapping.ContainsKey(key),
+                    key => nameMapping[key], out inlined);
+            }
+
+            if (inlined is FunctionCallStatement funcCallStt)
+            {
+                if (p.Scope.TryGetFunctionInfo(funcCallStt, out functionInfo))
+                {
+                    inlined = UnWrapInlinedStatement(p, functionInfo, funcCallStt);
+                }
+            }
+
+            return inlined;
         }
     }
 }

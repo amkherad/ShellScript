@@ -33,13 +33,14 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
 
         public FunctionCallStatement(string objectName, string functionName, DataTypes dataType,
-            EvaluationStatement[] parameters, StatementInfo info)
+            EvaluationStatement[] parameters, StatementInfo info, IStatement parentStatement = null)
         {
             ObjectName = objectName;
             FunctionName = functionName;
             Parameters = parameters;
             Info = info;
             DataType = dataType;
+            ParentStatement = parentStatement;
 
             TraversableChildren = StatementHelpers.CreateChildren(parameters.Cast<IStatement>().ToArray());
         }

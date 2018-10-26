@@ -1,5 +1,8 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
+    /// <summary>
+    /// Represents an statement.
+    /// </summary>
     public interface IStatement
     {
         /// <summary>

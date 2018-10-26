@@ -7,8 +7,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
 {
     public interface IPlatformEvaluationStatementTranspiler : IPlatformStatementTranspiler
     {
-        string PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter, TextWriter pinCodeWriter,
-            EvaluationStatement statement);
+        PinnedVariableResult PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter,
+            TextWriter pinCodeWriter, EvaluationStatement statement);
 
         ExpressionResult GetExpression(ExpressionBuilderParams p, EvaluationStatement statement);
 

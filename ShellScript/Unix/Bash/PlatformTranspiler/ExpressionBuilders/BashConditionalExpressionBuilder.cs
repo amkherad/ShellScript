@@ -202,6 +202,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             EvaluationStatement statement)
         {
             var result = base.CreateExpression(p, statement);
+            
+            if (result.IsEmptyResult)
+            {
+                throw new InvalidStatementStructureCompilerException(statement, statement.Info);
+            }
+            
             if (result.DataType != DataTypes.Boolean)
             {
                 throw new TypeMismatchCompilerException(result.DataType, DataTypes.Boolean, statement.Info);

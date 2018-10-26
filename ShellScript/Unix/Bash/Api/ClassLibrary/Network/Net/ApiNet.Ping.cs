@@ -3,13 +3,13 @@ using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Base;
 
-namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
+namespace ShellScript.Unix.Bash.Api.ClassLibrary.Network.Net
 {
-    public partial class ApiPlatform
+    public partial class ApiNet
     {
-        public class Call : BashFunction
+        public class Ping : BashFunction
         {
-            public override string Name => nameof(Call);
+            public override string Name => nameof(Ping);
 
             public override string Summary =>
                 "Takes a string and execute it as a void-result platform-dependent shell command.";
@@ -22,7 +22,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
 
             public override FunctionParameterDefinitionStatement[] Parameters { get; } =
             {
-                new FunctionParameterDefinitionStatement(DataTypes.String, "RawCommand", null, null),
+                new FunctionParameterDefinitionStatement(DataTypes.String, "Endpoint", null, null),
             };
 
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
@@ -30,12 +30,12 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
             {
                 AssertParameters(p, functionCallStatement.Parameters);
 
-                var parameter = functionCallStatement.Parameters[0];
+                var endpoint = functionCallStatement.Parameters[0];
 
                 p.FormatString = false;
 
-                var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
-                var result = transpiler.GetExpression(p, parameter);
+                var transpiler = p.Context.GetEvaluationTranspilerForStatement(endpoint);
+                var result = transpiler.GetExpression(p, endpoint);
 
                 if (result.DataType != DataTypes.String)
                 {
@@ -44,7 +44,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
 
                 return new ApiMethodBuilderRawResult(new ExpressionResult(
                     DataType,
-                    $"`{result.Expression}`",
+                    $"`ping {result.Expression}`",
                     result.Template
                 ));
             }

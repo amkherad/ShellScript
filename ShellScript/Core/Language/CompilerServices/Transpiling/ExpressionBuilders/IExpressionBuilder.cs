@@ -17,15 +17,15 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
 
 
-        string PinExpressionToVariable(ExpressionBuilderParams p, string nameHint, ExpressionResult result);
+        PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p, string nameHint, ExpressionResult result);
 
-        string PinExpressionToVariable(ExpressionBuilderParams p,
+        PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p,
             DataTypes dataTypes, string nameHint, string expression, EvaluationStatement template);
 
-        string PinFloatingPointExpressionToVariable(ExpressionBuilderParams p, string nameHint,
+        PinnedVariableResult PinFloatingPointExpressionToVariable(ExpressionBuilderParams p, string nameHint,
             ExpressionResult result);
         
-        string PinFloatingPointExpressionToVariable(ExpressionBuilderParams p,
+        PinnedVariableResult PinFloatingPointExpressionToVariable(ExpressionBuilderParams p,
             DataTypes dataTypes, string nameHint, string expression, EvaluationStatement template);
 
 

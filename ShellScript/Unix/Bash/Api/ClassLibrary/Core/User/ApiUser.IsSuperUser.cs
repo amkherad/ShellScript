@@ -23,7 +23,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.User
             {
                 return new ExpressionResult(
                     DataType,
-                    $"$(whoami) == 'root'",
+                    $"[ $(whoami) == 'root' ]",
                     functionCallStatement
                 );
             }

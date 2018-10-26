@@ -28,5 +28,13 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
             Template = template;
             Notices = notices;
         }
+
+        public override string ToString()
+        {
+            return Expression;
+        }
+
+        public bool IsEmptyResult => DataType == DataTypes.Void && Expression == null && Template == null && Notices == null;
+        public static ExpressionResult EmptyResult => new ExpressionResult(DataTypes.Void, null, null);
     }
 }

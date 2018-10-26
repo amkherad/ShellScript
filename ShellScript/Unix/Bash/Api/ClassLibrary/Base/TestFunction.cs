@@ -13,7 +13,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Base
         public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
             FunctionCallStatement functionCallStatement)
         {
-            AssertParameters(functionCallStatement.Parameters);
+            AssertParameters(p, functionCallStatement.Parameters);
 
             var result = CreateTestExpression(p, functionCallStatement);
 

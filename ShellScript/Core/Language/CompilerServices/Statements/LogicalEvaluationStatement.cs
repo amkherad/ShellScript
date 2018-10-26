@@ -13,12 +13,13 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
 
         public LogicalEvaluationStatement(EvaluationStatement left, LogicalOperator @operator,
-            EvaluationStatement right, StatementInfo info)
+            EvaluationStatement right, StatementInfo info, IStatement parentStatement = null)
         {
             Left = left;
             Operator = @operator;
             Right = right;
             Info = info;
+            ParentStatement = parentStatement;
 
             TraversableChildren = StatementHelpers.CreateChildren(left, @operator, right);
         }
@@ -30,9 +31,12 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
 
         public static LogicalEvaluationStatement CreateNot(NotOperator op, EvaluationStatement operand,
-            StatementInfo info)
+            StatementInfo info, IStatement parentStatement = null)
         {
-            return new LogicalEvaluationStatement(null, op, operand, info);
+            return new LogicalEvaluationStatement(null, op, operand, info)
+            {
+                ParentStatement = parentStatement
+            };
         }
     }
 }

@@ -13,12 +13,13 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
 
         public ArithmeticEvaluationStatement(EvaluationStatement left, ArithmeticOperator @operator,
-            EvaluationStatement right, StatementInfo info)
+            EvaluationStatement right, StatementInfo info, IStatement parentStatement = null)
         {
             Left = left;
             Operator = @operator;
             Right = right;
             Info = info;
+            ParentStatement = parentStatement;
 
             TraversableChildren = StatementHelpers.CreateChildren(left, @operator, right);
         }
@@ -29,47 +30,68 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
         public static ArithmeticEvaluationStatement CreateNegate(NegativeNumberOperator op,
-            EvaluationStatement operand, StatementInfo info)
+            EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(null, op, operand, info);
+            return new ArithmeticEvaluationStatement(null, op, operand, info)
+            {
+                ParentStatement = parentStatement
+            };
         }
         
         public static ArithmeticEvaluationStatement CreatePostfixIncrement(IncrementOperator op,
-            EvaluationStatement operand, StatementInfo info)
+            EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(operand, op, null, info);
+            return new ArithmeticEvaluationStatement(operand, op, null, info)
+            {
+                ParentStatement = parentStatement
+            };
         }
 
         public static ArithmeticEvaluationStatement CreatePrefixIncrement(IncrementOperator op,
-            EvaluationStatement operand, StatementInfo info)
+            EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(null, op, operand, info);
+            return new ArithmeticEvaluationStatement(null, op, operand, info)
+            {
+                ParentStatement = parentStatement
+            };
         }
 
 
         public static ArithmeticEvaluationStatement CreatePostfixDecrement(DecrementOperator op,
-            EvaluationStatement operand, StatementInfo info)
+            EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(operand, op, null, info);
+            return new ArithmeticEvaluationStatement(operand, op, null, info)
+            {
+                ParentStatement = parentStatement
+            };
         }
 
         public static ArithmeticEvaluationStatement CreatePrefixDecrement(DecrementOperator op,
-            EvaluationStatement operand, StatementInfo info)
+            EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(null, op, operand, info);
+            return new ArithmeticEvaluationStatement(null, op, operand, info)
+            {
+                ParentStatement = parentStatement
+            };
         }
 
 
         public static ArithmeticEvaluationStatement CreatePostfix(ArithmeticOperator op,
-            EvaluationStatement operand, StatementInfo info)
+            EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(operand, op, null, info);
+            return new ArithmeticEvaluationStatement(operand, op, null, info)
+            {
+                ParentStatement = parentStatement
+            };
         }
 
         public static ArithmeticEvaluationStatement CreatePrefix(ArithmeticOperator op,
-            EvaluationStatement operand, StatementInfo info)
+            EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(null, op, operand, info);
+            return new ArithmeticEvaluationStatement(null, op, operand, info)
+            {
+                ParentStatement = parentStatement
+            };
         }
     }
 }

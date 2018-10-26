@@ -66,8 +66,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
             return base.Validate(context, scope, statement, out message);
         }
 
-        public abstract string PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter,
-            TextWriter pinCodeWriter, EvaluationStatement statement);
+        public abstract PinnedVariableResult PinEvaluationToVariable(Context context, Scope scope,
+            TextWriter metaWriter, TextWriter nonInlinePartWriter, EvaluationStatement statement);
 
         public abstract ExpressionResult GetExpression(ExpressionBuilderParams p,
             EvaluationStatement statement);
@@ -123,7 +123,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                     if (constantValueStatement.IsString())
                     {
                         var str = StatementHelpers.UnEscapeString(constantValueStatement.Value);
-                        
+
                         return new ConstantValueStatement(DataTypes.String, str, constantValueStatement.Info);
                     }
 
@@ -730,7 +730,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         case MultiplicationOperator _:
                         case DivisionOperator _:
                         case ModulusOperator _:
-                        //case ReminderOperator _:
+                            //case ReminderOperator _:
                         {
                             var left = ProcessEvaluation(context, scope, arithmeticEvaluationStatement.Left);
                             var right = ProcessEvaluation(context, scope, arithmeticEvaluationStatement.Right);
@@ -929,18 +929,18 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                 {
                     if (scope.TryGetFunctionInfo(functionCallStatement, out var functionInfo))
                     {
-                        if (functionInfo.InlinedStatement != null)
-                        {
-                            if (functionInfo.InlinedStatement is EvaluationStatement evaluationStatement)
-                            {
-                                return ProcessEvaluation(context, scope, evaluationStatement);
-                            }
-
-                            if (functionInfo.InlinedStatement is FunctionCallStatement funcCallStt)
-                            {
-                                return ProcessEvaluation(context, scope, funcCallStt);
-                            }
-                        }
+//                        if (functionInfo.InlinedStatement != null)
+//                        {
+//                            if (functionInfo.InlinedStatement is EvaluationStatement evaluationStatement)
+//                            {
+//                                return ProcessEvaluation(context, scope, evaluationStatement);
+//                            }
+//
+//                            if (functionInfo.InlinedStatement is FunctionCallStatement funcCallStt)
+//                            {
+//                                return ProcessEvaluation(context, scope, funcCallStt);
+//                            }
+//                        }
 
                         if (functionCallStatement.Parameters != null && functionCallStatement.Parameters.Length > 0)
                         {

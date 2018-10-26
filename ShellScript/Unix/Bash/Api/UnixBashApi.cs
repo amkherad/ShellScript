@@ -8,6 +8,7 @@ using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.String;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.User;
+using ShellScript.Unix.Bash.Api.ClassLibrary.Network.Net;
 using ShellScript.Unix.Utilities;
 
 namespace ShellScript.Unix.Bash.Api
@@ -28,6 +29,8 @@ namespace ShellScript.Unix.Bash.Api
             new ApiFile(),
             
             new ApiLocale(),
+            
+            new ApiNet(),
         };
 
         private IThirdPartyUtility[] _utilities =

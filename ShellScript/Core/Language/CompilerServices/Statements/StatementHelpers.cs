@@ -98,6 +98,22 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
             return false;
         }
+        
+        public static int TreeCount(this IStatement statement, Predicate<IStatement> predicate)
+        {
+            var count = 0;
+            foreach (var child in statement.TraversableChildren)
+            {
+                if (predicate(child))
+                {
+                    count += 1;
+                }
+
+                count += TreeCount(child, predicate);
+            }
+
+            return count;
+        }
 
         public static bool TreeAll(this IStatement statement, Predicate<IStatement> predicate)
         {

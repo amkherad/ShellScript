@@ -41,14 +41,19 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             value = StandardizeString(value, dequote);
 
+            if (value.Contains('\\'))
+            {
+                value = value.Replace("\\", "\\\\");
+            }
+
             if (value.Contains('"'))
             {
                 value = value.Replace("\"", "\\\"");
             }
-
-            if (value.Contains('\\'))
+            
+            if (value.Contains('`'))
             {
-                value = value.Replace("\\", "\\\\");
+                value = value.Replace("`", "\\`");
             }
 
             if (value.Contains('\r'))

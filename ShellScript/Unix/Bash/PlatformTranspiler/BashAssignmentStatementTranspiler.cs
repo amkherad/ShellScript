@@ -25,16 +25,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         }
 
         public override void WriteBlock(Context context, Scope scope, TextWriter nonInlinePartWriter,
-            TextWriter metaWriter,
-            IStatement statement)
+            TextWriter metaWriter, IStatement statement)
         {
             if (!(statement is AssignmentStatement assignmentStatement)) throw new InvalidOperationException();
 
             using (var writer = new StringWriter())
             {
                 WriteAssignment(context, scope, writer, metaWriter, nonInlinePartWriter, assignmentStatement);
-
-                writer.WriteLine();
 
                 nonInlinePartWriter.Write(writer);
             }
@@ -74,7 +71,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 transpiler.GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
 
             writer.Write($"{varInfo.AccessName}=");
-            writer.Write(result.Expression);
+            writer.WriteLine(result.Expression);
         }
     }
 }

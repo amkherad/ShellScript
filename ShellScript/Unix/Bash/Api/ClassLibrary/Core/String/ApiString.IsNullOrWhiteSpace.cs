@@ -29,7 +29,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
-                AssertParameters(functionCallStatement.Parameters);
+                AssertParameters(p, functionCallStatement.Parameters);
 
                 var number = functionCallStatement.Parameters[0];
 

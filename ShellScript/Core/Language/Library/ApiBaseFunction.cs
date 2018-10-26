@@ -232,7 +232,7 @@ namespace ShellScript.Core.Language.Library
         }
 
 
-        public void AssertParameters(EvaluationStatement[] parameters)
+        public void AssertParameters(ExpressionBuilderParams p, EvaluationStatement[] parameters)
         {
             var passedCount = parameters?.Length ?? 0;
             var expectedCount = Parameters?.Length ?? 0;
@@ -241,8 +241,20 @@ namespace ShellScript.Core.Language.Library
             {
                 throw new InvalidFunctionCallParametersCompilerException(expectedCount, passedCount, null);
             }
-            
-            
+
+            if (parameters != null && Parameters != null)
+            {
+                for (var i = 0; i < parameters.Length; i++)
+                {
+                    var passed = parameters[i];
+                    var scheme = Parameters[i];
+
+                    if (!StatementHelpers.IsAssignableFrom(scheme.DataType, passed.GetDataType(p.Context, p.Scope)))
+                    {
+                        
+                    }
+                }
+            }
         }
         
         public void AssertExpressionParameters(EvaluationStatement[] parameters)

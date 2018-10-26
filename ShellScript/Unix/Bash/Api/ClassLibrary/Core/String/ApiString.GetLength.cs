@@ -12,7 +12,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
     {
         public class GetLength : BashFunction
         {
-            private const string ApiMathAbsBashMethodName = "GetLength_Bash";
+            private const string ApiMathAbsBashMethodName = "GetLocaleLength";
 
             public override string Name => nameof(GetLength);
             public override string Summary => "Returns the length of the string. (may vary depending on current locale)";
@@ -35,7 +35,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
-                AssertParameters(functionCallStatement.Parameters);
+                AssertParameters(p, functionCallStatement.Parameters);
 
                 var str = functionCallStatement.Parameters[0];
 

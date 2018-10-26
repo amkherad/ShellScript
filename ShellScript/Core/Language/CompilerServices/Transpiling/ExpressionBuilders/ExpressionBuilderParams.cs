@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using ShellScript.Core.Helpers;
 using ShellScript.Core.Language.CompilerServices.Statements;
@@ -13,6 +12,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
         public TextWriter NonInlinePartWriter { get; }
 
         public bool FormatString { get; set; } = true;
+        public bool VoidFunctionCall { get; set; }
         
         [CanBeNull]
         public IStatement UsageContext { get; }

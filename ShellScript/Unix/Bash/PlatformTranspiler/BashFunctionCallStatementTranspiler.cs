@@ -50,6 +50,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             EvaluationStatement evalStt = functionCallStatement;
             var result = GetExpression(context, scope, metaWriter, writer, blockUsageContext, evalStt);
 
+            if (result.IsEmptyResult)
+            {
+                return;
+            }
+            
             if (result.DataType == DataTypes.Void && !(result.Template is FunctionCallStatement))
             {
                 writer.WriteLine(result.Expression);

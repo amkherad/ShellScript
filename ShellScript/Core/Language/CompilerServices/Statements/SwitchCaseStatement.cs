@@ -9,6 +9,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         
         public EvaluationStatement SwitchTarget { get; }
         public ConditionalBlockStatement[] Cases { get; }
+        public IStatement DefaultCase { get; }
         
         public IStatement[] TraversableChildren { get; }
         
@@ -28,6 +29,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             SwitchTarget = switchTarget;
             Cases = cases;
+            DefaultCase = defaultCase;
             Info = info;
 
             TraversableChildren = StatementHelpers.CreateChildren(new IStatement[] {switchTarget}.Union(cases).Union(new []{defaultCase}).ToArray());

@@ -21,13 +21,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             evalStt = ProcessEvaluation(p.Context, p.Scope, evalStt);
 
-            var structure = StatementHelpers.TraverseTreeAndGetExpressionTypes(p.Context, p.Scope, evalStt);
-
-            IExpressionBuilder expressionBuilder = structure.Types.Contains(DataTypes.String)
-                ? BashStringConcatenationExpressionBuilder.Instance
-                : BashDefaultExpressionBuilder.Instance;
-
-            return expressionBuilder.CreateExpression(p, evalStt);
+            return BashDefaultExpressionBuilder.Instance.CreateExpression(p, evalStt);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,13 +30,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             evalStt = ProcessEvaluation(p.Context, p.Scope, evalStt);
 
-            var structure = StatementHelpers.TraverseTreeAndGetExpressionTypes(p.Context, p.Scope, evalStt);
-
-            IExpressionBuilder expressionBuilder = structure.Types.Contains(DataTypes.String)
-                ? BashConditionalStringConcatenationExpressionBuilder.Instance
-                : BashConditionalExpressionBuilder.Instance;
-
-            return expressionBuilder.CreateExpression(p, evalStt);
+            return BashConditionalExpressionBuilder.Instance.CreateExpression(p, evalStt);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -51,13 +39,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             evalStt = ProcessEvaluation(context, scope, evalStt);
 
-            var structure = StatementHelpers.TraverseTreeAndGetExpressionTypes(context, scope, evalStt);
-
-            IExpressionBuilder expressionBuilder = structure.Types.Contains(DataTypes.String)
-                ? BashStringConcatenationExpressionBuilder.Instance
-                : BashDefaultExpressionBuilder.Instance;
-
-            return expressionBuilder;
+            return BashDefaultExpressionBuilder.Instance;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,13 +48,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             evalStt = ProcessEvaluation(context, scope, evalStt);
 
-            var structure = StatementHelpers.TraverseTreeAndGetExpressionTypes(context, scope, evalStt);
-
-            IExpressionBuilder expressionBuilder = structure.Types.Contains(DataTypes.String)
-                ? BashConditionalStringConcatenationExpressionBuilder.Instance
-                : BashConditionalExpressionBuilder.Instance;
-
-            return expressionBuilder;
+            return BashConditionalExpressionBuilder.Instance;
         }
 
         public override void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
@@ -93,7 +69,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             throw new NotSupportedException();
         }
 
-        public override string PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter,
+        public override PinnedVariableResult PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter,
             TextWriter pinCodeWriter, EvaluationStatement statement)
         {
             if (statement == null) throw new ArgumentNullException(nameof(statement));

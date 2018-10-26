@@ -13,7 +13,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
     {
         public class Abs : BashFunction
         {
-            private const string ApiMathAbsBashMethodName = "Abs_Bash";
+            private const string ApiMathAbsBashMethodName = "Absolute";
 
             public override string Name => nameof(Abs);
             public override string Summary => "Returns the absolute value of the number.";
@@ -42,7 +42,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
-                AssertParameters(functionCallStatement.Parameters);
+                AssertParameters(p, functionCallStatement.Parameters);
 
                 var number = functionCallStatement.Parameters[0];
 

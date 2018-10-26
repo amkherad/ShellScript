@@ -10,11 +10,12 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
 
         public AssignmentStatement(EvaluationStatement leftSide, EvaluationStatement rightSide,
-            StatementInfo info)
+            StatementInfo info, IStatement parentStatement = null)
         {
             LeftSide = leftSide;
             RightSide = rightSide;
             Info = info;
+            ParentStatement = parentStatement;
 
             TraversableChildren = StatementHelpers.CreateChildren(leftSide, rightSide);
         }

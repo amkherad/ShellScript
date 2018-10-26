@@ -13,12 +13,13 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
 
         public BitwiseEvaluationStatement(EvaluationStatement left, BitwiseOperator @operator,
-            EvaluationStatement right, StatementInfo info)
+            EvaluationStatement right, StatementInfo info, IStatement parentStatement = null)
         {
             Left = left;
             Operator = @operator;
             Right = right;
             Info = info;
+            ParentStatement = parentStatement;
 
             TraversableChildren = StatementHelpers.CreateChildren(left, @operator, right);
         }
@@ -29,9 +30,12 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
         public static BitwiseEvaluationStatement CreateNot(BitwiseNotOperator op, EvaluationStatement operand,
-            StatementInfo info)
+            StatementInfo info, IStatement parentStatement = null)
         {
-            return new BitwiseEvaluationStatement(null, op, operand, info);
+            return new BitwiseEvaluationStatement(null, op, operand, info)
+            {
+                ParentStatement = parentStatement
+            };
         }
     }
 }

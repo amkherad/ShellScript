@@ -31,10 +31,10 @@ namespace ShellScript.Core.Language.CompilerServices
             {
                 if (ObjectName != null)
                 {
-                    return $"{ObjectName}_{Name}";
+                    return $"{ObjectName}_{ReName ?? Name}";
                 }
 
-                return Name;
+                return ReName ?? Name;
             }
         }
 
@@ -63,24 +63,6 @@ namespace ShellScript.Core.Language.CompilerServices
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             ObjectName = objectName;
-        }
-
-
-        public static IStatement UnWrapInlinedStatement(Context context, Scope scope, FunctionInfo functionInfo)
-        {
-            var inlined = functionInfo.InlinedStatement;
-            var result = inlined;
-            while (inlined != null && inlined is FunctionCallStatement funcCallStt)
-            {
-                if (!scope.TryGetFunctionInfo(funcCallStt, out functionInfo))
-                {
-                    return inlined;
-                }
-
-                inlined = functionInfo.InlinedStatement;
-            }
-
-            return inlined ?? result;
         }
 
         public virtual bool Equals(FunctionInfo other)
