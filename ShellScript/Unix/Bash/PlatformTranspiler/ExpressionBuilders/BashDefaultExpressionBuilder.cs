@@ -508,6 +508,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                         logicalEvaluationStatement.Info
                                     );
 
+                                    px.NonInlinePartWriter.Write(writer);
+                                    
                                     return new ExpressionResult(
                                         DataTypes.Boolean,
                                         $"${varName}",
@@ -577,6 +579,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
                                     leftResult.Template.ParentStatement = newTemp;
                                     rightResult.Template.ParentStatement = newTemp;
+
+                                    px.NonInlinePartWriter.Write(writer);
 
                                     return new ExpressionResult(
                                         DataTypes.String,

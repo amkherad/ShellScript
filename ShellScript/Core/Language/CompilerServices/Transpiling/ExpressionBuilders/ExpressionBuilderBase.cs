@@ -854,7 +854,6 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                         }
                     }
 
-
                     if (funcInfo.InlinedStatement != null && p.Context.Flags.UseInlining)
                     {
                         var inlined = UnWrapInlinedStatement(p, funcInfo, functionCallStatement);
