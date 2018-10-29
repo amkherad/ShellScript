@@ -53,7 +53,7 @@ namespace ShellScript.MSTest.CompilingTests
         }
 
         [TestMethod]
-        public void TestDecimalCalculationEvaluation()
+        public void TestIntegerCalculationEvaluation()
         {
             using (var reader = new StringReader("int x = 2 + 2"))
             using (var metaWriter = new StringWriter())

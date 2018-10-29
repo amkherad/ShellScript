@@ -4,11 +4,11 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
 {
     public partial class ApiPlatform
     {
-        public class CallDecimal : Call
+        public class CallInteger : Call
         {
-            public override string Name => nameof(CallDecimal);
+            public override string Name => nameof(CallInteger);
             public override string Summary { get; }
-            public override TypeDescriptor TypeDescriptor => TypeDescriptor.Decimal;
+            public override TypeDescriptor TypeDescriptor => TypeDescriptor.Integer;
         }
     }
 }

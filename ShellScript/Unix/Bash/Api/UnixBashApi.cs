@@ -50,7 +50,7 @@ namespace ShellScript.Unix.Bash.Api
         {
             base.InitializeContext(context);
             
-            context.GeneralScope.ReserveNewVariable(TypeDescriptor.Decimal, "?");
+            context.GeneralScope.ReserveNewVariable(TypeDescriptor.Integer, "?");
         }
 
         public override string Name => "Unix-Bash";

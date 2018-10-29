@@ -98,7 +98,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                 {
                     if (constantValueStatement.IsNumber())
                     {
-                        if (constantValueStatement.IsDecimal())
+                        if (constantValueStatement.IsInteger())
                         {
                             if (long.TryParse(constantValueStatement.Value, out _))
                             {
@@ -107,7 +107,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         }
                         else if (long.TryParse(constantValueStatement.Value, out _))
                         {
-                            return new ConstantValueStatement(TypeDescriptor.Decimal, constantValueStatement.Value,
+                            return new ConstantValueStatement(TypeDescriptor.Integer, constantValueStatement.Value,
                                 constantValueStatement.Info);
                         }
 
@@ -167,7 +167,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
                             if (bitwiseEvaluationStatement.Right is ConstantValueStatement constantValueStatement)
                             {
-                                if (constantValueStatement.TypeDescriptor.IsDecimal())
+                                if (constantValueStatement.TypeDescriptor.IsInteger())
                                 {
                                     if (!long.TryParse(constantValueStatement.Value, out var value))
                                     {
@@ -201,29 +201,29 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             if (left is ConstantValueStatement leftConstantValue &&
                                 right is ConstantValueStatement rightConstantValue)
                             {
-                                if (leftConstantValue.IsDecimal() &&
-                                    long.TryParse(leftConstantValue.Value, out var leftDecimal))
+                                if (leftConstantValue.IsInteger() &&
+                                    long.TryParse(leftConstantValue.Value, out var leftInteger))
                                 {
-                                    if (rightConstantValue.IsDecimal() &&
-                                        long.TryParse(rightConstantValue.Value, out var rightDecimal))
+                                    if (rightConstantValue.IsInteger() &&
+                                        long.TryParse(rightConstantValue.Value, out var rightInteger))
                                     {
                                         long resultVal;
                                         switch (bitwiseEvaluationStatement.Operator)
                                         {
                                             case BitwiseAndOperator _:
-                                                resultVal = leftDecimal & rightDecimal;
+                                                resultVal = leftInteger & rightInteger;
                                                 break;
                                             case BitwiseOrOperator _:
-                                                resultVal = leftDecimal | rightDecimal;
+                                                resultVal = leftInteger | rightInteger;
                                                 break;
                                             case XorOperator _:
-                                                resultVal = leftDecimal ^ rightDecimal;
+                                                resultVal = leftInteger ^ rightInteger;
                                                 break;
                                             default:
                                                 throw new InvalidOperationException();
                                         }
 
-                                        return new ConstantValueStatement(TypeDescriptor.Decimal,
+                                        return new ConstantValueStatement(TypeDescriptor.Integer,
                                             resultVal.ToString(CultureInfo.InvariantCulture),
                                             bitwiseEvaluationStatement.Info)
                                         {
@@ -309,12 +309,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                 if (rightConstantValue != null)
                                 {
                                     if ((leftConstantValue.IsBoolean() /*||
-                                         leftConstantValue.IsDecimal()*/) &&
+                                         leftConstantValue.IsInteger()*/) &&
                                         StatementHelpers.TryParseBooleanFromString(leftConstantValue.Value,
                                             out var leftBool))
                                     {
                                         if ((rightConstantValue.IsBoolean() /*||
-                                             rightConstantValue.IsDecimal()*/) &&
+                                             rightConstantValue.IsInteger()*/) &&
                                             StatementHelpers.TryParseBooleanFromString(rightConstantValue.Value,
                                                 out var rightBool))
                                         {
@@ -400,16 +400,16 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             {
                                 if (leftConstant.IsNumber() && rightConstant.IsNumber())
                                 {
-                                    if (leftConstant.IsDecimal() && rightConstant.IsDecimal() &&
-                                        long.TryParse(leftConstant.Value, out var leftDecimal) &&
-                                        long.TryParse(rightConstant.Value, out var rightDecimal)
+                                    if (leftConstant.IsInteger() && rightConstant.IsInteger() &&
+                                        long.TryParse(leftConstant.Value, out var leftInteger) &&
+                                        long.TryParse(rightConstant.Value, out var rightInteger)
                                     )
                                     {
                                         return new ConstantValueStatement(
                                             TypeDescriptor.Boolean,
                                             (logicalEvaluationStatement.Operator is EqualOperator
-                                                ? leftDecimal == rightDecimal
-                                                : leftDecimal != rightDecimal).ToString(CultureInfo.InvariantCulture),
+                                                ? leftInteger == rightInteger
+                                                : leftInteger != rightInteger).ToString(CultureInfo.InvariantCulture),
                                             logicalEvaluationStatement.Info
                                         )
                                         {
@@ -472,24 +472,24 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             {
                                 if (leftConstantValue.IsNumber() && rightConstantValue.IsNumber())
                                 {
-                                    if (leftConstantValue.IsDecimal() && rightConstantValue.IsDecimal() &&
-                                        long.TryParse(leftConstantValue.Value, out var leftDecimal) &&
-                                        long.TryParse(rightConstantValue.Value, out var rightDecimal))
+                                    if (leftConstantValue.IsInteger() && rightConstantValue.IsInteger() &&
+                                        long.TryParse(leftConstantValue.Value, out var leftInteger) &&
+                                        long.TryParse(rightConstantValue.Value, out var rightInteger))
                                     {
                                         bool resultVal;
                                         switch (logicalEvaluationStatement.Operator)
                                         {
                                             case GreaterOperator _:
-                                                resultVal = leftDecimal > rightDecimal;
+                                                resultVal = leftInteger > rightInteger;
                                                 break;
                                             case GreaterEqualOperator _:
-                                                resultVal = leftDecimal >= rightDecimal;
+                                                resultVal = leftInteger >= rightInteger;
                                                 break;
                                             case LessOperator _:
-                                                resultVal = leftDecimal < rightDecimal;
+                                                resultVal = leftInteger < rightInteger;
                                                 break;
                                             case LessEqualOperator _:
-                                                resultVal = leftDecimal <= rightDecimal;
+                                                resultVal = leftInteger <= rightInteger;
                                                 break;
                                             default:
                                                 throw new InvalidOperationException();
@@ -746,36 +746,36 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             {
                                 if (leftConstant.IsNumber() && rightConstant.IsNumber())
                                 {
-                                    if (leftConstant.IsDecimal() && rightConstant.IsDecimal() &&
-                                        long.TryParse(leftConstant.Value, out var leftDecimal) &&
-                                        long.TryParse(rightConstant.Value, out var rightDecimal))
+                                    if (leftConstant.IsInteger() && rightConstant.IsInteger() &&
+                                        long.TryParse(leftConstant.Value, out var leftInteger) &&
+                                        long.TryParse(rightConstant.Value, out var rightInteger))
                                     {
                                         long resultVal;
                                         switch (arithmeticEvaluationStatement.Operator)
                                         {
                                             case AdditionOperator _:
-                                                resultVal = leftDecimal + rightDecimal;
+                                                resultVal = leftInteger + rightInteger;
                                                 break;
                                             case SubtractionOperator _:
-                                                resultVal = leftDecimal - rightDecimal;
+                                                resultVal = leftInteger - rightInteger;
                                                 break;
                                             case MultiplicationOperator _:
-                                                resultVal = leftDecimal * rightDecimal;
+                                                resultVal = leftInteger * rightInteger;
                                                 break;
                                             case DivisionOperator _:
-                                                resultVal = leftDecimal / rightDecimal;
+                                                resultVal = leftInteger / rightInteger;
                                                 break;
                                             case ModulusOperator _:
-                                                resultVal = leftDecimal % rightDecimal;
+                                                resultVal = leftInteger % rightInteger;
                                                 break;
                                             //case ReminderOperator _:
-                                            //    resultVal = leftDecimal % rightDecimal;
+                                            //    resultVal = leftInteger % rightInteger;
                                             //    break;
                                             default:
                                                 throw new InvalidOperationException();
                                         }
 
-                                        return new ConstantValueStatement(TypeDescriptor.Decimal,
+                                        return new ConstantValueStatement(TypeDescriptor.Integer,
                                             resultVal.ToString(NumberFormatInfo.InvariantInfo),
                                             arithmeticEvaluationStatement.Info
                                         )
@@ -812,7 +812,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                                 throw new InvalidOperationException();
                                         }
 
-                                        return new ConstantValueStatement(TypeDescriptor.Decimal,
+                                        return new ConstantValueStatement(TypeDescriptor.Integer,
                                             resultVal.ToString(NumberFormatInfo.InvariantInfo),
                                             arithmeticEvaluationStatement.Info
                                         )
@@ -838,7 +838,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     };
                                 }
 
-                                if (leftConstant.IsDecimal() || rightConstant.IsString())
+                                if (leftConstant.IsInteger() || rightConstant.IsString())
                                 {
                                     if (!int.TryParse(leftConstant.Value, out var count))
                                     {
@@ -861,7 +861,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     };
                                 }
 
-                                if (leftConstant.IsString() || rightConstant.IsDecimal())
+                                if (leftConstant.IsString() || rightConstant.IsInteger())
                                 {
                                     if (!int.TryParse(rightConstant.Value, out var count))
                                     {

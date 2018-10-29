@@ -58,7 +58,7 @@ namespace ShellScript.Unix.Bash
                 {
                     return "0";
                 }
-                case DataTypes.Decimal:
+                case DataTypes.Integer:
                 case DataTypes.Float:
                 case DataTypes.Numeric:
                 {

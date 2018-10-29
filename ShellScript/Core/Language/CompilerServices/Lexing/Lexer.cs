@@ -111,7 +111,7 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         );
 
         public static readonly Regex Number = new Regex(@"^([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)", RegexOptions.Compiled);
-        public static readonly Regex DataType = new Regex(@"^(const|void|int(?!\[\])|bool(?!\[\])|double(?!\[\])|float(?!\[\])|string(?!\[\])|object(?!\[\])|number(?!\[\])|decimal(?!\[\])|int\[\]|bool\[\]|double\[\]|float\[\]|string\[\]|object\[\]|number\[\]|decimal\[\])(?!\w)", RegexOptions.Compiled);
+        public static readonly Regex DataType = new Regex(@"^(const|void|int(?!\[\])|long(?!\[\])|bool(?!\[\])|double(?!\[\])|float(?!\[\])|string(?!\[\])|object(?!\[\])|number(?!\[\])|int\[\]|long\[\]|bool\[\]|double\[\]|float\[\]|string\[\]|object\[\]|number\[\])(?!\w)", RegexOptions.Compiled);
         public static readonly Regex ValidIdentifierName = new Regex(@"^\w+", RegexOptions.Compiled);
         
         public static readonly Regex MultiLineCommentOpen = new Regex(@"^/\*", RegexOptions.Compiled);

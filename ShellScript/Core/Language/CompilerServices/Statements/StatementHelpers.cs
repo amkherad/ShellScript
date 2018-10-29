@@ -231,11 +231,11 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                 return a;
             }
 
-            if (a.IsDecimal())
+            if (a.IsInteger())
             {
-                if (b.IsDecimal())
+                if (b.IsInteger())
                 {
-                    return TypeDescriptor.Decimal;
+                    return TypeDescriptor.Integer;
                 }
 
                 if (b.IsNumericOrFloat())
@@ -377,7 +377,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             }
             else if (destination.IsFloat())
             {
-                if (source.IsDecimal())
+                if (source.IsInteger())
                 {
                     return true;
                 }
@@ -492,21 +492,21 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNumber(this DataTypes dataType)
         {
-            return dataType == DataTypes.Decimal || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
+            return dataType == DataTypes.Integer || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNumber(this TypeDescriptor typeDescriptor)
         {
             var dataType = typeDescriptor.DataType;
-            return dataType == DataTypes.Decimal || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
+            return dataType == DataTypes.Integer || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNumber(this ConstantValueStatement constantValueStatement)
         {
             var dataType = constantValueStatement.TypeDescriptor.DataType;
-            return dataType == DataTypes.Decimal || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
+            return dataType == DataTypes.Integer || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -549,22 +549,22 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsDecimal(this DataTypes dataType)
+        public static bool IsInteger(this DataTypes dataType)
         {
-            return dataType == DataTypes.Decimal;
+            return dataType == DataTypes.Integer;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsDecimal(this TypeDescriptor typeDescriptor)
+        public static bool IsInteger(this TypeDescriptor typeDescriptor)
         {
             var dataType = typeDescriptor.DataType;
-            return dataType == DataTypes.Decimal;
+            return dataType == DataTypes.Integer;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsDecimal(this ConstantValueStatement constantValueStatement)
+        public static bool IsInteger(this ConstantValueStatement constantValueStatement)
         {
-            return constantValueStatement.TypeDescriptor.DataType == DataTypes.Decimal;
+            return constantValueStatement.TypeDescriptor.DataType == DataTypes.Integer;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

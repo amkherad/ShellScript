@@ -29,7 +29,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         public static string WriteLastStatusCodeStoreVariableDefinition(Context context, Scope scope, TextWriter writer,
             string nameHint)
         {
-            var name = scope.NewHelperVariable(TypeDescriptor.Decimal, nameHint);
+            var name = scope.NewHelperVariable(TypeDescriptor.Integer, nameHint);
 
             if (scope.IsRootScope)
                 writer.WriteLine($"{name}=$?");

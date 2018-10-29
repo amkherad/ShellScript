@@ -35,7 +35,7 @@ namespace ShellScript.MSTest.LexingTests
             var syntax =
                 "\"ali\" 'ali' ( /* x*/ ) {/*x */ } [  /*x " +
                 Environment.NewLine +
-                "*/] && & || | . , = == != ! ~ ++ -- * / + - \\ if else #if #elseif #else #endif for foreach do while loop class function throw async await in notin like notlike call const var int double float object variant number decimal int[] double[] float[] object[] variant[] number[] decimal[] echo 343 +324.53 +34e-23";
+                "*/] && & || | . , = == != ! ~ ++ -- * / + - \\ if else #if #elseif #else #endif for foreach do while loop class function throw async await in notin like notlike call const var int double float object variant number integer int[] double[] float[] object[] variant[] number[] long[] echo 343 +324.53 +34e-23";
 
             var tokens = lexer.Tokenize(new StringReader(syntax)).ToList();
 

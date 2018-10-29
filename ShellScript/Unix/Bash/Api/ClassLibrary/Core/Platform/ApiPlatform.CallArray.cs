@@ -10,7 +10,7 @@
 //        {
 //            public override string Name => nameof(CallArray);
 //            public override string Summary { get; }
-//            public override DataTypes DataType => DataTypes.Decimal;
+//            public override DataTypes DataType => DataTypes.Integer;
 //
 //
 //            public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,

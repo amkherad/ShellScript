@@ -57,7 +57,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                     {
                         if (p.Scope.TryGetVariableInfo(variableAccessStatement, out var varInfo))
                         {
-                            if (varInfo.TypeDescriptor.IsDecimal())
+                            if (varInfo.TypeDescriptor.IsInteger())
                             {
                                 return new ApiMethodBuilderRawResult(new ExpressionResult(
                                     varInfo.TypeDescriptor,
@@ -91,12 +91,12 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
             {
                 if (typeDescriptor.IsNumber())
                 {
-                    if (typeDescriptor.IsDecimal() &&
-                        long.TryParse(value, out var decimalResult))
+                    if (typeDescriptor.IsInteger() &&
+                        long.TryParse(value, out var integerResult))
                     {
                         return Inline(
-                            new ConstantValueStatement(TypeDescriptor.Decimal,
-                                System.Math.Abs(decimalResult).ToString(NumberFormatInfo.InvariantInfo),
+                            new ConstantValueStatement(TypeDescriptor.Integer,
+                                System.Math.Abs(integerResult).ToString(NumberFormatInfo.InvariantInfo),
                                 statement.Info)
                         );
                     }

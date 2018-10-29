@@ -9,7 +9,7 @@ namespace ShellScript.Core.Language.Library
 
         Array = 0x4000,
 
-        Decimal = 1,
+        Integer = 1,
 
         Float = 2,
 

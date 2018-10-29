@@ -3,8 +3,8 @@
 int intVar;
 int intVarVal = 10 / 10;
 
-decimal decVar;
-decimal decVarVal = 10 * 10;
+long decVar;
+long decVarVal = 10 * 10;
 
 float floatVar;
 float floatVarVal = 3.5 * 2;

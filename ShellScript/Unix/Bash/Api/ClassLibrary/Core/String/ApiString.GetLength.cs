@@ -17,7 +17,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
             public override string Name => nameof(GetLength);
             public override string Summary => "Returns the length of the string. (may vary depending on current locale)";
             public override string ClassName => ClassAccessName;
-            public override TypeDescriptor TypeDescriptor => TypeDescriptor.Decimal;
+            public override TypeDescriptor TypeDescriptor => TypeDescriptor.Integer;
 
             public override FunctionParameterDefinitionStatement[] Parameters { get; } =
             {
@@ -28,7 +28,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
 
             public GetLength()
             {
-                _functionInfo = new FunctionInfo(TypeDescriptor.Decimal, ApiMathAbsBashMethodName,
+                _functionInfo = new FunctionInfo(TypeDescriptor.Integer, ApiMathAbsBashMethodName,
                     null, ClassAccessName, false, Parameters, null);
             }
 
@@ -84,7 +84,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
                 if (typeDescriptor.IsString())
                 {
                     return Inline(
-                        new ConstantValueStatement(TypeDescriptor.Decimal,
+                        new ConstantValueStatement(TypeDescriptor.Integer,
                             value.Length.ToString(NumberFormatInfo.InvariantInfo),
                             statement.Info)
                     );

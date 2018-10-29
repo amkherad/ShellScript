@@ -392,10 +392,10 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     }
                     case TokenType.Number:
                     {
-                        if (long.TryParse(token.Value, out var decimalResult))
+                        if (long.TryParse(token.Value, out var integerResult))
                         {
-                            statements.AddLast(new ConstantValueStatement(TypeDescriptor.Decimal,
-                                decimalResult.ToString(NumberFormatInfo.InvariantInfo),
+                            statements.AddLast(new ConstantValueStatement(TypeDescriptor.Integer,
+                                integerResult.ToString(NumberFormatInfo.InvariantInfo),
                                 CreateStatementInfo(context, token)));
                         }
                         else if (double.TryParse(token.Value, out var floatResult))

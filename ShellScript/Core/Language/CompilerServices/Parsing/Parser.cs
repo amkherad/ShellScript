@@ -31,7 +31,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             "double",
             "float",
             "void",
-            "decimal",
+            "integer",
             "null",
             "nil",
             "numeric",
@@ -48,7 +48,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
             "var",
             "variant[]",
             "numeric[]",
-            "decimal[]",
+            "integer[]",
             "for",
             "foreach",
             "loop",
@@ -112,18 +112,16 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                     switch (token.Value.ToLower())
                     {
                         case "int":
-                            return TypeDescriptor.Decimal;
+                        case "long":
+                            return TypeDescriptor.Integer;
                         case "bool":
                         case "boolean":
                             return TypeDescriptor.Boolean;
-                        case "decimal":
-                            return TypeDescriptor.Decimal;
-                        case "number":
-                            return TypeDescriptor.Numeric;
                         case "float":
-                            return TypeDescriptor.Float;
                         case "double":
                             return TypeDescriptor.Float;
+                        case "number":
+                            return TypeDescriptor.Numeric;
                         case "string":
                             return TypeDescriptor.String;
                         case "delegate":
@@ -138,13 +136,11 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
                             return TypeDescriptor.Void;
                         
                         case "int[]":
-                            return new TypeDescriptor(DataTypes.Decimal | DataTypes.Array);
-                        case "decimal[]":
-                            return new TypeDescriptor(DataTypes.Decimal | DataTypes.Array);
+                        case "long[]":
+                            return new TypeDescriptor(DataTypes.Integer | DataTypes.Array);
                         case "number[]":
                             return new TypeDescriptor(DataTypes.Numeric | DataTypes.Array);
                         case "float[]":
-                            return new TypeDescriptor(DataTypes.Float | DataTypes.Array);
                         case "double[]":
                             return new TypeDescriptor(DataTypes.Float | DataTypes.Array);
                         case "string[]":

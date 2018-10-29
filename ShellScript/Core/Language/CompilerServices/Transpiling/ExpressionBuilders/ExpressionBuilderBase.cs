@@ -380,7 +380,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                     {
                         var result = CreateExpressionRecursive(p, bitwiseEvaluationStatement.Right);
 
-                        if (!result.TypeDescriptor.IsDecimal())
+                        if (!result.TypeDescriptor.IsInteger())
                         {
                             throw new InvalidStatementCompilerException(bitwiseEvaluationStatement,
                                 bitwiseEvaluationStatement.Info);
@@ -398,7 +398,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
                             result.Template.ParentStatement = newTemp;
 
                             return new ExpressionResult(
-                                TypeDescriptor.Decimal,
+                                TypeDescriptor.Integer,
                                 FormatBitwiseExpression(p,
                                     exp,
                                     newTemp
@@ -410,14 +410,14 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                     var leftResult = CreateExpressionRecursive(p, bitwiseEvaluationStatement.Left);
 
-                    if (!(leftResult.TypeDescriptor.IsDecimal() || leftResult.TypeDescriptor.IsBoolean()))
+                    if (!(leftResult.TypeDescriptor.IsInteger() || leftResult.TypeDescriptor.IsBoolean()))
                     {
                         throw new InvalidStatementCompilerException(leftResult.Template, leftResult.Template.Info);
                     }
 
                     var rightResult = CreateExpressionRecursive(p, bitwiseEvaluationStatement.Right);
 
-                    if (!(rightResult.TypeDescriptor.IsDecimal() || rightResult.TypeDescriptor.IsBoolean()))
+                    if (!(rightResult.TypeDescriptor.IsInteger() || rightResult.TypeDescriptor.IsBoolean()))
                     {
                         throw new InvalidStatementCompilerException(bitwiseEvaluationStatement,
                             bitwiseEvaluationStatement.Info);
@@ -533,14 +533,14 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
                     var leftResult = CreateExpressionRecursive(p, logicalEvaluationStatement.Left);
 
-//                    if (!(leftDataType.IsDecimal() || leftDataType.IsBoolean()))
+//                    if (!(leftDataType.IsInteger() || leftDataType.IsBoolean()))
 //                    {
 //                        throw new InvalidStatementCompilerException(left, left.Info);
 //                    }
 
                     var rightResult = CreateExpressionRecursive(p, logicalEvaluationStatement.Right);
 
-//                    if (!(rightDataType.IsDecimal() || rightDataType.IsBoolean()))
+//                    if (!(rightDataType.IsInteger() || rightDataType.IsBoolean()))
 //                    {
 //                        throw new InvalidStatementCompilerException(logicalEvaluationStatement,
 //                            logicalEvaluationStatement.Info);
