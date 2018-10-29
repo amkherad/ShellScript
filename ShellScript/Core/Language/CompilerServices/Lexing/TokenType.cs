@@ -48,6 +48,7 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
         Reminder, // %
         
         Throw, //throw
+        Delegate, //delegate
         Async, //async
         Await, //await
         In, //in

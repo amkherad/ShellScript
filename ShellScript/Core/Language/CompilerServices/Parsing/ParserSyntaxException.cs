@@ -6,33 +6,33 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
     {
         public int LineNumber { get; }
         public int ColumnNumber { get; }
-        public ParserInfo ParserInfo { get; }
+        public ParserContext ParserContext { get; }
 
         public ParserSyntaxException(string message,
-            int lineNumber, int columnNumber, ParserInfo info)
-            : base($"{message} '{info}' at {lineNumber}:{columnNumber}")
+            int lineNumber, int columnNumber, ParserContext context)
+            : base($"{message} '{context}' at {lineNumber}:{columnNumber}")
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;
-            ParserInfo = info;
+            ParserContext = context;
         }
         
         public ParserSyntaxException(string message,
-            int lineNumber, int columnNumber, ParserInfo info,
+            int lineNumber, int columnNumber, ParserContext context,
             Exception innerException)
-            : base($"{message} '{info}' at {lineNumber}:{columnNumber}", innerException)
+            : base($"{message} '{context}' at {lineNumber}:{columnNumber}", innerException)
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;
-            ParserInfo = info;
+            ParserContext = context;
         }
         
-        public ParserSyntaxException(int lineNumber, int columnNumber, ParserInfo info)
-            : base($"Parse exception '{info}' at {lineNumber}:{columnNumber}")
+        public ParserSyntaxException(int lineNumber, int columnNumber, ParserContext context)
+            : base($"Parse exception '{context}' at {lineNumber}:{columnNumber}")
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;
-            ParserInfo = info;
+            ParserContext = context;
         }
     }
 }

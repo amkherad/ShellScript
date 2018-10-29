@@ -7,7 +7,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public virtual bool CanBeEmbedded => false;
         public StatementInfo Info { get; }
 
-        public DataTypes DataType { get; }
+        public TypeDescriptor TypeDescriptor { get; }
         public string Name { get; }
 
         public EvaluationStatement DefaultValue { get; }
@@ -16,10 +16,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public IStatement[] TraversableChildren { get; protected set; }
 
 
-        public DefinitionStatement(DataTypes dataType, string name, EvaluationStatement defaultValue,
+        public DefinitionStatement(TypeDescriptor typeDescriptor, string name, EvaluationStatement defaultValue,
             bool hasDefaultValue, StatementInfo info)
         {
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
             Name = name;
             DefaultValue = defaultValue;
             HasDefaultValue = hasDefaultValue;
@@ -32,10 +32,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             if (DefaultValue != null)
             {
-                return $"{DataType} {Name} = {DefaultValue}";
+                return $"{TypeDescriptor} {Name} = {DefaultValue}";
             }
 
-            return $"{DataType} {Name}";
+            return $"{TypeDescriptor} {Name}";
         }
     }
 }

@@ -107,7 +107,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         }
                         else if (long.TryParse(constantValueStatement.Value, out _))
                         {
-                            return new ConstantValueStatement(DataTypes.Decimal, constantValueStatement.Value,
+                            return new ConstantValueStatement(TypeDescriptor.Decimal, constantValueStatement.Value,
                                 constantValueStatement.Info);
                         }
 
@@ -124,7 +124,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                     {
                         var str = StatementHelpers.UnEscapeString(constantValueStatement.Value);
 
-                        return new ConstantValueStatement(DataTypes.String, str, constantValueStatement.Info);
+                        return new ConstantValueStatement(TypeDescriptor.String, str, constantValueStatement.Info);
                     }
 
                     return constantValueStatement;
@@ -139,8 +139,14 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
                     if (scope.TryGetConstantInfo(variableAccessStatement, out var constInfo))
                     {
-                        return new ConstantValueStatement(constInfo.DataType, constInfo.Value,
+                        return new ConstantValueStatement(constInfo.TypeDescriptor, constInfo.Value,
                             variableAccessStatement.Info);
+                    }
+                    
+                    if (scope.TryGetPrototypeInfo(variableAccessStatement, out _) ||
+                        scope.TryGetFunctionInfo(variableAccessStatement, out _))
+                    {
+                        return variableAccessStatement;
                     }
 
                     throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
@@ -161,7 +167,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
                             if (bitwiseEvaluationStatement.Right is ConstantValueStatement constantValueStatement)
                             {
-                                if (constantValueStatement.DataType == DataTypes.Decimal)
+                                if (constantValueStatement.TypeDescriptor.IsDecimal())
                                 {
                                     if (!long.TryParse(constantValueStatement.Value, out var value))
                                     {
@@ -170,7 +176,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     }
 
                                     return new ConstantValueStatement(
-                                        constantValueStatement.DataType,
+                                        constantValueStatement.TypeDescriptor,
                                         (~value).ToString(NumberFormatInfo.InvariantInfo),
                                         constantValueStatement.Info
                                     )
@@ -217,7 +223,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                                 throw new InvalidOperationException();
                                         }
 
-                                        return new ConstantValueStatement(DataTypes.Decimal,
+                                        return new ConstantValueStatement(TypeDescriptor.Decimal,
                                             resultVal.ToString(CultureInfo.InvariantCulture),
                                             bitwiseEvaluationStatement.Info)
                                         {
@@ -226,12 +232,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     }
 
                                     throw new InvalidOperatorForTypeCompilerException(
-                                        bitwiseEvaluationStatement.Operator.GetType(), rightConstantValue.DataType,
+                                        bitwiseEvaluationStatement.Operator.GetType(), rightConstantValue.TypeDescriptor,
                                         rightConstantValue.Info);
                                 }
 
-                                if (leftConstantValue.DataType == DataTypes.Boolean &&
-                                    rightConstantValue.DataType == DataTypes.Boolean &&
+                                if (leftConstantValue.TypeDescriptor.IsBoolean() &&
+                                    rightConstantValue.TypeDescriptor.IsBoolean() &&
                                     bool.TryParse(leftConstantValue.Value, out var leftBool) &&
                                     bool.TryParse(rightConstantValue.Value, out var rightBool))
                                 {
@@ -251,7 +257,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                             throw new InvalidOperationException();
                                     }
 
-                                    return new ConstantValueStatement(DataTypes.Boolean,
+                                    return new ConstantValueStatement(TypeDescriptor.Boolean,
                                         resultVal.ToString(CultureInfo.InvariantCulture),
                                         bitwiseEvaluationStatement.Info)
                                     {
@@ -260,7 +266,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                 }
 
                                 throw new InvalidOperatorForTypeCompilerException(
-                                    bitwiseEvaluationStatement.Operator.GetType(), leftConstantValue.DataType,
+                                    bitwiseEvaluationStatement.Operator.GetType(), leftConstantValue.TypeDescriptor,
                                     leftConstantValue.Info);
                             }
 
@@ -312,7 +318,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                             StatementHelpers.TryParseBooleanFromString(rightConstantValue.Value,
                                                 out var rightBool))
                                         {
-                                            return new ConstantValueStatement(DataTypes.Boolean,
+                                            return new ConstantValueStatement(TypeDescriptor.Boolean,
                                                 (logicalEvaluationStatement.Operator is LogicalAndOperator
                                                     ? leftBool && rightBool
                                                     : leftBool || rightBool).ToString(CultureInfo.InvariantCulture),
@@ -323,12 +329,12 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         }
 
                                         throw new InvalidOperatorForTypeCompilerException(
-                                            logicalEvaluationStatement.Operator.GetType(), rightConstantValue.DataType,
+                                            logicalEvaluationStatement.Operator.GetType(), rightConstantValue.TypeDescriptor,
                                             rightConstantValue.Info);
                                     }
 
                                     throw new InvalidOperatorForTypeCompilerException(
-                                        logicalEvaluationStatement.Operator.GetType(), leftConstantValue.DataType,
+                                        logicalEvaluationStatement.Operator.GetType(), leftConstantValue.TypeDescriptor,
                                         leftConstantValue.Info);
                                 }
 
@@ -400,7 +406,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     )
                                     {
                                         return new ConstantValueStatement(
-                                            DataTypes.Boolean,
+                                            TypeDescriptor.Boolean,
                                             (logicalEvaluationStatement.Operator is EqualOperator
                                                 ? leftDecimal == rightDecimal
                                                 : leftDecimal != rightDecimal).ToString(CultureInfo.InvariantCulture),
@@ -415,7 +421,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         double.TryParse(rightConstant.Value, out var rightFloat))
                                     {
                                         return new ConstantValueStatement(
-                                            DataTypes.Boolean,
+                                            TypeDescriptor.Boolean,
                                             (Math.Abs(leftFloat - rightFloat) < double.Epsilon).ToString(CultureInfo
                                                 .InvariantCulture),
                                             logicalEvaluationStatement.Info
@@ -427,7 +433,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                 }
 
                                 return new ConstantValueStatement(
-                                    DataTypes.Boolean,
+                                    TypeDescriptor.Boolean,
                                     (logicalEvaluationStatement.Operator is EqualOperator
                                         ? leftConstant.Value == rightConstant.Value
                                         : leftConstant.Value != rightConstant.Value)
@@ -489,7 +495,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                                 throw new InvalidOperationException();
                                         }
 
-                                        return new ConstantValueStatement(DataTypes.Boolean,
+                                        return new ConstantValueStatement(TypeDescriptor.Boolean,
                                             resultVal.ToString(NumberFormatInfo.InvariantInfo),
                                             logicalEvaluationStatement.Info)
                                         {
@@ -519,7 +525,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                                 throw new InvalidOperationException();
                                         }
 
-                                        return new ConstantValueStatement(DataTypes.Boolean,
+                                        return new ConstantValueStatement(TypeDescriptor.Boolean,
                                             resultVal.ToString(NumberFormatInfo.InvariantInfo),
                                             logicalEvaluationStatement.Info)
                                         {
@@ -528,7 +534,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     }
 
                                     throw new InvalidOperatorForTypeCompilerException(
-                                        logicalEvaluationStatement.Operator.GetType(), rightConstantValue.DataType,
+                                        logicalEvaluationStatement.Operator.GetType(), rightConstantValue.TypeDescriptor,
                                         rightConstantValue.Info);
                                 }
 
@@ -556,7 +562,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                             throw new InvalidOperationException();
                                     }
 
-                                    return new ConstantValueStatement(DataTypes.Boolean,
+                                    return new ConstantValueStatement(TypeDescriptor.Boolean,
                                         resultVal.ToString(NumberFormatInfo.InvariantInfo),
                                         logicalEvaluationStatement.Info)
                                     {
@@ -565,7 +571,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                 }
 
                                 throw new InvalidOperatorForTypeCompilerException(
-                                    logicalEvaluationStatement.Operator.GetType(), leftConstantValue.DataType,
+                                    logicalEvaluationStatement.Operator.GetType(), leftConstantValue.TypeDescriptor,
                                     leftConstantValue.Info);
                             }
 
@@ -593,7 +599,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
 
                             if (logicalEvaluationStatement.Right is ConstantValueStatement constantValueStatement)
                             {
-                                if (constantValueStatement.DataType == DataTypes.Boolean ||
+                                if (constantValueStatement.TypeDescriptor.IsBoolean() ||
                                     constantValueStatement.IsNumber())
                                 {
                                     if (!StatementHelpers.TryParseBooleanFromString(constantValueStatement.Value,
@@ -604,7 +610,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     }
 
                                     return new ConstantValueStatement(
-                                        constantValueStatement.DataType,
+                                        constantValueStatement.TypeDescriptor,
                                         (!value).ToString(NumberFormatInfo.InvariantInfo),
                                         constantValueStatement.Info
                                     )
@@ -689,7 +695,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     if (long.TryParse(constantValueStatement.Value, out var longResult))
                                     {
                                         return new ConstantValueStatement(
-                                            constantValueStatement.DataType,
+                                            constantValueStatement.TypeDescriptor,
                                             (-longResult).ToString(NumberFormatInfo.InvariantInfo),
                                             constantValueStatement.Info
                                         );
@@ -698,7 +704,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                     if (double.TryParse(constantValueStatement.Value, out var doubleResult))
                                     {
                                         return new ConstantValueStatement(
-                                            constantValueStatement.DataType,
+                                            constantValueStatement.TypeDescriptor,
                                             (-doubleResult).ToString(NumberFormatInfo.InvariantInfo),
                                             constantValueStatement.Info
                                         )
@@ -769,7 +775,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                                 throw new InvalidOperationException();
                                         }
 
-                                        return new ConstantValueStatement(DataTypes.Decimal,
+                                        return new ConstantValueStatement(TypeDescriptor.Decimal,
                                             resultVal.ToString(NumberFormatInfo.InvariantInfo),
                                             arithmeticEvaluationStatement.Info
                                         )
@@ -806,7 +812,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                                 throw new InvalidOperationException();
                                         }
 
-                                        return new ConstantValueStatement(DataTypes.Decimal,
+                                        return new ConstantValueStatement(TypeDescriptor.Decimal,
                                             resultVal.ToString(NumberFormatInfo.InvariantInfo),
                                             arithmeticEvaluationStatement.Info
                                         )
@@ -822,7 +828,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                 if (leftConstant.IsString() && rightConstant.IsString() &&
                                     arithmeticEvaluationStatement.Operator is AdditionOperator)
                                 {
-                                    return new ConstantValueStatement(DataTypes.String,
+                                    return new ConstantValueStatement(TypeDescriptor.String,
                                         BashTranspilerHelpers.StandardizeString(leftConstant.Value, true) +
                                         BashTranspilerHelpers.StandardizeString(rightConstant.Value, true),
                                         arithmeticEvaluationStatement.Info
@@ -846,7 +852,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         sb.Append(str);
                                     }
 
-                                    return new ConstantValueStatement(DataTypes.String,
+                                    return new ConstantValueStatement(TypeDescriptor.String,
                                         sb.ToString(),
                                         arithmeticEvaluationStatement.Info
                                     )
@@ -869,7 +875,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                                         sb.Append(str);
                                     }
 
-                                    return new ConstantValueStatement(DataTypes.String,
+                                    return new ConstantValueStatement(TypeDescriptor.String,
                                         sb.ToString(),
                                         arithmeticEvaluationStatement.Info
                                     )
@@ -953,7 +959,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             var paramArray = parameters.ToArray();
 
                             var result = new FunctionCallStatement(functionCallStatement.ObjectName,
-                                functionCallStatement.FunctionName, functionCallStatement.DataType,
+                                functionCallStatement.FunctionName, functionCallStatement.TypeDescriptor,
                                 paramArray, functionCallStatement.Info)
                             {
                                 ParentStatement = functionCallStatement.ParentStatement

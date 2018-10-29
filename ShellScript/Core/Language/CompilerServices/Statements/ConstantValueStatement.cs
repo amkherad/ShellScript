@@ -7,14 +7,14 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public override bool CanBeEmbedded => false;
         public override StatementInfo Info { get; }
 
-        public DataTypes DataType { get; }
+        public TypeDescriptor TypeDescriptor { get; }
         public string Value { get; }
 
 
-        public ConstantValueStatement(DataTypes dataType, string value,
+        public ConstantValueStatement(TypeDescriptor typeDescriptor, string value,
             StatementInfo info)
         {
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
             Value = value;
             Info = info;
 

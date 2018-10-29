@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using ShellScript.Core.Language.Library;
 
@@ -15,15 +13,16 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public FunctionParameterDefinitionStatement[] Parameters { get; }
 
         public bool IsParams { get; }
-        
-        public DataTypes DataType { get; }
-        
+
+        public TypeDescriptor TypeDescriptor { get; }
+
         public IStatement[] TraversableChildren { get; protected set; }
 
 
-        public FunctionStatement(DataTypes dataType, string name, FunctionParameterDefinitionStatement[] parameters, IStatement statement, StatementInfo info)
+        public FunctionStatement(TypeDescriptor typeDescriptor, string name,
+            FunctionParameterDefinitionStatement[] parameters, IStatement statement, StatementInfo info)
         {
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
             Name = name;
             Statement = statement;
             Info = info;
@@ -45,10 +44,10 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         {
             if (Parameters != null && Parameters.Length > 0)
             {
-                return $"{DataType} {Name}({string.Join(',', Parameters.Select(x => x.ToString()))}){{}}";
+                return $"{TypeDescriptor} {Name}({string.Join(',', Parameters.Select(x => x.ToString()))}){{}}";
             }
-            
-            return $"{DataType} {Name}(){{}}";
+
+            return $"{TypeDescriptor} {Name}(){{}}";
         }
     }
 }

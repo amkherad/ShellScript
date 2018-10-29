@@ -8,7 +8,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
         {
             public override string Name => nameof(CallFloat);
             public override string Summary { get; }
-            public override DataTypes DataType => DataTypes.Float;
+            public override TypeDescriptor TypeDescriptor => TypeDescriptor.Float;
         }
     }
 }

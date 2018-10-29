@@ -5,7 +5,9 @@ namespace ShellScript.Core.Language.CompilerServices
 {
     public class VariableInfo : IEquatable<VariableInfo>
     {
-        public DataTypes DataType { get; }
+        public TypeDescriptor TypeDescriptor { get; }
+        
+        public string ClassName { get; }
         public string Name { get; }
         public string ReName { get; }
 
@@ -15,14 +17,29 @@ namespace ShellScript.Core.Language.CompilerServices
         public bool IsOriginal { get; set; }
         
         
-        public VariableInfo(DataTypes dataType, string name, string reName)
+        public VariableInfo(TypeDescriptor typeDescriptor, string className, string name, string reName)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
-            DataType = dataType;
+            ClassName = className;
+            TypeDescriptor = typeDescriptor;
+            ReName = reName;
+            IsOriginal = true;
+        }
+        
+        public VariableInfo(TypeDescriptor typeDescriptor, string name, string reName)
+        {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            TypeDescriptor = typeDescriptor;
             ReName = reName;
             IsOriginal = true;
         }
 
+        public VariableInfo(string className, string name)
+        {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            ClassName = className;
+        }
+        
         public VariableInfo(string name)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));

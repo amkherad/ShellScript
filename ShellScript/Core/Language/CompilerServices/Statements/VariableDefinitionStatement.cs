@@ -9,12 +9,12 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         public bool IsConstant { get; }
 
         public VariableDefinitionStatement(
-            DataTypes dataType,
+            TypeDescriptor typeDescriptor,
             string name,
             bool isConstant,
             EvaluationStatement value,
             StatementInfo info)
-            : base(dataType, name, value, value != null, info)
+            : base(typeDescriptor, name, value, value != null, info)
         {
             IsConstant = isConstant;
         }

@@ -1,7 +1,7 @@
 namespace ShellScript.Core.Language.CompilerServices.Statements
 {
     /// <summary>
-    /// Represents an statement.
+    /// Represents an statement in abstract syntax tree.
     /// </summary>
     public interface IStatement
     {

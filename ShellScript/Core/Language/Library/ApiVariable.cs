@@ -4,21 +4,21 @@ namespace ShellScript.Core.Language.Library
     {
         public string Name { get; }
         
-        public DataTypes DataType { get; }
+        public TypeDescriptor TypeDescriptor { get; }
         
         public object DefaultValue { get; }
 
         
-        public ApiVariable(string name, DataTypes dataType)
+        public ApiVariable(string name, TypeDescriptor typeDescriptor)
         {
             Name = name;
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
         }
         
-        public ApiVariable(string name, DataTypes dataType, object defaultValue)
+        public ApiVariable(string name, TypeDescriptor typeDescriptor, object defaultValue)
         {
             Name = name;
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
             DefaultValue = defaultValue;
         }
     }

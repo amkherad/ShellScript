@@ -6,27 +6,27 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 {
     public interface IExpressionBuilder
     {
-        bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p, DataTypes dataType,
+        bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p, TypeDescriptor typeDescriptor,
             EvaluationStatement template);
 
         bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p, EvaluationStatement template,
             ExpressionResult left, ExpressionResult right);
 
         bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p, EvaluationStatement template,
-            DataTypes left, EvaluationStatement leftTemplate, DataTypes right, EvaluationStatement rightTemplate);
+            TypeDescriptor left, EvaluationStatement leftTemplate, TypeDescriptor right, EvaluationStatement rightTemplate);
 
 
 
         PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p, string nameHint, ExpressionResult result);
 
         PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p,
-            DataTypes dataTypes, string nameHint, string expression, EvaluationStatement template);
+            TypeDescriptor typeDescriptor, string nameHint, string expression, EvaluationStatement template);
 
         PinnedVariableResult PinFloatingPointExpressionToVariable(ExpressionBuilderParams p, string nameHint,
             ExpressionResult result);
         
         PinnedVariableResult PinFloatingPointExpressionToVariable(ExpressionBuilderParams p,
-            DataTypes dataTypes, string nameHint, string expression, EvaluationStatement template);
+            TypeDescriptor typeDescriptor, string nameHint, string expression, EvaluationStatement template);
 
 
         string FormatExpression(ExpressionBuilderParams p, ExpressionResult result);
@@ -38,8 +38,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
         string FormatArithmeticExpression(ExpressionBuilderParams p, string expression, EvaluationStatement template);
 
-        string FormatArithmeticExpression(ExpressionBuilderParams p, DataTypes leftDataType, string leftExp,
-            IOperator op, DataTypes rightDataType, string rightExp, EvaluationStatement template);
+        string FormatArithmeticExpression(ExpressionBuilderParams p, TypeDescriptor leftTypeDescriptor, string leftExp,
+            IOperator op, TypeDescriptor rightTypeDescriptor, string rightExp, EvaluationStatement template);
 
         string FormatArithmeticExpression(ExpressionBuilderParams p, ExpressionResult left, IOperator op,
             ExpressionResult right, EvaluationStatement template);
@@ -47,8 +47,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
         string FormatBitwiseExpression(ExpressionBuilderParams p, string expression, EvaluationStatement template);
 
-        string FormatBitwiseExpression(ExpressionBuilderParams p, DataTypes leftDataType, string leftExp,
-            IOperator op, DataTypes rightDataType, string rightExp, EvaluationStatement template);
+        string FormatBitwiseExpression(ExpressionBuilderParams p, TypeDescriptor leftTypeDescriptor, string leftExp,
+            IOperator op, TypeDescriptor rightTypeDescriptor, string rightExp, EvaluationStatement template);
 
         string FormatBitwiseExpression(ExpressionBuilderParams p, ExpressionResult left, IOperator op,
             ExpressionResult right, EvaluationStatement template);
@@ -56,8 +56,8 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
         string FormatLogicalExpression(ExpressionBuilderParams p, string expression, EvaluationStatement template);
 
-        string FormatLogicalExpression(ExpressionBuilderParams p, DataTypes leftDataType, string leftExp,
-            IOperator op, DataTypes rightDataType, string rightExp, EvaluationStatement template);
+        string FormatLogicalExpression(ExpressionBuilderParams p, TypeDescriptor leftTypeDescriptor, string leftExp,
+            IOperator op, TypeDescriptor rightTypeDescriptor, string rightExp, EvaluationStatement template);
 
         string FormatLogicalExpression(ExpressionBuilderParams p, ExpressionResult left, IOperator op,
             ExpressionResult right, EvaluationStatement template);
@@ -65,18 +65,18 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
 
         string FormatVariableAccessExpression(ExpressionBuilderParams p, ExpressionResult result);
 
-        string FormatVariableAccessExpression(ExpressionBuilderParams p, DataTypes dataType, string expression,
+        string FormatVariableAccessExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor, string expression,
             EvaluationStatement template);
 
 
         string FormatFunctionCallExpression(ExpressionBuilderParams p, ExpressionResult result);
 
-        string FormatFunctionCallExpression(ExpressionBuilderParams p, DataTypes dataType, string expression, EvaluationStatement template);
+        string FormatFunctionCallExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor, string expression, EvaluationStatement template);
 
 
         string FormatConstantExpression(ExpressionBuilderParams p, ExpressionResult result);
 
-        string FormatConstantExpression(ExpressionBuilderParams p, DataTypes dataType, string expression, EvaluationStatement template);
+        string FormatConstantExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor, string expression, EvaluationStatement template);
 
 
         ExpressionResult CreateExpression(ExpressionBuilderParams p, EvaluationStatement statement);

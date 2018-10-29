@@ -5,22 +5,24 @@ namespace ShellScript.Core.Language.Library
     [Flags]
     public enum DataTypes
     {
-        Void = 0, //Should not be used in code.
-        
+        Void = 0,
+
         Array = 0x4000,
-        
-        Boolean = 0x2001,
-        
+
         Decimal = 1,
-        
+
         Float = 2,
-        
+
         Numeric = 3,
-        
+
+        Boolean = 4,
+
         String = 16,
-        
+
         Class = 32,
-        
+
         Delegate = 64,
+
+        Lookup = 0x100, //Should not be used in code.
     }
 }

@@ -11,9 +11,14 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
     public static class StatementHelpers
     {
         public static readonly IStatement[] EmptyStatements = new IStatement[0];
-        
+
         public static IStatement[] CreateChildren(params IStatement[] children)
         {
+            if (children == null)
+            {
+                return EmptyStatements;
+            }
+
             var result = new List<IStatement>(children.Length);
             foreach (var child in children)
             {
@@ -98,7 +103,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
             return false;
         }
-        
+
         public static int TreeCount(this IStatement statement, Predicate<IStatement> predicate)
         {
             var count = 0;
@@ -139,7 +144,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
 
         public class ExpressionTypes
         {
-            public List<DataTypes> Types { get; set; }
+            public List<TypeDescriptor> Types { get; set; }
             public bool ContainsFunctionCall { get; set; }
             public List<VariableAccessStatement> NonExistenceVariables { get; set; }
 
@@ -150,7 +155,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             IStatement statement)
         {
             var result = new ExpressionTypes();
-            var types = new List<DataTypes>();
+            var types = new List<TypeDescriptor>();
             var nonExistenceVariables = new List<VariableAccessStatement>();
             var operators = new HashSet<Type>();
 
@@ -162,14 +167,14 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             {
                 case ConstantValueStatement constantValueStatement:
                 {
-                    types.Add(constantValueStatement.DataType);
+                    types.Add(constantValueStatement.TypeDescriptor);
                     break;
                 }
                 case VariableAccessStatement variableAccessStatement:
                 {
                     if (scope.TryGetVariableInfo(variableAccessStatement, out VariableInfo varInfo))
                     {
-                        types.Add(varInfo.DataType);
+                        types.Add(varInfo.TypeDescriptor);
                     }
                     else
                     {
@@ -185,7 +190,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                 }
                 case FunctionCallStatement functionCallStatement:
                 {
-                    types.Add(functionCallStatement.DataType);
+                    types.Add(functionCallStatement.TypeDescriptor);
                     break;
                 }
                 default:
@@ -219,7 +224,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             return result;
         }
 
-        public static DataTypes OperateDataTypes(IOperator op, DataTypes a, DataTypes b)
+        public static TypeDescriptor OperateDataTypes(IOperator op, TypeDescriptor a, TypeDescriptor b)
         {
             if (a == b)
             {
@@ -230,12 +235,12 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             {
                 if (b.IsDecimal())
                 {
-                    return DataTypes.Decimal;
+                    return TypeDescriptor.Decimal;
                 }
 
                 if (b.IsNumericOrFloat())
                 {
-                    return DataTypes.Numeric;
+                    return TypeDescriptor.Numeric;
                 }
             }
 
@@ -243,22 +248,22 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             {
                 if (b.IsNumber())
                 {
-                    return DataTypes.Numeric;
+                    return TypeDescriptor.Numeric;
                 }
 
-                if (b == DataTypes.String && op is AdditionOperator)
+                if (b.IsString() && op is AdditionOperator)
                 {
-                    return DataTypes.String;
+                    return TypeDescriptor.String;
                 }
 
                 throw new InvalidOperatorForTypeCompilerException(op.GetType(), a, b, op.Info);
             }
 
-            if (a == DataTypes.String)
+            if (a.IsString())
             {
-                if (b == DataTypes.Decimal || b == DataTypes.Float || b == DataTypes.Numeric)
+                if (b.IsNumber() && op is MultiplicationOperator)
                 {
-                    return DataTypes.String;
+                    return TypeDescriptor.String;
                 }
 
                 throw new InvalidOperatorForTypeCompilerException(op.GetType(), a, b, op.Info);
@@ -267,13 +272,14 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             throw new InvalidOperatorForTypeCompilerException(op.GetType(), a, b, op.Info);
         }
 
-        public static DataTypes GetDataType(this EvaluationStatement evaluationStatement, Context context, Scope scope)
+        public static TypeDescriptor GetDataType(this EvaluationStatement evaluationStatement, Context context,
+            Scope scope)
         {
             switch (evaluationStatement)
             {
                 case ConstantValueStatement constantValueStatement:
                 {
-                    return constantValueStatement.DataType;
+                    return constantValueStatement.TypeDescriptor;
                 }
                 case VariableAccessStatement variableAccessStatement:
                 {
@@ -283,7 +289,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                             variableAccessStatement.Info);
                     }
 
-                    return variableInfo.DataType;
+                    return variableInfo.TypeDescriptor;
                 }
                 case FunctionCallStatement functionCallStatement:
                 {
@@ -293,7 +299,7 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                             functionCallStatement.Info);
                     }
 
-                    return functionInfo.DataType;
+                    return functionInfo.TypeDescriptor;
                 }
                 case BitwiseEvaluationStatement bitwiseEvaluationStatement:
                 {
@@ -315,11 +321,11 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                         }
                     }
 
-                    return DataTypes.Numeric;
+                    return TypeDescriptor.Numeric;
                 }
                 case LogicalEvaluationStatement _: //logicalEvaluationStatement
                 {
-                    return DataTypes.Boolean;
+                    return TypeDescriptor.Boolean;
                 }
                 case ArithmeticEvaluationStatement arithmeticEvaluationStatement:
                 {
@@ -347,31 +353,95 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
                         }
                     }
 
-                    return DataTypes.Numeric;
+                    return TypeDescriptor.Numeric;
                 }
                 default:
                     throw new InvalidOperationException();
             }
         }
 
-        public static bool IsAssignableFrom(DataTypes destination, DataTypes source)
+        public static bool IsAssignableFrom(Context context, Scope scope, TypeDescriptor destination,
+            TypeDescriptor source)
         {
             if (destination == source)
             {
                 return true;
             }
 
-            if (destination == DataTypes.Numeric)
+            if (destination.DataType == DataTypes.Numeric)
             {
                 if (source.IsNumber())
                 {
                     return true;
                 }
             }
-            else if (destination == DataTypes.Float)
+            else if (destination.IsFloat())
             {
-                if (source == DataTypes.Decimal)
+                if (source.IsDecimal())
                 {
+                    return true;
+                }
+            }
+
+            if (destination.DataType == DataTypes.Lookup && destination.Lookup != null)
+            {
+                var lookup = destination.Lookup.Value;
+                if (scope.TryGetPrototypeInfo(lookup.ClassName, lookup.Name, out var functionInfo) ||
+                    scope.TryGetFunctionInfo(lookup.ClassName, lookup.Name, out functionInfo))
+                {
+                    destination = new TypeDescriptor(DataTypes.Delegate, lookup);
+                }
+
+                //TODO: support for objects, (if added later)
+            }
+
+            if (source.DataType == DataTypes.Lookup && source.Lookup != null)
+            {
+                var lookup = source.Lookup.Value;
+                if (scope.TryGetPrototypeInfo(lookup.ClassName, lookup.Name, out var functionInfo) ||
+                    scope.TryGetFunctionInfo(lookup.ClassName, lookup.Name, out functionInfo))
+                {
+                    source = new TypeDescriptor(DataTypes.Delegate, lookup);
+                }
+
+                //TODO: support for objects, (if added later)
+            }
+
+            if (destination.DataType == source.DataType)
+            {
+                if (destination.DataType == DataTypes.Delegate)
+                {
+                    if (destination.Lookup == null || source.Lookup == null)
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    var dstLookup = destination.Lookup.Value;
+                    var srcLookup = source.Lookup.Value;
+
+                    if (!scope.TryGetPrototypeInfo(dstLookup.ClassName, dstLookup.Name, out var dstFunctionInfo) &&
+                        !scope.TryGetFunctionInfo(dstLookup.ClassName, dstLookup.Name, out dstFunctionInfo))
+                    {
+                        throw new IdentifierNotFoundCompilerException(dstLookup, null);
+                    }
+
+                    if (!scope.TryGetPrototypeInfo(srcLookup.ClassName, srcLookup.Name, out var srcFunctionInfo) &&
+                        !scope.TryGetFunctionInfo(srcLookup.ClassName, srcLookup.Name, out srcFunctionInfo))
+                    {
+                        throw new IdentifierNotFoundCompilerException(dstLookup, null);
+                    }
+
+                    if (dstFunctionInfo.TypeDescriptor != srcFunctionInfo.TypeDescriptor)
+                    {
+                        return false;
+                    }
+
+                    if ((dstFunctionInfo.Parameters?.Length ?? 0) != (srcFunctionInfo.Parameters?.Length ?? 0))
+                    {
+                        return false;
+                        //TODO: support for params variables.
+                    }
+
                     return true;
                 }
             }
@@ -387,18 +457,18 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             {
                 str = str.Substring(1, str.Length - 2);
             }
-            
+
             if (str.Contains("\\\""))
             {
                 str = str.Replace("\\\"", "\"");
             }
-            
+
             if (str.Contains("\\\'"))
             {
                 str = str.Replace("\\\'", "\'");
             }
-            
-            
+
+
             if (str.Contains("\\r"))
             {
                 str = str.Replace("\\r", "\r");
@@ -413,11 +483,11 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             {
                 str = str.Replace("\\\\", "\\");
             }
-            
+
 
             return str;
         }
-        
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNumber(this DataTypes dataType)
@@ -426,9 +496,16 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNumber(this TypeDescriptor typeDescriptor)
+        {
+            var dataType = typeDescriptor.DataType;
+            return dataType == DataTypes.Decimal || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNumber(this ConstantValueStatement constantValueStatement)
         {
-            var dataType = constantValueStatement.DataType;
+            var dataType = constantValueStatement.TypeDescriptor.DataType;
             return dataType == DataTypes.Decimal || dataType == DataTypes.Numeric || dataType == DataTypes.Float;
         }
 
@@ -439,9 +516,16 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNumericOrFloat(this TypeDescriptor typeDescriptor)
+        {
+            var dataType = typeDescriptor.DataType;
+            return dataType == DataTypes.Numeric || dataType == DataTypes.Float;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNumericOrFloat(this ConstantValueStatement constantValueStatement)
         {
-            var dataType = constantValueStatement.DataType;
+            var dataType = constantValueStatement.TypeDescriptor.DataType;
             return dataType == DataTypes.Numeric || dataType == DataTypes.Float;
         }
 
@@ -452,9 +536,16 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsFloat(this TypeDescriptor typeDescriptor)
+        {
+            var dataType = typeDescriptor.DataType;
+            return dataType == DataTypes.Float;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsFloat(this ConstantValueStatement constantValueStatement)
         {
-            return constantValueStatement.DataType == DataTypes.Float;
+            return constantValueStatement.TypeDescriptor.DataType == DataTypes.Float;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -464,9 +555,16 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsDecimal(this TypeDescriptor typeDescriptor)
+        {
+            var dataType = typeDescriptor.DataType;
+            return dataType == DataTypes.Decimal;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsDecimal(this ConstantValueStatement constantValueStatement)
         {
-            return constantValueStatement.DataType == DataTypes.Decimal;
+            return constantValueStatement.TypeDescriptor.DataType == DataTypes.Decimal;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -476,9 +574,16 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsBoolean(this TypeDescriptor typeDescriptor)
+        {
+            var dataType = typeDescriptor.DataType;
+            return dataType == DataTypes.Boolean;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsBoolean(this ConstantValueStatement constantValueStatement)
         {
-            return constantValueStatement.DataType == DataTypes.Boolean;
+            return constantValueStatement.TypeDescriptor.DataType == DataTypes.Boolean;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -488,45 +593,81 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsString(this TypeDescriptor typeDescriptor)
+        {
+            var dataType = typeDescriptor.DataType;
+            return dataType == DataTypes.String;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsString(this ConstantValueStatement constantValueStatement)
         {
-            return constantValueStatement.DataType == DataTypes.String;
+            return constantValueStatement.TypeDescriptor.DataType == DataTypes.String;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsVoid(this DataTypes dataType)
+        {
+            return dataType == DataTypes.Void;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsVoid(this TypeDescriptor typeDescriptor)
+        {
+            var dataType = typeDescriptor.DataType;
+            return dataType == DataTypes.Void;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsVoid(this ConstantValueStatement constantValueStatement)
+        {
+            return constantValueStatement.TypeDescriptor.DataType == DataTypes.Void;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsArray(this DataTypes dataType)
         {
-            return dataType == DataTypes.Array;
+            return (dataType & DataTypes.Array) == DataTypes.Array;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsArray(this TypeDescriptor typeDescriptor)
+        {
+            var dataType = typeDescriptor.DataType;
+            return (dataType & DataTypes.Array) == DataTypes.Array;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsArray(this ConstantValueStatement constantValueStatement)
         {
-            return constantValueStatement.DataType == DataTypes.Array;
+            var dataType = constantValueStatement.TypeDescriptor.DataType;
+            return (dataType & DataTypes.Array) == DataTypes.Array;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsObject(this DataTypes dataType)
+        public static bool IsObject(this TypeDescriptor typeDescriptor)
         {
+            var dataType = typeDescriptor.DataType;
             return dataType == DataTypes.Class;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsObject(this ConstantValueStatement constantValueStatement)
         {
-            return constantValueStatement.DataType == DataTypes.Class;
+            return constantValueStatement.TypeDescriptor.DataType == DataTypes.Class;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsFunction(this DataTypes dataType)
+        public static bool IsFunction(this TypeDescriptor typeDescriptor)
         {
+            var dataType = typeDescriptor.DataType;
             return dataType == DataTypes.Delegate;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsFunction(this ConstantValueStatement constantValueStatement)
         {
-            return constantValueStatement.DataType == DataTypes.Delegate;
+            return constantValueStatement.TypeDescriptor.DataType == DataTypes.Delegate;
         }
 
         public static bool IsAbsoluteValue(IStatement statement, out bool isTrue)

@@ -22,6 +22,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         private readonly HashSet<ConstantInfo> _constants;
         private readonly HashSet<VariableInfo> _variables;
         private readonly HashSet<FunctionInfo> _functions;
+        private readonly HashSet<FunctionInfo> _functionPrototypes;
 
         private readonly Dictionary<string, string> _config;
         
@@ -38,6 +39,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             _variables = new HashSet<VariableInfo>();
             _constants = new HashSet<ConstantInfo>();
             _functions = new HashSet<FunctionInfo>();
+            _functionPrototypes = new HashSet<FunctionInfo>();
             
             _config = new Dictionary<string, string>();
         }
@@ -51,6 +53,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             _variables = new HashSet<VariableInfo>();
             _constants = new HashSet<ConstantInfo>();
             _functions = new HashSet<FunctionInfo>();
+            _functionPrototypes = new HashSet<FunctionInfo>();
             
             _config = new Dictionary<string, string>();
         }
@@ -151,28 +154,34 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             return false;
         }
 
-        public void ReserveNewVariable(DataTypes dataType, string name)
+        public void ReserveNewVariable(TypeDescriptor typeDescriptor, string name)
         {
             _identifiers.Add(name);
-            _variables.Add(new VariableInfo(dataType, name, null));
+            _variables.Add(new VariableInfo(typeDescriptor, name, null));
         }
 
-        public void ReserveNewParameter(DataTypes dataType, string name, string rename)
+        public void ReserveNewParameter(TypeDescriptor typeDescriptor, string name, string rename)
         {
             _identifiers.Add(name);
-            _variables.Add(new VariableInfo(dataType, name, rename));
+            _variables.Add(new VariableInfo(typeDescriptor, name, rename));
         }
 
-        public void ReserveNewConstant(DataTypes dataType, string name, string value)
+        public void ReserveNewConstant(TypeDescriptor typeDescriptor, string name, string value)
         {
             _identifiers.Add(name);
-            _constants.Add(new ConstantInfo(dataType, name, value));
+            _constants.Add(new ConstantInfo(typeDescriptor, name, value));
         }
 
         public void ReserveNewFunction(FunctionInfo function)
         {
             _identifiers.Add(function.Fqn);
             _functions.Add(function);
+        }
+
+        public void ReserveNewPrototype(FunctionInfo function)
+        {
+            _identifiers.Add(function.Fqn);
+            _functionPrototypes.Add(function);
         }
 
         private static string _generateRandomString(int len)
@@ -204,7 +213,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
 //            return varName;
 //        }
 
-        public string NewHelperVariable(DataTypes dataType, string nameHint)
+        public string NewHelperVariable(TypeDescriptor typeDescriptor, string nameHint)
         {
             if (string.IsNullOrWhiteSpace(nameHint) || !StringHelpers.IsValidIdentifierName(nameHint))
             {
@@ -233,7 +242,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             }
 
             _identifiers.Add(varName);
-            _variables.Add(new VariableInfo(dataType, varName, null));
+            _variables.Add(new VariableInfo(typeDescriptor, varName, null));
 
             return varName;
         }
@@ -257,7 +266,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
 
         public bool TryGetVariableInfo(VariableAccessStatement variableAccessStatement, out VariableInfo variableInfo)
         {
-            var varInfo = new VariableInfo(variableAccessStatement.VariableName);
+            var varInfo = new VariableInfo(variableAccessStatement.ClassName, variableAccessStatement.VariableName);
 
             var that = this;
             do
@@ -306,6 +315,40 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
             return false;
         }
 
+        public bool TryGetPrototypeInfo(VariableAccessStatement variableAccessStatement, out FunctionInfo functionInfo)
+        {
+            var funcInfo = new FunctionInfo(variableAccessStatement.ClassName, variableAccessStatement.VariableName);
+
+            var that = this;
+            do
+            {
+                if (that._functionPrototypes.TryGetValue(funcInfo, out functionInfo))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
+
+        public bool TryGetPrototypeInfo(string className, string functionName, out FunctionInfo functionInfo)
+        {
+            var funcInfo = new FunctionInfo(className, functionName);
+
+            var that = this;
+            do
+            {
+                if (that._functionPrototypes.TryGetValue(funcInfo, out functionInfo))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
+
         public bool TryGetFunctionInfo(FunctionInfo functionInfo, out FunctionInfo actualFunctionInfo)
         {
             var that = this;
@@ -324,6 +367,23 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling
         public bool TryGetFunctionInfo(FunctionCallStatement functionCallStatement, out FunctionInfo functionInfo)
         {
             var funcInfo = new FunctionInfo(functionCallStatement.ObjectName, functionCallStatement.FunctionName);
+
+            var that = this;
+            do
+            {
+                if (that._functions.TryGetValue(funcInfo, out functionInfo))
+                {
+                    return true;
+                }
+                
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
+
+        public bool TryGetFunctionInfo(VariableAccessStatement variableAccessStatement, out FunctionInfo functionInfo)
+        {
+            var funcInfo = new FunctionInfo(variableAccessStatement.ClassName, variableAccessStatement.VariableName);
 
             var that = this;
             do

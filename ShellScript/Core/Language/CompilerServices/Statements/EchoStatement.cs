@@ -18,7 +18,8 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             Parameters = parameters;
             Info = info;
 
-            TraversableChildren = StatementHelpers.CreateChildren(parameters.Cast<IStatement>().ToArray());
+            // ReSharper disable once CoVariantArrayConversion
+            TraversableChildren = StatementHelpers.CreateChildren(parameters);
         }
 
         public override string ToString()

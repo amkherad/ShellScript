@@ -12,7 +12,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Locale
             public override string Name => nameof(GetCurrentLocale);
             public override string Summary { get; }
             public override string ClassName => ClassAccessName;
-            public override DataTypes DataType => DataTypes.String;
+            public override TypeDescriptor TypeDescriptor => TypeDescriptor.String;
 
             public override FunctionParameterDefinitionStatement[] Parameters { get; }
 
@@ -20,7 +20,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Locale
             protected override ExpressionResult CreateEvaluationExpression(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
-                return CreateVariableAccess(DataType, "LANG", functionCallStatement.Info);
+                return CreateVariableAccess(TypeDescriptor, "LANG", functionCallStatement.Info);
             }
         }
     }

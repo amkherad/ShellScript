@@ -6,15 +6,15 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
     {
         public const string RootClassName = "Root";
 
-        public ApiFunctionCallStatement(string sdkClassName, string sdkFunctionName, DataTypes dataType,
+        public ApiFunctionCallStatement(string sdkClassName, string sdkFunctionName, TypeDescriptor typeDescriptor,
             EvaluationStatement[] parameters, StatementInfo info)
-            : base(sdkClassName, sdkFunctionName, dataType, parameters, info)
+            : base(sdkClassName, sdkFunctionName, typeDescriptor, parameters, info)
         {
         }
 
-        public ApiFunctionCallStatement(string sdkRootFunctionName, DataTypes dataType,
+        public ApiFunctionCallStatement(string sdkRootFunctionName, TypeDescriptor typeDescriptor,
             EvaluationStatement[] parameters, StatementInfo info)
-            : base(RootClassName, sdkRootFunctionName, dataType, parameters, info)
+            : base(RootClassName, sdkRootFunctionName, typeDescriptor, parameters, info)
         {
         }
     }

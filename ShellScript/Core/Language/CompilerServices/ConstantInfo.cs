@@ -5,7 +5,7 @@ namespace ShellScript.Core.Language.CompilerServices
 {
     public class ConstantInfo : IEquatable<ConstantInfo>
     {
-        public DataTypes DataType { get; }
+        public TypeDescriptor TypeDescriptor { get; }
 
         public string Name { get; }
         //public string ReName { get; }
@@ -15,11 +15,11 @@ namespace ShellScript.Core.Language.CompilerServices
         public string Value { get; }
 
 
-        public ConstantInfo(DataTypes dataType, string name, string value)
+        public ConstantInfo(TypeDescriptor typeDescriptor, string name, string value)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Value = value;
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
         }
 
         public ConstantInfo(string name)

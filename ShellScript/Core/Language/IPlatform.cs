@@ -13,8 +13,10 @@ namespace ShellScript.Core.Language
         
         string Name { get; }
         
-        ValueTuple<DataTypes, string, string>[] CompilerConstants { get; }
+        ValueTuple<TypeDescriptor, string, string>[] CompilerConstants { get; }
 
         CompilerFlags ReviseFlags(CompilerFlags flags);
+
+        string GetDefaultValue(DataTypes dataType);
     }
 }

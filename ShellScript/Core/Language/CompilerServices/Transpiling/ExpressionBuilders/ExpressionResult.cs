@@ -3,27 +3,27 @@ using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders
 {
-    public struct ExpressionResult
+    public readonly struct ExpressionResult
     {
-        public DataTypes DataType { get; }
+        public TypeDescriptor TypeDescriptor { get; }
         public string Expression { get; }
         public EvaluationStatement Template { get; }
 
         public IExpressionNotice[] Notices { get; }
 
 
-        public ExpressionResult(DataTypes dataType, string expression, EvaluationStatement template)
+        public ExpressionResult(TypeDescriptor typeDescriptor, string expression, EvaluationStatement template)
         {
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
             Expression = expression;
             Template = template;
             Notices = null;
         }
 
-        public ExpressionResult(DataTypes dataType, string expression, EvaluationStatement template,
+        public ExpressionResult(TypeDescriptor typeDescriptor, string expression, EvaluationStatement template,
             IExpressionNotice[] notices)
         {
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
             Expression = expression;
             Template = template;
             Notices = notices;
@@ -34,7 +34,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuild
             return Expression;
         }
 
-        public bool IsEmptyResult => DataType == DataTypes.Void && Expression == null && Template == null && Notices == null;
-        public static ExpressionResult EmptyResult => new ExpressionResult(DataTypes.Void, null, null);
+        public bool IsEmptyResult => TypeDescriptor.IsVoid() && Expression == null && Template == null && Notices == null;
+        public static ExpressionResult EmptyResult => new ExpressionResult(TypeDescriptor.Void, null, null);
     }
 }

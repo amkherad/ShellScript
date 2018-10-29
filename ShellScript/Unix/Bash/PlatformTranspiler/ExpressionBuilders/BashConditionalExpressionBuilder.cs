@@ -15,7 +15,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override string FormatExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            if (result.DataType.IsBoolean() || result.Template is LogicalEvaluationStatement)
+            if (result.TypeDescriptor.IsBoolean() || result.Template is LogicalEvaluationStatement)
             {
                 if (result.Expression[0] != '[' && result.Expression[result.Expression.Length - 1] != ']')
                 {
@@ -47,15 +47,15 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             EvaluationStatement template)
         {
             return FormatLogicalExpression(p,
-                left.DataType, left.Expression,
+                left.TypeDescriptor, left.Expression,
                 op,
-                right.DataType, right.Expression,
+                right.TypeDescriptor, right.Expression,
                 template);
         }
 
         public override string FormatVariableAccessExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            if (result.DataType.IsBoolean() && result.Template.ParentStatement is ConditionalBlockStatement)
+            if (result.TypeDescriptor.IsBoolean() && result.Template.ParentStatement is ConditionalBlockStatement)
             {
                 return _formatBoolVariable(
                     base.FormatVariableAccessExpression(p, result)
@@ -65,17 +65,17 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return base.FormatVariableAccessExpression(p, result);
         }
 
-        public override string FormatVariableAccessExpression(ExpressionBuilderParams p, DataTypes dataType,
+        public override string FormatVariableAccessExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor,
             string expression, EvaluationStatement template)
         {
-            if (dataType.IsBoolean() && template.ParentStatement is ConditionalBlockStatement)
+            if (typeDescriptor.IsBoolean() && template.ParentStatement is ConditionalBlockStatement)
             {
                 return _formatBoolVariable(
-                    base.FormatVariableAccessExpression(p, dataType, expression, template)
+                    base.FormatVariableAccessExpression(p, typeDescriptor, expression, template)
                 );
             }
 
-            return base.FormatVariableAccessExpression(p, dataType, expression, template);
+            return base.FormatVariableAccessExpression(p, typeDescriptor, expression, template);
         }
 
 //        public override string FormatLogicalExpression(ExpressionBuilderParams p, ExpressionResult result)
@@ -84,7 +84,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 //        }
 
         public override string FormatLogicalExpression(ExpressionBuilderParams p,
-            DataTypes leftDataType, string left, IOperator op, DataTypes rightDataType, string right,
+            TypeDescriptor leftTypeDescriptor, string left, IOperator op, TypeDescriptor rightTypeDescriptor, string right,
             EvaluationStatement template)
         {
             if (!(template is LogicalEvaluationStatement logicalEvaluationStatement))
@@ -92,14 +92,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
             string opStr;
 
-            if (leftDataType.IsString() || rightDataType.IsString())
+            if (leftTypeDescriptor.IsString() || rightTypeDescriptor.IsString())
             {
-                return base.FormatLogicalExpression(p, leftDataType, left, op, rightDataType, right, template);
+                return base.FormatLogicalExpression(p, leftTypeDescriptor, left, op, rightTypeDescriptor, right, template);
             }
 
-            if (leftDataType.IsNumericOrFloat() || rightDataType.IsNumericOrFloat())
+            if (leftTypeDescriptor.IsNumericOrFloat() || rightTypeDescriptor.IsNumericOrFloat())
             {
-                return base.FormatLogicalExpression(p, leftDataType, left, op, rightDataType, right, template);
+                return base.FormatLogicalExpression(p, leftTypeDescriptor, left, op, rightTypeDescriptor, right, template);
             }
 
             var operatorNeedsToEvaluate = false;
@@ -142,8 +142,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                     break;
             }
 
-            left = _createBoolExpression(leftDataType, left, logicalEvaluationStatement.Left, operatorNeedsToEvaluate);
-            right = _createBoolExpression(rightDataType, right, logicalEvaluationStatement.Right,
+            left = _createBoolExpression(leftTypeDescriptor, left, logicalEvaluationStatement.Left, operatorNeedsToEvaluate);
+            right = _createBoolExpression(rightTypeDescriptor, right, logicalEvaluationStatement.Right,
                 operatorNeedsToEvaluate);
 
             return $"{left} {opStr} {right}";
@@ -155,7 +155,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return $"[ {exp} -ne 0 ]";
         }
 
-        private string _createBoolExpression(DataTypes dataType, string exp, IStatement template,
+        private string _createBoolExpression(TypeDescriptor typeDescriptor, string exp, IStatement template,
             bool operatorNeedsToEvaluate)
         {
             if (template is ConstantValueStatement _)
@@ -180,7 +180,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 return exp;
             }
 
-            if (dataType.IsBoolean())
+            if (typeDescriptor.IsBoolean())
             {
                 if (exp[0] != '[' && exp[exp.Length - 1] != ']')
                 {
@@ -208,9 +208,9 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 throw new InvalidStatementStructureCompilerException(statement, statement.Info);
             }
             
-            if (result.DataType != DataTypes.Boolean)
+            if (!result.TypeDescriptor.IsBoolean())
             {
-                throw new TypeMismatchCompilerException(result.DataType, DataTypes.Boolean, statement.Info);
+                throw new TypeMismatchCompilerException(result.TypeDescriptor, TypeDescriptor.Boolean, statement.Info);
             }
 
             return result;

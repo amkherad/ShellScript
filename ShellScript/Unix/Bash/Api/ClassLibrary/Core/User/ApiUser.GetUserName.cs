@@ -12,7 +12,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.User
             public override string Name => nameof(GetUserName);
             public override string Summary { get; }
             public override string ClassName => ClassAccessName;
-            public override DataTypes DataType => DataTypes.String;
+            public override TypeDescriptor TypeDescriptor => TypeDescriptor.String;
 
 
             public override FunctionParameterDefinitionStatement[] Parameters { get; }
@@ -22,7 +22,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.User
                 FunctionCallStatement functionCallStatement)
             {
                 return new ExpressionResult(
-                    DataType,
+                    TypeDescriptor,
                     "`whoami`",
                     functionCallStatement
                 );

@@ -79,8 +79,8 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
             {TokenType.Return, @"^return(?!\w)"},
 
             {TokenType.Throw, @"^throw(?!\w)"},
-            {TokenType.Comment, "^//.*"},
-
+            {TokenType.Delegate, @"^delegate(?!\w)"},
+            
             {TokenType.Async, @"^async(?!\w)"},
             {TokenType.Await, @"^await(?!\w)"},
 
@@ -99,6 +99,7 @@ namespace ShellScript.Core.Language.CompilerServices.Lexing
 
             {TokenType.Echo, @"^echo(?!\w)"},
 
+            {TokenType.Comment, "^//.*"},
             {TokenType.SequenceTerminator, "^;"},
         };
 

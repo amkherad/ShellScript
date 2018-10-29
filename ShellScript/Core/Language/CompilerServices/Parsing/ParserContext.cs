@@ -2,7 +2,7 @@ using System.IO;
 
 namespace ShellScript.Core.Language.CompilerServices.Parsing
 {
-    public class ParserInfo
+    public class ParserContext
     {
         public TextWriter WarningWriter { get; }
         public TextWriter LogWriter { get; }
@@ -13,7 +13,7 @@ namespace ShellScript.Core.Language.CompilerServices.Parsing
         public string FilePath { get; }
         public string File { get; }
         
-        public ParserInfo(
+        public ParserContext(
             TextWriter warningWriter,
             TextWriter logWriter,
             bool semicolonRequired,

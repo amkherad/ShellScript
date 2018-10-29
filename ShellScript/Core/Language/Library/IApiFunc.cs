@@ -5,7 +5,7 @@ namespace ShellScript.Core.Language.Library
 {
     public interface IApiFunc : IApiObject
     {
-        DataTypes DataType { get; }
+        TypeDescriptor TypeDescriptor { get; }
         string ClassName { get; }
         
         bool IsStatic { get; }

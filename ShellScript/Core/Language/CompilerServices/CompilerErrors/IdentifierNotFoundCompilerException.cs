@@ -1,5 +1,6 @@
 using System;
 using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
 {
@@ -7,6 +8,11 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
     {
         public IdentifierNotFoundCompilerException(string identifierName, StatementInfo info)
             : base(CreateMessage(identifierName, info), info)
+        {
+        }
+        
+        public IdentifierNotFoundCompilerException(TypeDescriptor.LookupInfo lookup, StatementInfo info)
+            : base(CreateMessage(lookup.ToString(), info), info)
         {
         }
         

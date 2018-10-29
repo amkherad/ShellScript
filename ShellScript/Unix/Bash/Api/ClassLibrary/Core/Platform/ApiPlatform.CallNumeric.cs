@@ -8,7 +8,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
         {
             public override string Name => nameof(CallNumeric);
             public override string Summary { get; }
-            public override DataTypes DataType => DataTypes.Numeric;
+            public override TypeDescriptor TypeDescriptor => TypeDescriptor.Numeric;
         }
     }
 }

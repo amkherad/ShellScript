@@ -95,7 +95,7 @@ namespace ShellScript.Core.Language.CompilerServices
                 var metaInfo = context.GetMetaInfoTranspiler();
                 metaInfo.WritePrologue(context, metaWriter);
 
-                var info = new ParserInfo(
+                var info = new ParserContext(
                     warningWriter,
                     logWriter,
                     flags.SemicolonRequired,

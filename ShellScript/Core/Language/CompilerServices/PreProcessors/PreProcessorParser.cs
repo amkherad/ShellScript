@@ -22,28 +22,28 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
         }
 
         private bool CalculatePreProcessorCondition(Token token, IPeekingEnumerator<Token> enumerator,
-            ParserInfo info, bool parseCondition)
+            ParserContext context, bool parseCondition)
         {
             if (!enumerator.MoveNext())
-                throw EndOfFile(token, info);
+                throw EndOfFile(token, context);
 
             token = enumerator.Current;
             if (token.Type != TokenType.OpenParenthesis)
-                throw UnexpectedToken(token, info, true);
+                throw UnexpectedToken(token, context, true);
 
             if (!enumerator.MoveNext()) //read the first eval token
-                throw EndOfFile(token, info);
+                throw EndOfFile(token, context);
 
             token = enumerator.Current;
 
-            var evalStatement = Parser.ReadEvaluationStatement(token, enumerator, info);
+            var evalStatement = Parser.ReadEvaluationStatement(token, enumerator, context);
 
             if (!enumerator.MoveNext()) //read the close parenthesis
-                throw EndOfFile(token, info);
+                throw EndOfFile(token, context);
 
             token = enumerator.Current;
             if (token.Type != TokenType.CloseParenthesis)
-                throw UnexpectedToken(token, info);
+                throw UnexpectedToken(token, context);
 
             if (parseCondition)
             {
@@ -59,7 +59,7 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
                             return boolVal;
                         }
 
-                        throw UnexpectedToken(token, info);
+                        throw UnexpectedToken(token, context);
                     }
                 }
                 catch (IdentifierNotFoundCompilerException)
@@ -67,37 +67,37 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
                     return false;
                 }
 
-                throw UnexpectedToken(token, info);
+                throw UnexpectedToken(token, context);
             }
 
             return false;
         }
 
-        public IPeekingEnumerator<Token> CreateParserProxy(IEnumerator<Token> enumerator, ParserInfo info)
+        public IPeekingEnumerator<Token> CreateParserProxy(IEnumerator<Token> enumerator, ParserContext context)
         {
-            return new PreProcessorParserProxyClass(this, enumerator, info);
+            return new PreProcessorParserProxyClass(this, enumerator, context);
         }
 
 
-        private static PreProcessorException EndOfFile(Token token, ParserInfo info)
+        private static PreProcessorException EndOfFile(Token token, ParserContext context)
         {
             return new PreProcessorException(
-                $"Unexpected end of file reached {info} at {token.LineNumber}:{token.ColumnNumber}");
+                $"Unexpected end of file reached {context} at {token.LineNumber}:{token.ColumnNumber}");
         }
 
-        private static PreProcessorException UnexpectedToken(Token token, ParserInfo info, bool isInCondition = false)
+        private static PreProcessorException UnexpectedToken(Token token, ParserContext context, bool isInCondition = false)
         {
             if (isInCondition)
                 return new PreProcessorException(
-                    $"Unexpected token {token.Type}('{token.Value}') found (parentheses are required) {info} at {token.LineNumber}:{token.ColumnNumber}");
+                    $"Unexpected token {token.Type}('{token.Value}') found (parentheses are required) {context} at {token.LineNumber}:{token.ColumnNumber}");
             return new PreProcessorException(
-                $"Unexpected token {token.Type}('{token.Value}') found {info} at {token.LineNumber}:{token.ColumnNumber}");
+                $"Unexpected token {token.Type}('{token.Value}') found {context} at {token.LineNumber}:{token.ColumnNumber}");
         }
 
-        private static PreProcessorException PreProcessorNotExited(Token token, ParserInfo info)
+        private static PreProcessorException PreProcessorNotExited(Token token, ParserContext context)
         {
             return new PreProcessorException(
-                $"#endif does not match any corresponding #if {info} at {token.LineNumber}:{token.ColumnNumber}");
+                $"#endif does not match any corresponding #if {context} at {token.LineNumber}:{token.ColumnNumber}");
         }
 
 
@@ -105,7 +105,7 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
         {
             private readonly PreProcessorParser _parser;
             private readonly IEnumerator<Token> _enumerator;
-            private ParserInfo _info;
+            private ParserContext _context;
 
             private Token _current;
             private Token _next;
@@ -115,11 +115,11 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
 
 
             public PreProcessorParserProxyClass(PreProcessorParser parser, IEnumerator<Token> enumerator,
-                ParserInfo info)
+                ParserContext context)
             {
                 _parser = parser;
                 _enumerator = enumerator;
-                _info = info;
+                _context = context;
             }
 
             public void Reset()
@@ -182,7 +182,7 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
 
                         _preProcessors.Push(state);
 
-                        var condition = _parser.CalculatePreProcessorCondition(token, this, _info, true);
+                        var condition = _parser.CalculatePreProcessorCondition(token, this, _context, true);
 
                         state.ConditionTaken = condition;
                         skipToken = !condition;
@@ -191,11 +191,11 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
                     {
                         if (!_preProcessors.TryPeek(out var preProcessor))
                         {
-                            throw UnexpectedToken(token, _info);
+                            throw UnexpectedToken(token, _context);
                         }
 
                         var condition =
-                            _parser.CalculatePreProcessorCondition(token, this, _info,
+                            _parser.CalculatePreProcessorCondition(token, this, _context,
                                 !preProcessor.ConditionTaken);
 
                         skipToken = !condition;
@@ -209,7 +209,7 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
                     {
                         if (!_preProcessors.TryPeek(out var preProcessor))
                         {
-                            throw UnexpectedToken(token, _info);
+                            throw UnexpectedToken(token, _context);
                         }
 
                         skipToken = false;
@@ -221,7 +221,7 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
                     {
                         if (!_preProcessors.TryPop(out var preProcessor))
                         {
-                            throw UnexpectedToken(token, _info);
+                            throw UnexpectedToken(token, _context);
                         }
 
                         skipToken = false;
@@ -235,7 +235,7 @@ namespace ShellScript.Core.Language.CompilerServices.PreProcessors
 
                 if (_preProcessors.TryPop(out var preProcessorState))
                 {
-                    throw PreProcessorNotExited(preProcessorState.FirstToken, _info);
+                    throw PreProcessorNotExited(preProcessorState.FirstToken, _context);
                 }
 
                 current = null;

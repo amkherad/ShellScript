@@ -20,7 +20,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Base
             if (p.UsageContext is IfElseStatement)
             {
                 return new ApiMethodBuilderRawResult(new ExpressionResult(
-                    DataType,
+                    TypeDescriptor,
                     result.Expression,
                     result.Template
                 ));
@@ -32,7 +32,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Base
                 p.NonInlinePartWriter, $"{functionCallStatement.Fqn}_Result");
             
             return new ApiMethodBuilderRawResult(new ExpressionResult(
-                DataType,
+                TypeDescriptor,
                 $"${varName}",
                 new VariableAccessStatement(varName, functionCallStatement.Info),
                 ExpressionBuilderBase.PinRequiredNotice

@@ -18,11 +18,11 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
             public override string Name => nameof(Abs);
             public override string Summary => "Returns the absolute value of the number.";
             public override string ClassName => ClassAccessName;
-            public override DataTypes DataType => DataTypes.Numeric;
+            public override TypeDescriptor TypeDescriptor => TypeDescriptor.Numeric;
 
             public override FunctionParameterDefinitionStatement[] Parameters { get; } =
             {
-                new FunctionParameterDefinitionStatement(DataTypes.Numeric, "Number", null, null),
+                new FunctionParameterDefinitionStatement(TypeDescriptor.Numeric, "Number", null, null),
             };
 
             private FunctionInfo _functionInfo;
@@ -35,7 +35,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
 
             public Abs()
             {
-                _functionInfo = new FunctionInfo(DataTypes.Numeric, ApiMathAbsBashMethodName,
+                _functionInfo = new FunctionInfo(TypeDescriptor.Numeric, ApiMathAbsBashMethodName,
                     null, ClassAccessName, false, Parameters, null);
             }
 
@@ -50,17 +50,17 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                 {
                     case ConstantValueStatement constantValueStatement:
                     {
-                        return InlineConstant(constantValueStatement.DataType, constantValueStatement.Value,
+                        return InlineConstant(constantValueStatement.TypeDescriptor, constantValueStatement.Value,
                             constantValueStatement);
                     }
                     case VariableAccessStatement variableAccessStatement:
                     {
                         if (p.Scope.TryGetVariableInfo(variableAccessStatement, out var varInfo))
                         {
-                            if (varInfo.DataType.IsDecimal())
+                            if (varInfo.TypeDescriptor.IsDecimal())
                             {
                                 return new ApiMethodBuilderRawResult(new ExpressionResult(
-                                    varInfo.DataType,
+                                    varInfo.TypeDescriptor,
                                     $"${{{varInfo.AccessName}#-}}",
                                     variableAccessStatement
                                 ));
@@ -73,7 +73,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
 
                         if (p.Scope.TryGetConstantInfo(variableAccessStatement, out var constInfo))
                         {
-                            return InlineConstant(constInfo.DataType, constInfo.Value, variableAccessStatement);
+                            return InlineConstant(constInfo.TypeDescriptor, constInfo.Value, variableAccessStatement);
                         }
 
                         throw new IdentifierNotFoundCompilerException(variableAccessStatement);
@@ -86,16 +86,16 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                 }
             }
 
-            public static ApiMethodBuilderInlineResult InlineConstant(DataTypes dataType, string value,
+            public static ApiMethodBuilderInlineResult InlineConstant(TypeDescriptor typeDescriptor, string value,
                 IStatement statement)
             {
-                if (dataType.IsNumber())
+                if (typeDescriptor.IsNumber())
                 {
-                    if (dataType.IsDecimal() &&
+                    if (typeDescriptor.IsDecimal() &&
                         long.TryParse(value, out var decimalResult))
                     {
                         return Inline(
-                            new ConstantValueStatement(DataTypes.Decimal,
+                            new ConstantValueStatement(TypeDescriptor.Decimal,
                                 System.Math.Abs(decimalResult).ToString(NumberFormatInfo.InvariantInfo),
                                 statement.Info)
                         );
@@ -104,7 +104,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                     if (double.TryParse(value, out var floatResult))
                     {
                         return Inline(
-                            new ConstantValueStatement(DataTypes.Float,
+                            new ConstantValueStatement(TypeDescriptor.Float,
                                 System.Math.Abs(floatResult).ToString(NumberFormatInfo.InvariantInfo),
                                 statement.Info)
                         );
@@ -114,7 +114,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                         statement.Info);
                 }
 
-                throw new TypeMismatchCompilerException(dataType, DataTypes.Numeric,
+                throw new TypeMismatchCompilerException(typeDescriptor, TypeDescriptor.Numeric,
                     statement.Info);
             }
         }

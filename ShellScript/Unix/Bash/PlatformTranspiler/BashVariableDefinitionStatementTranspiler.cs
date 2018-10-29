@@ -29,8 +29,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         public static string WriteLastStatusCodeStoreVariableDefinition(Context context, Scope scope, TextWriter writer,
             string nameHint)
         {
-            var name = scope.NewHelperVariable(DataTypes.Decimal, nameHint);
-            
+            var name = scope.NewHelperVariable(TypeDescriptor.Decimal, nameHint);
+
             if (scope.IsRootScope)
                 writer.WriteLine($"{name}=$?");
             else
@@ -66,13 +66,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     throw new InvalidOperationException(ErrorMessages.ConstantValueRequired);
                 }
 
-                if (!StatementHelpers.IsAssignableFrom(varDefStt.DataType, constantValueStatement.DataType))
+                if (!StatementHelpers.IsAssignableFrom(context, scope, varDefStt.TypeDescriptor, constantValueStatement.TypeDescriptor))
                 {
-                    throw new TypeMismatchCompilerException(constantValueStatement.DataType, varDefStt.DataType,
-                        varDefStt.Info);
+                    throw new TypeMismatchCompilerException(constantValueStatement.TypeDescriptor,
+                        varDefStt.TypeDescriptor, varDefStt.Info);
                 }
 
-                scope.ReserveNewConstant(varDefStt.DataType, varDefStt.Name, constantValueStatement.Value);
+                scope.ReserveNewConstant(varDefStt.TypeDescriptor, varDefStt.Name, constantValueStatement.Value);
             }
             else
             {
@@ -92,9 +92,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     //x=$((34 * myFuncResult))
                     var result = transpiler.GetExpression(context, scope, metaWriter, writer, null, def);
 
-                    if (!StatementHelpers.IsAssignableFrom(varDefStt.DataType, result.DataType))
+                    if (!StatementHelpers.IsAssignableFrom(context, scope, varDefStt.TypeDescriptor, result.TypeDescriptor))
                     {
-                        throw new TypeMismatchCompilerException(result.DataType, varDefStt.DataType, varDefStt.Info);
+                        throw new TypeMismatchCompilerException(result.TypeDescriptor, varDefStt.TypeDescriptor,
+                            varDefStt.Info);
                     }
 
                     WriteVariableDefinition(context, scope, writer, varDefStt.Name, result.Expression);
@@ -102,10 +103,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 else
                 {
                     WriteVariableDefinition(context, scope, writer, varDefStt.Name,
-                        DesignGuidelines.GetDefaultValue(varDefStt.DataType));
+                        context.Platform.GetDefaultValue(varDefStt.TypeDescriptor.DataType));
                 }
 
-                scope.ReserveNewVariable(varDefStt.DataType, varDefStt.Name);
+                scope.ReserveNewVariable(varDefStt.TypeDescriptor, varDefStt.Name);
             }
         }
     }

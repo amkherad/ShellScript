@@ -1,6 +1,8 @@
 using System;
 using ShellScript.Core.Language;
 using ShellScript.Core.Language.CompilerServices;
+using ShellScript.Core.Language.CompilerServices.CompilerErrors;
+using ShellScript.Core.Language.CompilerServices.Statements;
 using ShellScript.Core.Language.CompilerServices.Transpiling;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api;
@@ -14,10 +16,10 @@ namespace ShellScript.Unix.Bash
         
         public string Name => "Unix-Bash";
 
-        public ValueTuple<DataTypes, string, string>[] CompilerConstants { get; } =
+        public ValueTuple<TypeDescriptor, string, string>[] CompilerConstants { get; } =
         {
-            (DataTypes.Boolean, "Unix", "true"),
-            (DataTypes.Boolean, "Bash", "true"),
+            (TypeDescriptor.Boolean, "Unix", "true"),
+            (TypeDescriptor.Boolean, "Bash", "true"),
         };
 
         public IApi Api { get; } = new UnixBashApi();
@@ -36,11 +38,58 @@ namespace ShellScript.Unix.Bash
             new BashVariableDefinitionStatementTranspiler(),
             new BashEvaluationStatementTranspiler(),
             new BashFunctionStatementTranspiler(),
+            new BashDelegateStatementTranspiler()
         };
         
         public CompilerFlags ReviseFlags(CompilerFlags flags)
         {
             return flags;
+        }
+
+        public string GetDefaultValue(DataTypes dataType)
+        {
+            switch (dataType)
+            {
+                case DataTypes.Void:
+                {
+                    throw new CompilerException("Void should not be used.", null);
+                }
+                case DataTypes.Boolean:
+                {
+                    return "0";
+                }
+                case DataTypes.Decimal:
+                case DataTypes.Float:
+                case DataTypes.Numeric:
+                {
+                    return "0";
+                }
+                case DataTypes.String:
+                {
+                    return "\"\"";
+                }
+                case DataTypes.Class:
+                {
+                    return "0";
+                }
+                case DataTypes.Delegate:
+                {
+                    return "0";
+                }
+                case DataTypes.Lookup:
+                {
+                    return "0";
+                }
+                default:
+                {
+                    if (dataType.IsArray())
+                    {
+                        return null;
+                    }
+
+                    throw new ArgumentOutOfRangeException(nameof(dataType), dataType, null);
+                }
+            }
         }
     }
 }

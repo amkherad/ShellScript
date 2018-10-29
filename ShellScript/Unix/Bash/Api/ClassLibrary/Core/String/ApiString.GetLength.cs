@@ -17,7 +17,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
             public override string Name => nameof(GetLength);
             public override string Summary => "Returns the length of the string. (may vary depending on current locale)";
             public override string ClassName => ClassAccessName;
-            public override DataTypes DataType => DataTypes.Decimal;
+            public override TypeDescriptor TypeDescriptor => TypeDescriptor.Decimal;
 
             public override FunctionParameterDefinitionStatement[] Parameters { get; } =
             {
@@ -28,7 +28,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
 
             public GetLength()
             {
-                _functionInfo = new FunctionInfo(DataTypes.Decimal, ApiMathAbsBashMethodName,
+                _functionInfo = new FunctionInfo(TypeDescriptor.Decimal, ApiMathAbsBashMethodName,
                     null, ClassAccessName, false, Parameters, null);
             }
 
@@ -43,29 +43,29 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
                 {
                     case ConstantValueStatement constantValueStatement:
                     {
-                        return InlineConstant(constantValueStatement.DataType, constantValueStatement.Value,
+                        return InlineConstant(constantValueStatement.TypeDescriptor, constantValueStatement.Value,
                             constantValueStatement);
                     }
                     case VariableAccessStatement variableAccessStatement:
                     {
                         if (p.Scope.TryGetVariableInfo(variableAccessStatement, out var varInfo))
                         {
-                            if (varInfo.DataType.IsString())
+                            if (varInfo.TypeDescriptor.IsString())
                             {
                                 return new ApiMethodBuilderRawResult(new ExpressionResult(
-                                    DataType,
+                                    TypeDescriptor,
                                     $"${{#{varInfo.AccessName}}}",
                                     variableAccessStatement
                                 ));
                             }
 
-                            throw new TypeMismatchCompilerException(varInfo.DataType, DataTypes.String,
+                            throw new TypeMismatchCompilerException(varInfo.TypeDescriptor, TypeDescriptor.String,
                                 variableAccessStatement.Info);
                         }
 
                         if (p.Scope.TryGetConstantInfo(variableAccessStatement, out var constInfo))
                         {
-                            return InlineConstant(constInfo.DataType, constInfo.Value, variableAccessStatement);
+                            return InlineConstant(constInfo.TypeDescriptor, constInfo.Value, variableAccessStatement);
                         }
 
                         throw new IdentifierNotFoundCompilerException(variableAccessStatement);
@@ -78,19 +78,19 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
                 }
             }
 
-            public static ApiMethodBuilderInlineResult InlineConstant(DataTypes dataType, string value,
+            public static ApiMethodBuilderInlineResult InlineConstant(TypeDescriptor typeDescriptor, string value,
                 IStatement statement)
             {
-                if (dataType.IsString())
+                if (typeDescriptor.IsString())
                 {
                     return Inline(
-                        new ConstantValueStatement(DataTypes.Decimal,
+                        new ConstantValueStatement(TypeDescriptor.Decimal,
                             value.Length.ToString(NumberFormatInfo.InvariantInfo),
                             statement.Info)
                     );
                 }
 
-                throw new TypeMismatchCompilerException(dataType, DataTypes.String, statement.Info);
+                throw new TypeMismatchCompilerException(typeDescriptor, TypeDescriptor.String, statement.Info);
             }
         }
     }

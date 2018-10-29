@@ -9,7 +9,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
         public override string Name => ClassAccessName;
 
         public static readonly FunctionParameterDefinitionStatement NumberParameter =
-            new FunctionParameterDefinitionStatement(DataTypes.Numeric, "Number", null, null);
+            new FunctionParameterDefinitionStatement(TypeDescriptor.Numeric, "Number", null, null);
         
         public override IApiVariable[] Variables => new IApiVariable[0];
 

@@ -134,7 +134,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             var result = expressionBuilder.GetConditionalExpression(context, scope, metaWriter, nonInlinePartWriter,
                 ifElseStatement, statement);
 
-            if (result.DataType != DataTypes.Boolean)
+            if (!result.TypeDescriptor.IsBoolean())
             {
                 throw new InvalidStatementStructureCompilerException(statement, statement.Info);
             }

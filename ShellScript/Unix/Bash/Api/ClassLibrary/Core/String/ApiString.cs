@@ -9,7 +9,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
         public override string Name => ClassAccessName;
 
         public static readonly FunctionParameterDefinitionStatement StringParameter =
-            new FunctionParameterDefinitionStatement(DataTypes.String, "String", null, null);
+            new FunctionParameterDefinitionStatement(TypeDescriptor.String, "String", null, null);
         
         public override IApiVariable[] Variables => new IApiVariable[0];
 

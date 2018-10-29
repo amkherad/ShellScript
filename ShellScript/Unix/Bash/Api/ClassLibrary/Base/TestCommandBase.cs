@@ -6,7 +6,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Base
 {
     public abstract class TestCommandBase : TestFunction
     {
-        public override DataTypes DataType => DataTypes.Boolean;
+        public override TypeDescriptor TypeDescriptor => TypeDescriptor.Boolean;
 
         private string _testCharacter;
 
@@ -17,7 +17,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Base
 
         public override FunctionParameterDefinitionStatement[] Parameters { get; } =
         {
-            new FunctionParameterDefinitionStatement(DataTypes.String, "FilePath", null, null),
+            new FunctionParameterDefinitionStatement(TypeDescriptor.String, "FilePath", null, null),
         };
 
         protected override ExpressionResult CreateTestExpression(ExpressionBuilderParams p,
@@ -30,7 +30,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Base
                 parameter);
 
             return new ExpressionResult(
-                DataType,
+                TypeDescriptor,
                 $"[ -{_testCharacter} {result.Expression} ]",
                 functionCallStatement
             );

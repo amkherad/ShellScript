@@ -36,7 +36,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             if (context.Flags.UseComments && context.Flags.CommentParameterInfos)
             {
-                BashTranspilerHelpers.WriteComment(writer, $"! {funcDefStt.DataType} {functionName}");
+                BashTranspilerHelpers.WriteComment(writer, $"! {funcDefStt.TypeDescriptor} {functionName}");
             }
             
             if (funcDefStt.Parameters != null && funcDefStt.Parameters.Length > 0)
@@ -45,11 +45,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 {
                     var param = funcDefStt.Parameters[i];
                     var paramMappedName = (i + 1).ToString(CultureInfo.InvariantCulture);
-                    funcScope.ReserveNewParameter(param.DataType, param.Name, paramMappedName);
+                    funcScope.ReserveNewParameter(param.TypeDescriptor, param.Name, paramMappedName);
 
                     if (context.Flags.UseComments && context.Flags.CommentParameterInfos)
                     {
-                        BashTranspilerHelpers.WriteComment(writer, $"\\param ${paramMappedName} {param.DataType} - {param.Name}");
+                        BashTranspilerHelpers.WriteComment(writer, $"\\param ${paramMappedName} {param.TypeDescriptor} - {param.Name}");
                     }
                 }
             }
@@ -69,7 +69,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 TryGetInlinedStatement(context, funcScope, funcDefStt, out inlinedStatement);
             }
 
-            var func = new FunctionInfo(funcDefStt.DataType, functionName, null, null, funcDefStt.IsParams,
+            var func = new FunctionInfo(funcDefStt.TypeDescriptor, functionName, null, null, funcDefStt.IsParams,
                 funcDefStt.Parameters, inlinedStatement);
 
             scope.ReserveNewFunction(func);

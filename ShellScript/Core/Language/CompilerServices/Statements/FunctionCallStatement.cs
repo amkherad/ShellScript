@@ -28,21 +28,22 @@ namespace ShellScript.Core.Language.CompilerServices.Statements
             }
         }
 
-        public DataTypes DataType { get; }
+        public TypeDescriptor TypeDescriptor { get; }
         public EvaluationStatement[] Parameters { get; }
 
 
-        public FunctionCallStatement(string objectName, string functionName, DataTypes dataType,
+        public FunctionCallStatement(string objectName, string functionName, TypeDescriptor typeDescriptor,
             EvaluationStatement[] parameters, StatementInfo info, IStatement parentStatement = null)
         {
             ObjectName = objectName;
             FunctionName = functionName;
             Parameters = parameters;
             Info = info;
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
             ParentStatement = parentStatement;
 
-            TraversableChildren = StatementHelpers.CreateChildren(parameters.Cast<IStatement>().ToArray());
+            // ReSharper disable once CoVariantArrayConversion
+            TraversableChildren = StatementHelpers.CreateChildren(parameters);
         }
 
         public override string ToString()

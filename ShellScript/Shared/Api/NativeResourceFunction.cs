@@ -18,7 +18,7 @@ namespace ShellScript.Shared.Api
 
         private FunctionInfo _functionInfo;
 
-        public override DataTypes DataType { get; }
+        public override TypeDescriptor TypeDescriptor { get; }
 
 
         public NativeResourceFunction(
@@ -26,7 +26,7 @@ namespace ShellScript.Shared.Api
             string name,
             string resourceName,
             string summary,
-            DataTypes dataType,
+            TypeDescriptor typeDescriptor,
             bool isParams,
             bool isStatic,
             params FunctionParameterDefinitionStatement[] parameters)
@@ -34,13 +34,13 @@ namespace ShellScript.Shared.Api
             Name = name;
             ClassName = className;
             ResourceName = resourceName;
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
             Parameters = parameters;
             Summary = summary;
             IsStatic = isStatic;
             AllowDynamicParams = isParams;
 
-            _functionInfo = new FunctionInfo(dataType, name, null, className, isParams, parameters, null);
+            _functionInfo = new FunctionInfo(typeDescriptor, name, null, className, isParams, parameters, null);
         }
         
         

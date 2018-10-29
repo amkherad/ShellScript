@@ -19,7 +19,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
             public override string Name => nameof(IsNullOrWhiteSpace);
             public override string Summary => "Checks whether a string is null or only contains spaces.";
             public override string ClassName => ClassAccessName;
-            public override DataTypes DataType => DataTypes.Boolean;
+            public override TypeDescriptor TypeDescriptor => TypeDescriptor.Boolean;
 
             public override FunctionParameterDefinitionStatement[] Parameters { get; } =
             {
@@ -37,17 +37,17 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
                 {
                     case ConstantValueStatement constantValueStatement:
                     {
-                        return InlineConstant(constantValueStatement.DataType, constantValueStatement.Value,
+                        return InlineConstant(constantValueStatement.TypeDescriptor, constantValueStatement.Value,
                             constantValueStatement);
                     }
                     case VariableAccessStatement variableAccessStatement:
                     {
                         if (p.Scope.TryGetVariableInfo(variableAccessStatement, out var varInfo))
                         {
-                            if (varInfo.DataType.IsString())
+                            if (varInfo.TypeDescriptor.IsString())
                             {
                                 return new ApiMethodBuilderRawResult(new ExpressionResult(
-                                    DataType,
+                                    TypeDescriptor,
                                     $"[[ -z ${{{varInfo.AccessName}// }} ]]",
                                     variableAccessStatement
                                 ));
@@ -55,7 +55,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
                         }
                         else if (p.Scope.TryGetConstantInfo(variableAccessStatement, out var constInfo))
                         {
-                            return InlineConstant(constInfo.DataType, constInfo.Value, variableAccessStatement);
+                            return InlineConstant(constInfo.TypeDescriptor, constInfo.Value, variableAccessStatement);
                         }
 
                         throw new IdentifierNotFoundCompilerException(variableAccessStatement);
@@ -67,16 +67,16 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
                 }
             }
 
-            public static ApiMethodBuilderInlineResult InlineConstant(DataTypes dataType, string value,
+            public static ApiMethodBuilderInlineResult InlineConstant(TypeDescriptor typeDescriptor, string value,
                 IStatement statement)
             {
-                if (!dataType.IsString())
+                if (!typeDescriptor.IsString())
                 {
-                    throw new TypeMismatchCompilerException(dataType, DataTypes.String, statement.Info);
+                    throw new TypeMismatchCompilerException(typeDescriptor, TypeDescriptor.String, statement.Info);
                 }
 
                 return Inline(
-                    new ConstantValueStatement(DataTypes.String,
+                    new ConstantValueStatement(TypeDescriptor.String,
                         string.IsNullOrWhiteSpace(BashTranspilerHelpers.GetString(value))
                             .ToString(NumberFormatInfo.InvariantInfo),
                         statement.Info)

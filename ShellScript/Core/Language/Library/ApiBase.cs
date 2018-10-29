@@ -22,7 +22,7 @@ namespace ShellScript.Core.Language.Library
             foreach (var cls in Classes)
             foreach (var function in cls.Functions)
             {
-                var funcInfo = new ApiFunctionInfo(function.DataType, function.Name, null, cls.Name, function,
+                var funcInfo = new ApiFunctionInfo(function.TypeDescriptor, function.Name, null, cls.Name, function,
                     function.AllowDynamicParams, function.Parameters);
                 
                 scope.ReserveNewFunction(funcInfo);

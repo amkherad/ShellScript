@@ -3,28 +3,29 @@ using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders
 {
-    public struct PinnedVariableResult
+    public readonly struct PinnedVariableResult
     {
-        public DataTypes DataType { get; }
+        public TypeDescriptor TypeDescriptor { get; }
         public string Name { get; }
         public string Expression { get; }
         public EvaluationStatement Template { get; }
 
-        public PinnedVariableResult(DataTypes dataType, string name, string expression, EvaluationStatement template)
+        public PinnedVariableResult(TypeDescriptor typeDescriptor, string name, string expression,
+            EvaluationStatement template)
         {
-            DataType = dataType;
+            TypeDescriptor = typeDescriptor;
             Name = name;
             Expression = expression;
             Template = template;
         }
-        
+
         public static implicit operator ExpressionResult(PinnedVariableResult result)
         {
             return new ExpressionResult(
-                result.DataType,
+                result.TypeDescriptor,
                 result.Expression,
                 result.Template
-                );
+            );
         }
     }
 }

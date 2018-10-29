@@ -14,7 +14,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
 
         public override bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p,
-            DataTypes dataType, EvaluationStatement template)
+            TypeDescriptor typeDescriptor, EvaluationStatement template)
         {
             if (template is ConstantValueStatement)
                 return false;
@@ -23,14 +23,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             if (template is FunctionCallStatement)
                 return false;
 
-            return dataType.IsNumericOrFloat();
+            return typeDescriptor.IsNumericOrFloat();
         }
 
         public override bool ShouldBePinnedToFloatingPointVariable(
             ExpressionBuilderParams p, EvaluationStatement template,
             ExpressionResult left, ExpressionResult right)
         {
-            if (left.DataType.IsNumericOrFloat() || right.DataType.IsNumericOrFloat())
+            if (left.TypeDescriptor.IsNumericOrFloat() || right.TypeDescriptor.IsNumericOrFloat())
             {
                 if (template is LogicalEvaluationStatement)
                     return true;
@@ -56,7 +56,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override bool ShouldBePinnedToFloatingPointVariable(
             ExpressionBuilderParams p, EvaluationStatement template,
-            DataTypes left, EvaluationStatement leftTemplate, DataTypes right, EvaluationStatement rightTemplate)
+            TypeDescriptor left, EvaluationStatement leftTemplate, TypeDescriptor right, EvaluationStatement rightTemplate)
         {
             if (left.IsNumericOrFloat() || right.IsNumericOrFloat())
             {
@@ -84,7 +84,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override string FormatSubExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            if (result.DataType == DataTypes.String)
+            if (result.TypeDescriptor.IsString())
             {
                 return result.Expression;
             }
@@ -96,7 +96,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         {
             if (result.Template is ConstantValueStatement constantValueStatement)
             {
-                if (result.DataType.IsBoolean())
+                if (result.TypeDescriptor.IsBoolean())
                 {
                     if (!StatementHelpers.TryParseBooleanFromString(constantValueStatement.Value, out var boolResult))
                     {
@@ -129,13 +129,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return base.FormatConstantExpression(p, result);
         }
 
-        public override string FormatConstantExpression(ExpressionBuilderParams p, DataTypes dataType,
+        public override string FormatConstantExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor,
             string expression,
             EvaluationStatement template)
         {
             if (template is ConstantValueStatement constantValueStatement)
             {
-                if (dataType.IsBoolean())
+                if (typeDescriptor.IsBoolean())
                 {
                     if (!StatementHelpers.TryParseBooleanFromString(constantValueStatement.Value, out var boolResult))
                     {
@@ -161,14 +161,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                         }
                     }
 
-                    return base.FormatConstantExpression(p, dataType, expression, template);
+                    return base.FormatConstantExpression(p, typeDescriptor, expression, template);
                 }
             }
 
-            return base.FormatConstantExpression(p, dataType, expression, template);
+            return base.FormatConstantExpression(p, typeDescriptor, expression, template);
         }
 
-        public override string FormatFunctionCallExpression(ExpressionBuilderParams p, DataTypes dataType,
+        public override string FormatFunctionCallExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor,
             string expression, EvaluationStatement template)
         {
             return expression; //$"{expression}";
@@ -184,12 +184,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             if (result.Template is FunctionCallStatement)
                 return result.Expression;
 
-            if (result.DataType.IsNumericOrFloat())
+            if (result.TypeDescriptor.IsNumericOrFloat())
             {
                 return result.Expression;
             }
 
-            if (result.DataType.IsString())
+            if (result.TypeDescriptor.IsString())
             {
                 return $"\"{result.Expression}\"";
             }
@@ -201,7 +201,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         {
             if (result.Template is ConstantValueStatement || result.Template is VariableAccessStatement)
             {
-                if (result.DataType.IsString())
+                if (result.TypeDescriptor.IsString())
                 {
                     if (p.FormatString)
                     {
@@ -225,7 +225,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             if (result.Template is FunctionCallStatement)
                 return result.Expression;
 
-            if (result.DataType.IsNumericOrFloat())
+            if (result.TypeDescriptor.IsNumericOrFloat())
             {
                 string expression;
                 if (result.Expression.Contains("\""))
@@ -240,7 +240,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 return $"`awk \"BEGIN {{print ({expression})}}\"`";
             }
 
-            if (result.DataType.IsString())
+            if (result.TypeDescriptor.IsString())
             {
                 if (p.FormatString)
                 {
@@ -269,7 +269,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         {
             var exp = '$' + result.Expression;
 
-            if (!result.DataType.IsString())
+            if (!result.TypeDescriptor.IsString())
             {
                 return exp;
             }
@@ -294,12 +294,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return $"\"{exp}\"";
         }
 
-        public override string FormatVariableAccessExpression(ExpressionBuilderParams p, DataTypes dataType,
+        public override string FormatVariableAccessExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor,
             string expression, EvaluationStatement template)
         {
             var exp = '$' + expression;
 
-            if (!dataType.IsString())
+            if (!typeDescriptor.IsString())
             {
                 return exp;
             }
@@ -328,7 +328,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         public override PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p, string nameHint,
             ExpressionResult result)
         {
-            var variableName = p.Scope.NewHelperVariable(result.DataType, nameHint);
+            var variableName = p.Scope.NewHelperVariable(result.TypeDescriptor, nameHint);
 
             BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(
                 p.Context,
@@ -341,10 +341,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             var template = new VariableAccessStatement(variableName, result.Template.Info);
 
             return new PinnedVariableResult(
-                result.DataType,
+                result.TypeDescriptor,
                 variableName,
                 FormatVariableAccessExpression(p,
-                    result.DataType,
+                    result.TypeDescriptor,
                     variableName,
                     template
                 ),
@@ -353,12 +353,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override PinnedVariableResult PinExpressionToVariable(
             ExpressionBuilderParams p,
-            DataTypes dataType,
+            TypeDescriptor typeDescriptor,
             string nameHint,
             string expression,
             EvaluationStatement template)
         {
-            var variableName = p.Scope.NewHelperVariable(dataType, nameHint);
+            var variableName = p.Scope.NewHelperVariable(typeDescriptor, nameHint);
 
             BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(
                 p.Context,
@@ -371,10 +371,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             template = new VariableAccessStatement(variableName, template.Info);
 
             return new PinnedVariableResult(
-                dataType,
+                typeDescriptor,
                 variableName,
                 FormatVariableAccessExpression(p,
-                    dataType,
+                    typeDescriptor,
                     variableName,
                     template
                 ),
@@ -384,7 +384,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         public override PinnedVariableResult PinFloatingPointExpressionToVariable(ExpressionBuilderParams p,
             string nameHint, ExpressionResult result)
         {
-            var variableName = p.Scope.NewHelperVariable(result.DataType, nameHint);
+            var variableName = p.Scope.NewHelperVariable(result.TypeDescriptor, nameHint);
 
             var expression = $"`awk \"BEGIN {{print ({result.Expression})}}\"`";
 
@@ -399,10 +399,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             var template = new VariableAccessStatement(variableName, result.Template.Info);
 
             return new PinnedVariableResult(
-                result.DataType,
+                result.TypeDescriptor,
                 variableName,
                 FormatVariableAccessExpression(p,
-                    result.DataType,
+                    result.TypeDescriptor,
                     variableName,
                     template
                 ),
@@ -411,12 +411,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override PinnedVariableResult PinFloatingPointExpressionToVariable(
             ExpressionBuilderParams p,
-            DataTypes dataType,
+            TypeDescriptor typeDescriptor,
             string nameHint,
             string expression,
             EvaluationStatement template)
         {
-            var variableName = p.Scope.NewHelperVariable(dataType, nameHint);
+            var variableName = p.Scope.NewHelperVariable(typeDescriptor, nameHint);
 
             expression = $"`awk \"BEGIN {{print ({expression})}}\"`";
 
@@ -431,10 +431,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             template = new VariableAccessStatement(variableName, template.Info);
 
             return new PinnedVariableResult(
-                dataType,
+                typeDescriptor,
                 variableName,
                 FormatVariableAccessExpression(p,
-                    dataType,
+                    typeDescriptor,
                     variableName,
                     template
                 ),
@@ -482,7 +482,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                 var leftResult = CreateExpressionRecursive(p, logicalEvaluationStatement.Left);
                                 var rightResult = CreateExpressionRecursive(p, logicalEvaluationStatement.Right);
 
-                                if (leftResult.DataType.IsString() && rightResult.DataType.IsString())
+                                if (leftResult.TypeDescriptor.IsString() && rightResult.TypeDescriptor.IsString())
                                 {
                                     HandleNotices(p, ref leftResult, ref rightResult);
 
@@ -511,7 +511,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                     px.NonInlinePartWriter.Write(writer);
                                     
                                     return new ExpressionResult(
-                                        DataTypes.Boolean,
+                                        TypeDescriptor.Boolean,
                                         $"${varName}",
                                         template,
                                         PinRequiredNotice
@@ -538,7 +538,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                 var leftResult = CreateExpressionRecursive(p, arithmeticEvaluationStatement.Left);
                                 var rightResult = CreateExpressionRecursive(p, arithmeticEvaluationStatement.Right);
 
-                                if (leftResult.DataType.IsString() || rightResult.DataType.IsString())
+                                if (leftResult.TypeDescriptor.IsString() || rightResult.TypeDescriptor.IsString())
                                 {
                                     HandleNotices(p, ref leftResult, ref rightResult);
 
@@ -556,13 +556,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                     }
 
 
-                                    if (leftResult.DataType != DataTypes.String &&
+                                    if (!leftResult.TypeDescriptor.IsString() &&
                                         !(leftResult.Template is VariableAccessStatement))
                                     {
                                         leftExp = $"$(({leftExp}))";
                                     }
 
-                                    if (rightResult.DataType != DataTypes.String &&
+                                    if (!rightResult.TypeDescriptor.IsString() &&
                                         !(rightResult.Template is VariableAccessStatement))
                                     {
                                         rightExp = $"$(({rightExp}))";
@@ -583,7 +583,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                     px.NonInlinePartWriter.Write(writer);
 
                                     return new ExpressionResult(
-                                        DataTypes.String,
+                                        TypeDescriptor.String,
                                         concatExp,
                                         newTemp
                                     );

@@ -21,7 +21,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             if (scope.TryGetFunctionInfo(functionCallStatement, out var funcInfo))
             {
-                return funcInfo.DataType != DataTypes.Void;
+                return !funcInfo.TypeDescriptor.IsVoid();
             }
             
             return false;
@@ -55,7 +55,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 return;
             }
             
-            if (result.DataType == DataTypes.Void && !(result.Template is FunctionCallStatement))
+            if (result.TypeDescriptor.IsVoid() && !(result.Template is FunctionCallStatement))
             {
                 writer.WriteLine(result.Expression);
             }

@@ -18,9 +18,9 @@ namespace ShellScript.MSTest
                 Console.Out);
         }
 
-        public static ParserInfo CreateParserInfo()
+        public static ParserContext CreateParserInfo()
         {
-            return new ParserInfo(Console.Out, Console.Out, true, "", "", "");
+            return new ParserContext(Console.Out, Console.Out, true, "", "", "");
         }
     }
 }

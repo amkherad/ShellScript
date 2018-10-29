@@ -6,14 +6,14 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
 {
     public class TypeMismatchCompilerException : CompilerException
     {
-        public TypeMismatchCompilerException(DataTypes specifiedType, DataTypes expectedType, StatementInfo info)
-            : base(CreateMessage(specifiedType, expectedType, info), info)
+        public TypeMismatchCompilerException(TypeDescriptor specifiedTypeDescriptor, TypeDescriptor expectedTypeDescriptor, StatementInfo info)
+            : base(CreateMessage(specifiedTypeDescriptor, expectedTypeDescriptor, info), info)
         {
         }
 
-        public TypeMismatchCompilerException(DataTypes specifiedType, DataTypes expectedType, StatementInfo info,
+        public TypeMismatchCompilerException(TypeDescriptor specifiedTypeDescriptor, TypeDescriptor expectedTypeDescriptor, StatementInfo info,
             Exception innerException)
-            : base(CreateMessage(specifiedType, expectedType, info), info, innerException)
+            : base(CreateMessage(specifiedTypeDescriptor, expectedTypeDescriptor, info), info, innerException)
         {
         }
 
@@ -22,11 +22,11 @@ namespace ShellScript.Core.Language.CompilerServices.CompilerErrors
         {
         }
 
-        public static string CreateMessage(DataTypes specifiedType, DataTypes expectedType, StatementInfo info)
+        public static string CreateMessage(TypeDescriptor specifiedTypeDescriptor, TypeDescriptor expectedTypeDescriptor, StatementInfo info)
         {
             // ReSharper disable once UseStringInterpolation
             return
-                $"A type mismatch exception has been thrown, expectation was: '{expectedType}' but a type of '{specifiedType}' is specified {info}";
+                $"A type mismatch exception has been thrown, expectation was: '{expectedTypeDescriptor}' but a type of '{specifiedTypeDescriptor}' is specified {info}";
         }
 
 //        public static string CreateMessage(DataTypes specifiedType, DataTypes expectedType)

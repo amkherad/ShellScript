@@ -19,7 +19,7 @@ namespace ShellScript.Core.Language.Library
         public abstract string Name { get; }
         public abstract string Summary { get; }
         public abstract string ClassName { get; }
-        public abstract DataTypes DataType { get; }
+        public abstract TypeDescriptor TypeDescriptor { get; }
         public abstract bool IsStatic { get; }
         public abstract bool AllowDynamicParams { get; }
         public abstract FunctionParameterDefinitionStatement[] Parameters { get; }
@@ -67,7 +67,7 @@ namespace ShellScript.Core.Language.Library
 //
 //            p.Context.GeneralScope.ReserveNewFunction(functionInfo);
 
-            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.DataType,
+            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.TypeDescriptor,
                 parameters, statementInfo));
         }
 
@@ -78,7 +78,7 @@ namespace ShellScript.Core.Language.Library
         {
             if (p.Scope.TryGetFunctionInfo(functionInfo, out var funcInfo))
             {
-                return Inline(new FunctionCallStatement(funcInfo.ObjectName, funcInfo.Name, funcInfo.DataType,
+                return Inline(new FunctionCallStatement(funcInfo.ClassName, funcInfo.Name, funcInfo.TypeDescriptor,
                     parameters, statementInfo));
             }
 
@@ -97,7 +97,7 @@ namespace ShellScript.Core.Language.Library
 
             p.Context.GeneralScope.ReserveNewFunction(functionInfo);
 
-            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.DataType,
+            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.TypeDescriptor,
                 parameters, statementInfo));
         }
 
@@ -108,7 +108,7 @@ namespace ShellScript.Core.Language.Library
         {
             if (p.Scope.TryGetFunctionInfo(functionInfo, out var funcInfo))
             {
-                return Inline(new FunctionCallStatement(funcInfo.ObjectName, funcInfo.Name, funcInfo.DataType,
+                return Inline(new FunctionCallStatement(funcInfo.ClassName, funcInfo.Name, funcInfo.TypeDescriptor,
                     parameters, statementInfo));
             }
 
@@ -127,7 +127,7 @@ namespace ShellScript.Core.Language.Library
 
             p.Context.GeneralScope.ReserveNewFunction(functionInfo);
 
-            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.DataType,
+            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.TypeDescriptor,
                 parameters, statementInfo));
         }
 
@@ -145,7 +145,7 @@ namespace ShellScript.Core.Language.Library
             metaWriter.WriteLine($"if [ {condition} ]");
             metaWriter.WriteLine("then");
             
-            name = context.GeneralScope.NewHelperVariable(DataTypes.Boolean, $"{utilName}_existence");
+            name = context.GeneralScope.NewHelperVariable(TypeDescriptor.Boolean, $"{utilName}_existence");
             BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(context, context.GeneralScope, metaWriter,
                 name, "1");
             
@@ -167,7 +167,7 @@ namespace ShellScript.Core.Language.Library
         {
             if (p.Scope.TryGetFunctionInfo(functionInfo, out var funcInfo))
             {
-                return Inline(new FunctionCallStatement(funcInfo.ObjectName, funcInfo.Name, funcInfo.DataType,
+                return Inline(new FunctionCallStatement(funcInfo.ClassName, funcInfo.Name, funcInfo.TypeDescriptor,
                     parameters, statementInfo));
             }
 
@@ -216,16 +216,26 @@ namespace ShellScript.Core.Language.Library
 
             p.Context.GeneralScope.ReserveNewFunction(functionInfo);
 
-            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.DataType,
+            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.TypeDescriptor,
                 parameters, statementInfo));
         }
 
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static ExpressionResult CreateVariableAccess(DataTypes dataType, string name, StatementInfo info)
+        protected static ExpressionResult CreateVariableAccess(TypeDescriptor typeDescriptor, string className, string name, StatementInfo info)
         {
             return new ExpressionResult(
-                dataType,
+                typeDescriptor,
+                $"${name}",
+                new VariableAccessStatement(className, name, info)
+            );
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected static ExpressionResult CreateVariableAccess(TypeDescriptor typeDescriptor, string name, StatementInfo info)
+        {
+            return new ExpressionResult(
+                typeDescriptor,
                 $"${name}",
                 new VariableAccessStatement(name, info)
             );
@@ -249,7 +259,7 @@ namespace ShellScript.Core.Language.Library
                     var passed = parameters[i];
                     var scheme = Parameters[i];
 
-                    if (!StatementHelpers.IsAssignableFrom(scheme.DataType, passed.GetDataType(p.Context, p.Scope)))
+                    if (!StatementHelpers.IsAssignableFrom(p.Context, p.Scope, scheme.TypeDescriptor, passed.GetDataType(p.Context, p.Scope)))
                     {
                         
                     }
@@ -262,7 +272,7 @@ namespace ShellScript.Core.Language.Library
             //TODO: assert
         }
 
-        protected Exception ThrowInvalidParameterType(DataTypes dataType, string name)
+        protected Exception ThrowInvalidParameterType(TypeDescriptor typeDescriptor, string name)
         {
             //TODO: return correct exception.
             return new Exception();

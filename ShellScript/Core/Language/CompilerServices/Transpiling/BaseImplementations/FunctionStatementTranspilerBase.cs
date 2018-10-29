@@ -30,7 +30,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                 scope = new Scope(context, scope);
                 foreach (var p in funcDefStt.Parameters)
                 {
-                    scope.ReserveNewVariable(p.DataType, p.Name);
+                    scope.ReserveNewVariable(p.TypeDescriptor, p.Name);
                 }
             }
 
@@ -42,7 +42,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                 return false;
             }
 
-            if (funcDefStt.DataType == DataTypes.Void)
+            if (funcDefStt.TypeDescriptor.IsVoid())
             {
                 if (!CheckVoidReturn(context, scope, funcDefStt))
                 {
@@ -53,7 +53,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
             }
             else
             {
-                var (assertion, assertTarget) = CheckReturnOnAllPaths(context, scope, funcDefStt.DataType, funcDefStt);
+                var (assertion, assertTarget) = CheckReturnOnAllPaths(context, scope, funcDefStt.TypeDescriptor, funcDefStt);
                 if (assertion != 0)
                 {
                     //throw new InvalidStatementStructureCompilerException("Not all paths return a value.", funcDefStt.Info);
@@ -90,7 +90,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
         /// </summary>
         /// <param name="context"></param>
         /// <param name="scope"></param>
-        /// <param name="assertDataType"></param>
+        /// <param name="assertTypeDescriptor"></param>
         /// <param name="statement"></param>
         /// <returns>
         /// 0: success
@@ -98,7 +98,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
         /// 2: void return
         /// </returns>
         /// <exception cref="TypeMismatchCompilerException"></exception>
-        public static (int, IStatement) CheckReturnOnAllPaths(Context context, Scope scope, DataTypes assertDataType,
+        public static (int, IStatement) CheckReturnOnAllPaths(Context context, Scope scope, TypeDescriptor assertTypeDescriptor,
             IStatement statement)
         {
             switch (statement)
@@ -115,9 +115,9 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                     }
 
                     var returnDataType = returnStatement.Result.GetDataType(context, scope);
-                    if (!StatementHelpers.IsAssignableFrom(assertDataType, returnDataType))
+                    if (!StatementHelpers.IsAssignableFrom(context, scope, assertTypeDescriptor, returnDataType))
                     {
-                        throw new TypeMismatchCompilerException(returnDataType, assertDataType,
+                        throw new TypeMismatchCompilerException(returnDataType, assertTypeDescriptor,
                             returnStatement.Result.Info);
                     }
 
@@ -128,7 +128,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                 {
                     foreach (var branch in branchWrapperStatement.Branches)
                     {
-                        var result = CheckReturnOnAllPaths(context, scope, assertDataType, branch);
+                        var result = CheckReturnOnAllPaths(context, scope, assertTypeDescriptor, branch);
                         if (result.Item1 != 0)
                         {
                             return result;
@@ -139,7 +139,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                 }
                 case IBlockWrapperStatement blockWrapperStatement:
                 {
-                    return CheckReturnOnAllPaths(context, scope, assertDataType, blockWrapperStatement.Statement);
+                    return CheckReturnOnAllPaths(context, scope, assertTypeDescriptor, blockWrapperStatement.Statement);
                 }
                 case BlockStatement block:
                 {
@@ -153,7 +153,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                             break;
                         }
 
-                        var check = CheckReturnOnAllPaths(context, scope, assertDataType, stt);
+                        var check = CheckReturnOnAllPaths(context, scope, assertTypeDescriptor, stt);
                         if (check.Item1 == 0)
                         {
                             isUnreachable = true;
@@ -433,7 +433,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         if (isReplaced)
                         {
                             result = new FunctionCallStatement(functionCallStatement.ObjectName,
-                                functionCallStatement.FunctionName, functionCallStatement.DataType, newParameters,
+                                functionCallStatement.FunctionName, functionCallStatement.TypeDescriptor, newParameters,
                                 functionCallStatement.Info, functionCallStatement.ParentStatement);
                             return true;
                         }
@@ -548,7 +548,7 @@ namespace ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementat
                         ReplaceEvaluation(variableDefinitionStatement.DefaultValue, predicate, replace,
                             out var newResult))
                     {
-                        result = new VariableDefinitionStatement(variableDefinitionStatement.DataType,
+                        result = new VariableDefinitionStatement(variableDefinitionStatement.TypeDescriptor,
                             variableDefinitionStatement.Name, variableDefinitionStatement.IsConstant,
                             (EvaluationStatement) newResult, variableDefinitionStatement.Info);
                         return true;

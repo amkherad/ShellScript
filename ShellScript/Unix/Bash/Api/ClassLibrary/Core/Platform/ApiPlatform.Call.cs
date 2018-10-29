@@ -15,14 +15,14 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
                 "Takes a string and execute it as a void-result platform-dependent shell command.";
 
             public override string ClassName => ClassAccessName;
-            public override DataTypes DataType => DataTypes.Void;
+            public override TypeDescriptor TypeDescriptor => TypeDescriptor.Void;
 
             public override bool IsStatic => true;
             public override bool AllowDynamicParams => false;
 
             public override FunctionParameterDefinitionStatement[] Parameters { get; } =
             {
-                new FunctionParameterDefinitionStatement(DataTypes.String, "RawCommand", null, null),
+                new FunctionParameterDefinitionStatement(TypeDescriptor.String, "RawCommand", null, null),
             };
 
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
@@ -37,13 +37,13 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
                 var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
                 var result = transpiler.GetExpression(p, parameter);
 
-                if (result.DataType != DataTypes.String)
+                if (!result.TypeDescriptor.IsString())
                 {
                     throw ThrowInvalidParameterType(result);
                 }
 
                 return new ApiMethodBuilderRawResult(new ExpressionResult(
-                    DataType,
+                    TypeDescriptor,
                     $"`{result.Expression}`",
                     result.Template
                 ));
