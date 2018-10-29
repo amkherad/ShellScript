@@ -76,9 +76,9 @@ ShellScript is a strong-typed/static-typed language, all data types are listed b
 
 | Data Type | Alias(es)     | Description
 |-----------|---------------|-------------
-| Decimal   | decimal, int  | Any decimal number. (e.g. 956)
+| Integer   | int, long     | Any integer number. (e.g. 956)
 | Float     | double, float | Any float number. (e.g. 56.48)
-| Number    | number        | Any number, either decimal or float.
+| Number    | number        | Any number, either integer or float.
 | String    | string        | Representing a string of characters.
 | Boolean   | bool          | Representing a boolean value. (i.e. true or false)
 | Void      | void          | Void data type. (The only usage is to define a void method)
@@ -89,7 +89,7 @@ ShellScript is a strong-typed/static-typed language, all data types are listed b
 Example of data types in code:
 ```csharp
 int i = 956;
-decimal d = 956;
+long l = 956;
 float f = 56.48;
 float f = +8.56e-23;
 double d = +8.56e-23;
@@ -103,7 +103,7 @@ boolean b = true || false;
 
 * Types have no boundaries or limitation in the language itself but they're limited to target platform specifications.
 
-* Only decimal types can cast to float types implicitly, for other types an explicit cast is required.
+* Only integer types can be casted to float types implicitly, for other types an explicit cast is required.
 
 ### Variable Definition
 Variable definitions are similar to C#, except there is no var keyword for auto typing.  
@@ -182,7 +182,7 @@ int myFunction (int parameter1) {
 Same as the C#, all code paths must return a value, so this is a compiler error:
 
 ```csharp
-double myDouble (decimal parameter1) {
+double myDouble (int parameter1) {
     if (parameter1 < 10) {
         echo "ERROR";
 
@@ -379,7 +379,7 @@ return $"Hello World {dateValue}";
 * You can use both single quote or double quote. (both are strings, ShellScript has no character data type)
 * String escaping is exactly like C#.
 * Concatenating constant strings will generate a concatenated constant string.
-* You can use multiplication operator on one decimal and one string to repeat the string.
+* You can use multiplication operator on one integer and one string to repeat the string.
   ```csharp
   echo (80 * "-"); //will repeat (-) 80 times.
   ```
