@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
-using ShellScript.Core.Language.CompilerServices;
+using ShellScript.Core.Language.Compiler;
 
 namespace ShellScript.CommandLine
 {

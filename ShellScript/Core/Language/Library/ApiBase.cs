@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using ShellScript.Core.Language.CompilerServices;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
+using ShellScript.Core.Language.Compiler;
+using ShellScript.Core.Language.Compiler.Transpiling;
 
 namespace ShellScript.Core.Language.Library
 {

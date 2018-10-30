@@ -1,5 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-using ShellScript.Core.Language.CompilerServices.Lexing;
+using ShellScript.Core.Language.Compiler.Lexing;
 
 namespace ShellScript.Core
 {

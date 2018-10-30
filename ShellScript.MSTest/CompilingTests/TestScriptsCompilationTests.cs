@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ShellScript.Core.Language.CompilerServices;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Unix.Bash;
 
 namespace ShellScript.MSTest.CompilingTests

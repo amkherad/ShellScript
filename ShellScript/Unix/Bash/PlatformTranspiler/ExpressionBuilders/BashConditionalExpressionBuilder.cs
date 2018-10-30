@@ -1,9 +1,9 @@
 using System;
 using System.Runtime.CompilerServices;
-using ShellScript.Core.Language.CompilerServices.CompilerErrors;
-using ShellScript.Core.Language.CompilerServices.Statements;
-using ShellScript.Core.Language.CompilerServices.Statements.Operators;
-using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
+using ShellScript.Core.Language.Compiler.CompilerErrors;
+using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Compiler.Statements.Operators;
+using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders

@@ -1,4 +1,4 @@
-using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
+using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 
 namespace ShellScript.Core.Language.Library
 {

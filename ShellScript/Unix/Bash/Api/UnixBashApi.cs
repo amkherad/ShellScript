@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
+using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Locale;
 using ShellScript.Unix.Bash.Api.ClassLibrary.IO.File;

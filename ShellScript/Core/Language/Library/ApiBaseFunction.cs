@@ -5,11 +5,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
-using ShellScript.Core.Language.CompilerServices;
-using ShellScript.Core.Language.CompilerServices.CompilerErrors;
-using ShellScript.Core.Language.CompilerServices.Statements;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
-using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
+using ShellScript.Core.Language.Compiler;
+using ShellScript.Core.Language.Compiler.CompilerErrors;
+using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Compiler.Transpiling;
+using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Unix.Bash.PlatformTranspiler;
 
 namespace ShellScript.Core.Language.Library

@@ -1,9 +1,9 @@
 using System;
 using ShellScript.Core.Language;
-using ShellScript.Core.Language.CompilerServices;
-using ShellScript.Core.Language.CompilerServices.CompilerErrors;
-using ShellScript.Core.Language.CompilerServices.Statements;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
+using ShellScript.Core.Language.Compiler;
+using ShellScript.Core.Language.Compiler.CompilerErrors;
+using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api;
 using ShellScript.Unix.Bash.PlatformTranspiler;

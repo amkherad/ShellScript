@@ -1,7 +1,7 @@
 using System;
-using ShellScript.Core.Language.CompilerServices;
-using ShellScript.Core.Language.CompilerServices.Parsing;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
+using ShellScript.Core.Language.Compiler;
+using ShellScript.Core.Language.Compiler.Parsing;
+using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Unix.Bash;
 
 namespace ShellScript.MSTest

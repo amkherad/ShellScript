@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ShellScript.Core.Language;
-using ShellScript.Core.Language.CompilerServices;
-using ShellScript.Core.Language.CompilerServices.Parsing;
-using ShellScript.Core.Language.CompilerServices.Statements;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
-using ShellScript.Core.Language.CompilerServices.Transpiling.BaseImplementations;
+using ShellScript.Core.Language.Compiler;
+using ShellScript.Core.Language.Compiler.Parsing;
+using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Compiler.Transpiling;
+using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 using ShellScript.Unix.Bash;
 
 namespace ShellScript.MSTest.CompilingTests

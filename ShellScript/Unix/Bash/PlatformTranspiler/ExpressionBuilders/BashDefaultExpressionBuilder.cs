@@ -1,9 +1,9 @@
 using System.IO;
 using System.Runtime.CompilerServices;
-using ShellScript.Core.Language.CompilerServices.CompilerErrors;
-using ShellScript.Core.Language.CompilerServices.Statements;
-using ShellScript.Core.Language.CompilerServices.Statements.Operators;
-using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
+using ShellScript.Core.Language.Compiler.CompilerErrors;
+using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Compiler.Statements.Operators;
+using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
@@ -145,7 +145,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                     return boolResult ? "1" : "0";
                 }
 
-                if (constantValueStatement.IsString())
+                if (constantValueStatement.IsString() || constantValueStatement.IsDelegate())
                 {
                     if (template.ParentStatement is ArithmeticEvaluationStatement arithmeticEvaluationStatement)
                     {

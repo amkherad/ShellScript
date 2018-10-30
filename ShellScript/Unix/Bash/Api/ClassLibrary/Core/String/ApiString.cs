@@ -1,4 +1,4 @@
-using ShellScript.Core.Language.CompilerServices.Statements;
+using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String

@@ -1,6 +1,6 @@
 using System.IO;
 using ShellScript.Core;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
+using ShellScript.Core.Language.Compiler.Transpiling;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
 {

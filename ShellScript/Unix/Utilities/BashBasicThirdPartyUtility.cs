@@ -1,5 +1,5 @@
 using System.IO;
-using ShellScript.Core.Language.CompilerServices.Transpiling;
+using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Unix.Utilities
