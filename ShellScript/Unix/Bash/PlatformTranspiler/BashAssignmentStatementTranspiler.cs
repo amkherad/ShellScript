@@ -35,6 +35,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
                 nonInlinePartWriter.Write(writer);
             }
+            
+            scope.IncrementStatements();
         }
 
         private static void WriteAssignment(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,

@@ -63,6 +63,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             {
                 writer.WriteLine($"{resultVar}={result.Expression}");
             }
+            
+            scope.IncrementStatements();
         }
     }
 }

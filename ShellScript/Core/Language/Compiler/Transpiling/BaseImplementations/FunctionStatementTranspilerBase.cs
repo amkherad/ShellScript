@@ -152,7 +152,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                         if (isUnreachable)
                         {
                             context.WarningWriter.WriteLine(
-                                $"Statement at {stt.Info.GetPositionString()} is unreachable");
+                                $"Statement {stt.Info} is unreachable");
                             break;
                         }
 

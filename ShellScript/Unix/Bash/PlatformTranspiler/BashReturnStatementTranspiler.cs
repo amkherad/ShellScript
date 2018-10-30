@@ -39,9 +39,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 writer.WriteLine();
             }
 
-            writer.Write("return ");
-            writer.Write(context.Flags.SuccessStatusCode);
-            writer.WriteLine();
+            if (scope.StatementCount > 1 && scope.Type != ScopeType.MethodRoot)
+            {
+                writer.Write("return ");
+                writer.Write(context.Flags.SuccessStatusCode);
+                writer.WriteLine();
+            }
+
+            scope.IncrementStatements();
         }
     }
 }

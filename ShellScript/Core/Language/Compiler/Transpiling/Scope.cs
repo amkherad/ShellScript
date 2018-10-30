@@ -25,7 +25,12 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
         private readonly HashSet<FunctionInfo> _functionPrototypes;
 
         private readonly Dictionary<string, string> _config;
+
+        public int StatementCount { get; private set; }
+
+        public ScopeType Type { get; private set; }
         
+
         public interface IScopedConfig
         {
             string ExplicitEchoStream { get; set; }
@@ -40,7 +45,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             _constants = new HashSet<ConstantInfo>();
             _functions = new HashSet<FunctionInfo>();
             _functionPrototypes = new HashSet<FunctionInfo>();
-            
+
             _config = new Dictionary<string, string>();
         }
 
@@ -54,13 +59,20 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             _constants = new HashSet<ConstantInfo>();
             _functions = new HashSet<FunctionInfo>();
             _functionPrototypes = new HashSet<FunctionInfo>();
-            
+
             _config = new Dictionary<string, string>();
         }
 
-        public Scope BeginNewScope()
+        public Scope BeginNewScope(ScopeType type)
         {
-            return new Scope(Context, this);
+            var scope = new Scope(Context, this);
+            
+            if (type == ScopeType.Block)
+            {
+                scope.Type = Type | type;
+            }
+
+            return scope;
         }
 
         public T GetConfig<T>(Expression<Func<IScopedConfig, T>> config, T defaultValue)
@@ -70,10 +82,10 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             if (propertyInfo == null)
             {
                 throw new ArgumentException(string.Format(
-                "Expression '{0}' refers to a invalid member, not a property.",
-                config.ToString()));
+                    "Expression '{0}' refers to a invalid member, not a property.",
+                    config.ToString()));
             }
-            
+
             if (typeof(T) != propertyInfo.PropertyType &&
                 !typeof(T).IsSubclassOf(propertyInfo.PropertyType))
                 throw new ArgumentException(string.Format(
@@ -89,12 +101,11 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return (T) Convert.ChangeType(value, typeof(T));
                 }
-                
             } while ((that = that.Parent) != null);
 
             return defaultValue;
         }
-        
+
         public void SetConfig<T>(Expression<Func<IScopedConfig, T>> config, T value)
         {
             var propertyInfo = (config.Body as MemberExpression)?.Member as PropertyInfo;
@@ -102,10 +113,10 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             if (propertyInfo == null)
             {
                 throw new ArgumentException(string.Format(
-                "Expression '{0}' refers to a invalid member, not a property.",
-                config.ToString()));
+                    "Expression '{0}' refers to a invalid member, not a property.",
+                    config.ToString()));
             }
-            
+
             if (typeof(T) != propertyInfo.PropertyType &&
                 !typeof(T).IsSubclassOf(propertyInfo.PropertyType))
                 throw new ArgumentException(string.Format(
@@ -124,6 +135,11 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             }
         }
 
+        public void IncrementStatements()
+        {
+            StatementCount++;
+        }
+
         public bool IsIdentifierExists(FunctionCallStatement functionCallStatement)
         {
             var that = this;
@@ -133,12 +149,11 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
         }
-        
+
         public bool IsIdentifierExists(string name)
         {
             var that = this;
@@ -148,7 +163,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -219,7 +233,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             {
                 nameHint = _generateRandomString(12);
             }
-            
+
             var varName = "h_" + nameHint;
 
             if (Context.Flags.PreferRandomHelperVariableNames)
@@ -258,7 +272,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -275,7 +288,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -292,7 +304,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -326,7 +337,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -343,7 +353,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -360,7 +369,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -377,7 +385,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -392,7 +399,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -409,7 +415,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -426,7 +431,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
@@ -443,12 +447,11 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 {
                     return true;
                 }
-                
             } while ((that = that.Parent) != null);
 
             return false;
         }
-        
+
 
         public int Level
         {

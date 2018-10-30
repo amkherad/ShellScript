@@ -49,6 +49,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
 
             writer.WriteLine();
+            
+            scope.IncrementStatements();
         }
     }
 }

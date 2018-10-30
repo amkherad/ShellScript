@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#ShellScript v0.1.2.2018 - [https://github.com/amkherad/ShellScript]
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+#delegate String PathProvider
+getApplicationsDir=0
+#! String getCurrentUserApplicationsDir
+function getCurrentUserApplicationsDir() {
+echo "~/.local/share/applications/"
+}
+#! String getSharedApplicationsDir
+function getSharedApplicationsDir() {
+echo "/usr/share/applications/"
+}
+if [ $(whoami) == 'root' ]
+then
+getApplicationsDir=getSharedApplicationsDir
+else
+getApplicationsDir=getCurrentUserApplicationsDir
+fi
+echo `$getApplicationsDir`

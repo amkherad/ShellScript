@@ -44,6 +44,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             );
             
             BashTranspilerHelpers.WriteComment(writer, $"delegate {delegateStatement.ReturnTypeDescriptor} {delegateStatement.Name}");
+            
+            scope.IncrementStatements();
         }
     }
 }

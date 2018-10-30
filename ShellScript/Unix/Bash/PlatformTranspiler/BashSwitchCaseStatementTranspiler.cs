@@ -28,6 +28,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         public void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter, IStatement statement)
         {
             throw new NotImplementedException();
+            
+            scope.IncrementStatements();
         }
     }
 }

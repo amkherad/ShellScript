@@ -29,7 +29,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 throw new IdentifierNameExistsCompilerException(functionName, funcDefStt.Info);
             }
 
-            var funcScope = scope.BeginNewScope();
+            var funcScope = scope.BeginNewScope(ScopeType.MethodRoot);
             IStatement inlinedStatement = null;
 
             funcScope.SetConfig(c => c.ExplicitEchoStream, context.Flags.DefaultExplicitEchoStream);
@@ -38,7 +38,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             {
                 BashTranspilerHelpers.WriteComment(writer, $"! {funcDefStt.TypeDescriptor} {functionName}");
             }
-            
+
             if (funcDefStt.Parameters != null && funcDefStt.Parameters.Length > 0)
             {
                 for (var i = 0; i < funcDefStt.Parameters.Length; i++)
@@ -49,7 +49,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
                     if (context.Flags.UseComments && context.Flags.CommentParameterInfos)
                     {
-                        BashTranspilerHelpers.WriteComment(writer, $"\\param ${paramMappedName} {param.TypeDescriptor} - {param.Name}");
+                        BashTranspilerHelpers.WriteComment(writer,
+                            $"\\param ${paramMappedName} {param.TypeDescriptor} - {param.Name}");
                     }
                 }
             }
@@ -62,9 +63,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
             else
             {
-                var transpiler = context.GetTranspilerForStatement(funcDefStt.Statement);
-
-                transpiler.WriteBlock(context, funcScope, writer, metaWriter, funcDefStt.Statement);
+                BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                    funcDefStt.Statement, ScopeType.MethodRoot, typeof(ReturnStatement));
 
                 TryGetInlinedStatement(context, funcScope, funcDefStt, out inlinedStatement);
             }
@@ -75,6 +75,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             scope.ReserveNewFunction(func);
 
             writer.WriteLine("}");
+
+            scope.IncrementStatements();
         }
     }
 }

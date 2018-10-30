@@ -66,7 +66,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     throw new InvalidOperationException(ErrorMessages.ConstantValueRequired);
                 }
 
-                if (!StatementHelpers.IsAssignableFrom(context, scope, varDefStt.TypeDescriptor, constantValueStatement.TypeDescriptor))
+                if (!StatementHelpers.IsAssignableFrom(context, scope, varDefStt.TypeDescriptor,
+                    constantValueStatement.TypeDescriptor))
                 {
                     throw new TypeMismatchCompilerException(constantValueStatement.TypeDescriptor,
                         varDefStt.TypeDescriptor, varDefStt.Info);
@@ -92,7 +93,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     //x=$((34 * myFuncResult))
                     var result = transpiler.GetExpression(context, scope, metaWriter, writer, null, def);
 
-                    if (!StatementHelpers.IsAssignableFrom(context, scope, varDefStt.TypeDescriptor, result.TypeDescriptor))
+                    if (!StatementHelpers.IsAssignableFrom(context, scope, varDefStt.TypeDescriptor,
+                        result.TypeDescriptor))
                     {
                         throw new TypeMismatchCompilerException(result.TypeDescriptor, varDefStt.TypeDescriptor,
                             varDefStt.Info);
@@ -107,6 +109,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 }
 
                 scope.ReserveNewVariable(varDefStt.TypeDescriptor, varDefStt.Name);
+
+                scope.IncrementStatements();
             }
         }
     }
