@@ -21,7 +21,7 @@ namespace ShellScript.MSTest.CompilingTests
                 new UnixBashPlatform()
             };
             var compilerFlags = CompilerFlags.CreateDefault();
-            compilerFlags.WriteShellScriptVersion = false;
+            //compilerFlags.WriteShellScriptVersion = false;
 
             string testScriptsRoot = null;
             string tempOutputRoot = null;
@@ -74,12 +74,17 @@ namespace ShellScript.MSTest.CompilingTests
                                 string assertLine;
                                 string outputLine;
 
+                                int line = 0;
+                                
                                 while ((assertLine = assertionReader.ReadLine()) != null &&
                                        (outputLine = outputReader.ReadLine()) != null)
                                 {
-                                    if (assertLine != outputLine)
+                                    if (line > 2)
                                     {
-                                        Assert.Fail($"Assert failed on {file}");
+                                        if (assertLine != outputLine)
+                                        {
+                                            Assert.Fail($"Assert failed on {file}");
+                                        }
                                     }
                                 }
                             }
