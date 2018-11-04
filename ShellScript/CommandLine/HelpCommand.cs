@@ -9,9 +9,9 @@ namespace ShellScript.CommandLine
     public class HelpCommand : ICommand
     {
         public string Name => "Help";
-        
+
         public Dictionary<string, string> SwitchesHelp { get; }
-        
+
         public bool CanHandle(CommandContext command)
         {
             if (command.IsCommand("help", "-h", "--help"))
@@ -33,9 +33,12 @@ namespace ShellScript.CommandLine
             WriteEntry(writer, "--platforms", "Shows the installed platforms.");
             WriteEntry(writer, "-v, --version", "Shows the version string.");
             WriteSeperator(writer);
-            WriteEntry(writer, "compile, -c, --compile", "Compiles the given source/project file.");
-            WriteEntry(writer, "exec, --exec", "Executes the given source/project file without compilation.");
-            WriteEntry(writer, "--daemon", "Starts the runtime daemon.");
+            WriteEntry(writer, "compile", "Compiles the given source/project file.");
+            WriteEntry(writer, "exec", "Executes the given source/project file without compilation.");
+            WriteEntry(writer, "daemon", "Starts the runtime daemon.");
+            WriteEntry(writer, "--duplex-error-output", "Writes the error output to both the StdOut and the StdErr.");
+            WriteEntry(writer, $"--{Program.CompatibleOutputSwitchName}",
+                "Determines that output is used by an external software like an IDE.");
 
             return ResultCodes.Successful;
         }
@@ -65,7 +68,21 @@ namespace ShellScript.CommandLine
 
         private void WriteSeperator(TextWriter writer)
         {
-            
+        }
+
+        public void ShowHelp(TextWriter writer, ICommand command)
+        {
+            writer.WriteLine($"List of '{command.Name}' command switches:");
+            writer.WriteLine("*Switches must start with either '-' or '--'");
+            writer.WriteLine();
+
+            if (command.SwitchesHelp != null)
+            {
+                foreach (var sw in command.SwitchesHelp)
+                {
+                    WriteEntry(writer, sw.Key, sw.Value);
+                }
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ namespace ShellScript.CommandLine
         
         public bool CanHandle(CommandContext command)
         {
-            return command.IsCommand("--daemon");
+            return command.IsCommand("daemon");
         }
 
         public ResultCodes Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,

@@ -1,6 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
 using ShellScript.Core.Language.Compiler;
+using ShellScript.Core.Language.Compiler.Statements;
+using LambdaExpression = System.Linq.Expressions.LambdaExpression;
 
 namespace ShellScript.CommandLine
 {
@@ -10,7 +15,7 @@ namespace ShellScript.CommandLine
 
         public bool CanHandle(CommandContext command)
         {
-            if (command.IsCommand("compile", "-c", "--compile"))
+            if (command.IsCommand("compile"))
             {
                 return true;
             }
@@ -51,7 +56,10 @@ namespace ShellScript.CommandLine
 
             var flags = CompilerFlags.CreateDefault();
 
-            _fillCompilerFlags(context, flags);
+            foreach (var sw in _switches)
+            {
+                _setFlag(context, flags, sw.Value.Item1, sw.Key);
+            }
 
             var result = compiler.CompileFromSource(
                 errorWriter,
@@ -68,42 +76,67 @@ namespace ShellScript.CommandLine
                 outputWriter.WriteLine("Compilation finished successfully.");
                 return ResultCodes.Successful;
             }
-            else
-            {
-                if (context.AnySwitch("verbose"))
-                {
-                    errorWriter.WriteLine(result.Exception?.ToString());
-                }
-                else
-                {
-                    errorWriter.WriteLine(result.Exception?.Message);
-                }
 
-                return ResultCodes.Failure;
-            }
+            throw result.Exception;
         }
 
-        private void _fillCompilerFlags(CommandContext context, CompilerFlags flags)
+        private void _setFlag(CommandContext context, CompilerFlags flags,
+            Expression<Func<CompilerFlags, object>> prop, string switchName)
         {
             Switch s;
 
-            if ((s = context.GetSwitch(CompilerFlags.ExplicitEchoStreamSwitch)) != null)
+            if ((s = context.GetSwitch(switchName)) != null)
             {
                 s.AssertValue();
-                flags.ExplicitEchoStream = s.Value;
-            }
 
-            if ((s = context.GetSwitch(CompilerFlags.DefaultExplicitEchoStreamSwitch)) != null)
-            {
-                s.AssertValue();
-                flags.DefaultExplicitEchoStream = s.Value;
+                var lambda = prop as LambdaExpression;
+                var memberExpr = lambda.Body as MemberExpression;
+                if (memberExpr == null) throw new InvalidOperationException();
+                var propName = memberExpr.Member.Name;
+
+                var propInfo = flags.GetType().GetProperty(propName);
+
+                if (propInfo.PropertyType == typeof(bool))
+                {
+                    StatementHelpers.TryParseBooleanFromString(s.Value, out var value);
+                    propInfo.SetValue(flags, value);
+                }
+                else
+                {
+                    propInfo.SetValue(flags, Convert.ChangeType(s.Value, propInfo.PropertyType));
+                }
             }
         }
-        
-        public Dictionary<string, string> SwitchesHelp { get; } = new Dictionary<string, string>
-        {
-            {CompilerFlags.ExplicitEchoStreamSwitch, ""},
-            {"", ""}
-        };
+
+        private static Dictionary<string, (Expression<Func<CompilerFlags, object>>, string)> _switches =
+            new Dictionary<string, (Expression<Func<CompilerFlags, object>>, string)>
+            {
+                {
+                    "echo-dev",
+                    (
+                        x => x.ExplicitEchoStream,
+                        "Specifies the explicit device for standard output, default is /dev/tty."
+                    )
+                },
+
+                {
+                    "default-echo-dev",
+                    (
+                        x => x.DefaultExplicitEchoStream,
+                        "Specifies the default explicit device for standard output, if not changed, /dev/tty will be used."
+                    )
+                },
+
+                {
+                    "use-comment",
+                    (
+                        x => x.UseComments,
+                        "Determines whether meta-comments should be used in output code."
+                    )
+                },
+            };
+
+        public Dictionary<string, string> SwitchesHelp { get; } =
+            _switches.ToDictionary(kv => kv.Key, kv => kv.Value.Item2);
     }
 }

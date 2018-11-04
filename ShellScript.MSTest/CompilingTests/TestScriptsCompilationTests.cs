@@ -25,7 +25,7 @@ namespace ShellScript.MSTest.CompilingTests
 
             string testScriptsRoot = null;
             string tempOutputRoot = null;
-
+            
             var cDir = Environment.CurrentDirectory;
             while (!string.IsNullOrWhiteSpace(cDir))
             {
@@ -79,7 +79,7 @@ namespace ShellScript.MSTest.CompilingTests
                                 while ((assertLine = assertionReader.ReadLine()) != null &&
                                        (outputLine = outputReader.ReadLine()) != null)
                                 {
-                                    if (line > 2)
+                                    if (line++ >= 2)
                                     {
                                         if (assertLine != outputLine)
                                         {

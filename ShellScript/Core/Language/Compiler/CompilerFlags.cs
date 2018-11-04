@@ -18,10 +18,10 @@ namespace ShellScript.Core.Language.Compiler
         // Environmental Features
         //==========================
         public bool UseLastFunctionCallStorageVariable { get; set; }
-        
+
         public int SuccessStatusCode { get; set; }
         public int FailureStatusCode { get; set; }
-        
+
         /// <summary>
         /// only on linux.
         /// </summary>
@@ -29,55 +29,52 @@ namespace ShellScript.Core.Language.Compiler
         /// /dev/tty
         /// </example>
         public string ExplicitEchoStream { get; set; }
+
         public string DefaultExplicitEchoStream { get; set; }
 
-        public const string ExplicitEchoStreamSwitch = "explicit-echo-dev";
-
-        public const string DefaultExplicitEchoStreamSwitch = "default-explicit-echo-dev";
-        
         //==========================
         // Readability
         //==========================
         public bool UseComments { get; set; }
-        
+
         public bool CommentParameterInfos { get; set; }
-        
+
         public bool UseSegments { get; set; }
-        
+
         public bool PreferRandomHelperVariableNames { get; set; }
 
-        
+
         //==========================
         // Info
         //==========================
         public bool WriteShellScriptVersion { get; set; }
-        
+
         public string Author { get; set; }
         public string ContactInfo { get; set; }
         public string WikiUrl { get; set; }
-        
-        
+
+
         public static CompilerFlags CreateDefault()
         {
             return new CompilerFlags
             {
                 SemicolonRequired = true,
-                
+
                 UseInlining = true,
                 InlineCascadingFunctionCalls = true,
                 InlineNonEvaluations = true,
-                
+
                 SuccessStatusCode = 0,
                 FailureStatusCode = 1,
-                
+
                 ExplicitEchoStream = null,
                 DefaultExplicitEchoStream = "/dev/tty",
-                
+
                 UseComments = true,
                 CommentParameterInfos = true,
-                
+
                 UseSegments = true,
-                
+
                 WriteShellScriptVersion = true,
             };
         }

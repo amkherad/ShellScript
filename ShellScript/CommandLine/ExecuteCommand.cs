@@ -11,7 +11,7 @@ namespace ShellScript.CommandLine
         
         public bool CanHandle(CommandContext command)
         {
-            return command.IsCommand("exec", "--exec");
+            return command.IsCommand("exec");
         }
 
         public ResultCodes Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
