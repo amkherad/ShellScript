@@ -1,7 +1,6 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ShellScript.CommandLine;
-using ShellScript.Core;
 using ShellScript.Core.Language;
 using ShellScript.Unix.Bash;
 
@@ -10,7 +9,7 @@ namespace ShellScript.MSTest.CliTests
     [TestClass]
     public class CompileCommandTests
     {
-        [TestMethod]
+        //[TestMethod]
         public void TestCompile()
         {
             var compileCommand = new CompileCommand();
@@ -24,7 +23,7 @@ namespace ShellScript.MSTest.CliTests
                 "/home/amk/Temp/ShellScript/variables.sh",
                 "unix-bash",
                 "--verbose",
-                "--use-explicit-echo-dev",
+                "--echo-dev",
             });
 
             Platforms.AddPlatform(new UnixBashPlatform());
