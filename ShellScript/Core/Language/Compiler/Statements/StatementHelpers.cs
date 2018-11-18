@@ -377,6 +377,14 @@ namespace ShellScript.Core.Language.Compiler.Statements
 
                     return TypeDescriptor.Numeric;
                 }
+                case AssignmentStatement assignmentStatement:
+                {
+                    return assignmentStatement.LeftSide.GetDataType(context, scope);
+                }
+                case TypeCastStatement typeCastStatement:
+                {
+                    return typeCastStatement.TypeDescriptor;
+                }
                 default:
                     throw new InvalidOperationException();
             }
@@ -499,10 +507,7 @@ namespace ShellScript.Core.Language.Compiler.Statements
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string UnEscapeString(string str)
         {
-            if (str[0] == '"' && str[str.Length - 1] == '"')
-            {
-                str = str.Substring(1, str.Length - 2);
-            }
+            str = StringHelpers.DeQuote(str);
 
             if (str.Contains("\\\""))
             {

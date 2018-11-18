@@ -57,17 +57,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             writer.WriteLine($"function {functionName}() {{");
 
-            if (IsEmptyBody(funcDefStt.Statement))
-            {
-                writer.WriteLine(':');
-            }
-            else
-            {
-                BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
-                    funcDefStt.Statement, ScopeType.MethodRoot, typeof(ReturnStatement));
 
-                TryGetInlinedStatement(context, funcScope, funcDefStt, out inlinedStatement);
-            }
+            BashBlockStatementTranspiler.WriteBlockStatement(context, funcScope, writer, metaWriter,
+                funcDefStt.Statement, ScopeType.MethodRoot, typeof(ReturnStatement));
+            TryGetInlinedStatement(context, funcScope, funcDefStt, out inlinedStatement);
+
 
             var func = new FunctionInfo(funcDefStt.TypeDescriptor, functionName, null, null, funcDefStt.IsParams,
                 funcDefStt.Parameters, inlinedStatement);

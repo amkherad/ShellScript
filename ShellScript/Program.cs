@@ -17,6 +17,7 @@ namespace ShellScript
     public class Program
     {
         public const string CompatibleOutputSwitchName = "compatible";
+        public const string DuplexErrorOutputSwitchName = "duplex-error";
         
         public static HelpCommand HelpCommand { get; } = new HelpCommand();
 
@@ -48,7 +49,7 @@ namespace ShellScript
             {
                 commandContext = CommandContext.Parse(args);
 
-                if (commandContext.AnySwitch("duplex-error-output"))
+                if (commandContext.AnySwitch(DuplexErrorOutputSwitchName))
                 {
                     var errorStdOutWriter = new ColoredWriter(Console.Out, ConsoleColor.Red);
                     var errorErrOutWriter = Console.Error;
@@ -87,12 +88,11 @@ namespace ShellScript
                 {
                     writer = WriteCompilerDebugInfo;
                 }
-                
-                if (commandContext.AnySwitch(CompatibleOutputSwitchName))
+                else if (commandContext.AnySwitch(CompatibleOutputSwitchName))
                 {
                     writer = WriteCleanErrorInfo;
                 }
-
+                
                 if (writer == null)
                 {
                     errorWriter.WriteLine(ex.Message);
@@ -117,7 +117,7 @@ namespace ShellScript
             TextWriter logWriter,
             Exception ex)
         {
-            errorWriter.WriteLine(ex.Message);
+            errorWriter.WriteLine(ex.ToString());
         }
         
         static void WriteCleanErrorInfo(

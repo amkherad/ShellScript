@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.ExceptionServices;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.Statements;
 using LambdaExpression = System.Linq.Expressions.LambdaExpression;
@@ -58,7 +59,7 @@ namespace ShellScript.CommandLine
 
             foreach (var sw in _switches)
             {
-                _setFlag(context, flags, sw.Value.Item1, sw.Key);
+                //_setFlag(context, flags, sw.Value.Item1, sw.Key);
             }
 
             var result = compiler.CompileFromSource(
@@ -77,7 +78,10 @@ namespace ShellScript.CommandLine
                 return ResultCodes.Successful;
             }
 
-            throw result.Exception;
+            //preserving the stack-trace.
+            var info = ExceptionDispatchInfo.Capture(result.Exception);
+            info.Throw();
+            return ResultCodes.Failure;
         }
 
         private void _setFlag(CommandContext context, CompilerFlags flags,

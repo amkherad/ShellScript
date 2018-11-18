@@ -912,6 +912,17 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                     }
                 }
 
+                case TypeCastStatement typeCastStatement:
+                {
+                    var right = ProcessEvaluation(context, scope, typeCastStatement.Target);
+
+                    var result = new TypeCastStatement(typeCastStatement.TypeDescriptor, right, typeCastStatement.Info);
+
+                    right.ParentStatement = result;
+
+                    return result;
+                }
+                    
                 case AssignmentStatement assignmentStatement:
                 {
                     if (!(assignmentStatement.LeftSide is VariableAccessStatement variableAccessStatement))

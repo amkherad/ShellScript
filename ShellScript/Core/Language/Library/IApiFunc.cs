@@ -9,7 +9,6 @@ namespace ShellScript.Core.Language.Library
         string ClassName { get; }
         
         bool IsStatic { get; }
-        bool AllowDynamicParams { get; }
 
         FunctionParameterDefinitionStatement[] Parameters { get; }
 

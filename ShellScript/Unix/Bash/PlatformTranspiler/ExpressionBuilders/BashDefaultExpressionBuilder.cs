@@ -1,5 +1,6 @@
 using System.IO;
 using System.Runtime.CompilerServices;
+using ShellScript.Core;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Statements.Operators;
@@ -205,13 +206,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                 {
                     if (p.FormatString)
                     {
-                        var value = result.Expression;
-                        if (value[0] == '"' && value[value.Length - 1] == '"')
-                        {
-                            return value;
-                        }
-
-                        return $"\"{value}\"";
+                        return StringHelpers.EnQuote(result.Expression);
                     }
 
                     return result.Expression;
@@ -244,13 +239,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             {
                 if (p.FormatString)
                 {
-                    var value = result.Expression;
-                    if (value[0] == '"' && value[value.Length - 1] == '"')
-                    {
-                        return value;
-                    }
-
-                    return $"\"{value}\"";
+                    return StringHelpers.EnQuote(result.Expression);
                 }
 
                 return result.Expression;
@@ -286,12 +275,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 //                return $"\"{base.FormatVariableAccessExpression(p, result)}\"";
 //            }
 
-            if (exp[0] == '"' && exp[exp.Length - 1] == '"')
-            {
-                return exp;
-            }
-
-            return $"\"{exp}\"";
+            return StringHelpers.EnQuote(exp);
         }
 
         public override string FormatVariableAccessExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor,
@@ -316,12 +300,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 //                return $"\"{base.FormatVariableAccessExpression(p, dataType, expression, template)}\"";
 //            }
 
-            if (exp[0] == '"' && exp[exp.Length - 1] == '"')
-            {
-                return exp;
-            }
-
-            return $"\"{exp}\"";
+            return StringHelpers.EnQuote(exp);
         }
 
 

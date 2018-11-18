@@ -87,29 +87,18 @@ namespace ShellScript.Core.Language.Compiler
                 codeOutputFile.SetLength(0);
                 metaOutputFile.SetLength(0);
 
-                var context = new Context(platform, flags, errorWriter, warningWriter, logWriter);
-                var scope = context.GeneralScope;
-
-                platform.Api.InitializeContext(context);
-
-                var metaInfo = context.GetMetaInfoTranspiler();
-                metaInfo.WritePrologue(context, metaWriter);
-
-                var info = new ParserContext(
+                var context = CompileFromSource(
+                    platform,
+                    flags,
+                    errorWriter,
                     warningWriter,
                     logWriter,
-                    flags.SemicolonRequired,
-                    sourceCodePath,
-                    Path.GetFileName(sourceCodePath),
-                    sourceCodePath);
-
-                var parser = new Parser(context);
-
-                foreach (var statement in parser.Parse(reader, info))
-                {
-                    Transpile(context, scope, statement, codeWriter, metaWriter);
-                }
-
+                    metaWriter,
+                    codeWriter,
+                    reader,
+                    sourceCodePath
+                    );
+                
                 codeWriter.Flush();
                 metaWriter.Flush();
 
@@ -140,6 +129,44 @@ namespace ShellScript.Core.Language.Compiler
                     outputWriter.WriteLine(line);
                 }
             }
+        }
+
+        public static Context CompileFromSource(
+            IPlatform platform, 
+            CompilerFlags flags,
+            TextWriter errorWriter,
+            TextWriter warningWriter,
+            TextWriter logWriter,
+            TextWriter metaWriter,
+            TextWriter codeWriter,
+            TextReader reader,
+            string sourceCodePath
+        )
+        {
+            var context = new Context(platform, flags, errorWriter, warningWriter, logWriter);
+            var scope = context.GeneralScope;
+
+            platform.Api.InitializeContext(context);
+
+            var metaInfo = context.GetMetaInfoTranspiler();
+            metaInfo.WritePrologue(context, metaWriter);
+
+            var info = new ParserContext(
+                warningWriter,
+                logWriter,
+                flags.SemicolonRequired,
+                sourceCodePath,
+                Path.GetFileName(sourceCodePath),
+                sourceCodePath);
+
+            var parser = new Parser(context);
+
+            foreach (var statement in parser.Parse(reader, info))
+            {
+                Transpile(context, scope, statement, codeWriter, metaWriter);
+            }
+
+            return context;
         }
 
         public static void Transpile(

@@ -11,7 +11,6 @@ namespace ShellScript.Shared.Api
         public override string Summary { get; }
         public override string ClassName { get; }
         public override bool IsStatic { get; }
-        public override bool AllowDynamicParams { get; }
         public override FunctionParameterDefinitionStatement[] Parameters { get; }
 
         public string ResourceName { get; set; }
@@ -38,7 +37,6 @@ namespace ShellScript.Shared.Api
             Parameters = parameters;
             Summary = summary;
             IsStatic = isStatic;
-            AllowDynamicParams = isParams;
 
             _functionInfo = new FunctionInfo(typeDescriptor, name, null, className, isParams, parameters, null);
         }

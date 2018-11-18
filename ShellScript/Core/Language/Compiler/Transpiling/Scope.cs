@@ -404,6 +404,21 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             return false;
         }
 
+        public bool TryGetFunctionInfo(IApiFunc func, out FunctionInfo actualFunctionInfo)
+        {
+            var funcInfo = new FunctionInfo(func.ClassName, func.Name);
+            var that = this;
+            do
+            {
+                if (that._functions.TryGetValue(funcInfo, out actualFunctionInfo))
+                {
+                    return true;
+                }
+            } while ((that = that.Parent) != null);
+
+            return false;
+        }
+
         public bool TryGetFunctionInfo(FunctionCallStatement functionCallStatement, out FunctionInfo functionInfo)
         {
             var funcInfo = new FunctionInfo(functionCallStatement.ClassName, functionCallStatement.FunctionName);

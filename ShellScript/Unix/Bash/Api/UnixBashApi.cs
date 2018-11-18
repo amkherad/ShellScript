@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Library;
+using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Convert;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Locale;
 using ShellScript.Unix.Bash.Api.ClassLibrary.IO.File;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math;
@@ -10,6 +11,13 @@ using ShellScript.Unix.Bash.Api.ClassLibrary.Core.String;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.User;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Network.Net;
 using ShellScript.Unix.Utilities;
+using ApiFile = ShellScript.Core.Language.Library.IO.File.ApiFile;
+using ApiLocale = ShellScript.Core.Language.Library.Core.Locale.ApiLocale;
+using ApiMath = ShellScript.Core.Language.Library.Core.Math.ApiMath;
+using ApiNet = ShellScript.Core.Language.Library.Network.Net.ApiNet;
+using ApiPlatform = ShellScript.Core.Language.Library.Core.Platform.ApiPlatform;
+using ApiString = ShellScript.Core.Language.Library.Core.String.ApiString;
+using ApiUser = ShellScript.Core.Language.Library.Core.User.ApiUser;
 
 namespace ShellScript.Unix.Bash.Api
 {
@@ -20,17 +28,19 @@ namespace ShellScript.Unix.Bash.Api
 
         public override IApiClass[] Classes { get; } =
         {
-            new ApiMath(),
-            new ApiString(),
+            new BashConvert(),
             
-            new ApiPlatform(),
-            new ApiUser(),
+            new BashMath(),
+            new BashString(),
+            
+            new BashPlatform(),
+            new BashUser(),
 
-            new ApiFile(),
+            new BashFile(),
             
-            new ApiLocale(),
+            new BashLocale(),
             
-            new ApiNet(),
+            new BashNet(),
         };
 
         private IThirdPartyUtility[] _utilities =

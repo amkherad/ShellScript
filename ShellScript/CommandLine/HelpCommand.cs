@@ -36,7 +36,7 @@ namespace ShellScript.CommandLine
             WriteEntry(writer, "compile", "Compiles the given source/project file.");
             WriteEntry(writer, "exec", "Executes the given source/project file without compilation.");
             WriteEntry(writer, "daemon", "Starts the runtime daemon.");
-            WriteEntry(writer, "--duplex-error-output", "Writes the error output to both the StdOut and the StdErr.");
+            WriteEntry(writer, $"--{Program.DuplexErrorOutputSwitchName}", "Writes the error output to both the StdOut and the StdErr.");
             WriteEntry(writer, $"--{Program.CompatibleOutputSwitchName}",
                 "Determines that output is used by an external software like an IDE.");
 

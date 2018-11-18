@@ -21,7 +21,6 @@ namespace ShellScript.Core.Language.Library
         public abstract string ClassName { get; }
         public abstract TypeDescriptor TypeDescriptor { get; }
         public abstract bool IsStatic { get; }
-        public abstract bool AllowDynamicParams { get; }
         public abstract FunctionParameterDefinitionStatement[] Parameters { get; }
 
         public static Dictionary<string, string> UtilitiesLookupTestVariableName { get; }
@@ -89,7 +88,7 @@ namespace ShellScript.Core.Language.Library
                 funcWriter.WriteLine("() {");
 
                 funcWriter.WriteLine(methodBody);
-                
+
                 funcWriter.WriteLine("}");
 
                 p.MetaWriter.Write(funcWriter);
@@ -144,16 +143,16 @@ namespace ShellScript.Core.Language.Library
 
             metaWriter.WriteLine($"if [ {condition} ]");
             metaWriter.WriteLine("then");
-            
+
             name = context.GeneralScope.NewHelperVariable(TypeDescriptor.Boolean, $"{utilName}_existence");
             BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(context, context.GeneralScope, metaWriter,
                 name, "1");
-            
+
             metaWriter.WriteLine("else");
-            
+
             BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(context, context.GeneralScope, metaWriter,
                 name, "0");
-            
+
             metaWriter.WriteLine("fi");
 
             return $"${name} -ne 0";
@@ -201,6 +200,7 @@ namespace ShellScript.Core.Language.Library
                         funcWriter.WriteLine("then");
                         funcWriter.WriteLine(utility.Value);
                     }
+
                     //Just ignoring the utility!
 //                    else
 //                    {
@@ -220,9 +220,10 @@ namespace ShellScript.Core.Language.Library
                 parameters, statementInfo));
         }
 
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static ExpressionResult CreateVariableAccess(TypeDescriptor typeDescriptor, string className, string name, StatementInfo info)
+        protected static ExpressionResult CreateVariableAccess(TypeDescriptor typeDescriptor, string className,
+            string name, StatementInfo info)
         {
             return new ExpressionResult(
                 typeDescriptor,
@@ -230,9 +231,10 @@ namespace ShellScript.Core.Language.Library
                 new VariableAccessStatement(className, name, info)
             );
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static ExpressionResult CreateVariableAccess(TypeDescriptor typeDescriptor, string name, StatementInfo info)
+        protected static ExpressionResult CreateVariableAccess(TypeDescriptor typeDescriptor, string name,
+            StatementInfo info)
         {
             return new ExpressionResult(
                 typeDescriptor,
@@ -246,7 +248,7 @@ namespace ShellScript.Core.Language.Library
         {
             var passedCount = parameters?.Length ?? 0;
             var expectedCount = Parameters?.Length ?? 0;
-            
+
             if (passedCount != expectedCount)
             {
                 throw new InvalidFunctionCallParametersCompilerException(expectedCount, passedCount, null);
@@ -259,26 +261,32 @@ namespace ShellScript.Core.Language.Library
                     var passed = parameters[i];
                     var scheme = Parameters[i];
 
-                    if (!StatementHelpers.IsAssignableFrom(p.Context, p.Scope, scheme.TypeDescriptor, passed.GetDataType(p.Context, p.Scope)))
+                    var passedType = passed.GetDataType(p.Context, p.Scope);
+                    if (!StatementHelpers.IsAssignableFrom(p.Context, p.Scope, scheme.TypeDescriptor, passedType))
                     {
+                        if (scheme.DynamicType)
+                        {
+                            continue;
+                        }
                         
+                        throw new TypeMismatchCompilerException(passedType, scheme.TypeDescriptor, passed.Info);
                     }
                 }
             }
         }
-        
+
         public void AssertExpressionParameters(EvaluationStatement[] parameters)
         {
             //TODO: assert
         }
 
-        protected Exception ThrowInvalidParameterType(TypeDescriptor typeDescriptor, string name)
+        protected static Exception ThrowInvalidParameterType(TypeDescriptor typeDescriptor, string name)
         {
             //TODO: return correct exception.
             return new Exception();
         }
 
-        protected Exception ThrowInvalidParameterType(ExpressionResult result)
+        protected static Exception ThrowInvalidParameterType(ExpressionResult result)
         {
             //TODO: return correct exception.
             return new Exception();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -16,39 +17,29 @@ namespace ShellScript.MSTest.CompilingTests
     [TestClass]
     public class CompilerTests
     {
-        //[TestMethod]
+        [TestMethod]
         public void TestCompiler()
         {
-            Platforms.AddPlatform(new UnixBashPlatform());
-
-            var compiler = new Compiler();
-            var result = compiler.CompileFromSource(
-                Console.Out,
-                Console.Out,
-                Console.Out,
-                "/home/amk/Temp/ShellScript/variables.shellscript",
-                "/home/amk/Temp/ShellScript/variables.sh",
-                "unix-bash",
-                CompilerFlags.CreateDefault()
-            );
-
-            GC.KeepAlive(result);
-        }
-
-        class XXX
-        {
-            public IEnumerator<string> GetEnumerator()
+            //try
             {
-                return new List<string>().GetEnumerator();
+                Platforms.AddPlatform(new UnixBashPlatform());
+
+                var compiler = new Compiler();
+                var result = compiler.CompileFromSource(
+                    Console.Out,
+                    Console.Out,
+                    Console.Out,
+                    "/home/amk/Temp/ShellScript/variables.shellscript",
+                    "/home/amk/Temp/ShellScript/variables.sh",
+                    "unix-bash",
+                    CompilerFlags.CreateDefault()
+                );
+
+                GC.KeepAlive(result);
             }
-        }
-
-        public void TestXXX()
-        {
-            var x = new XXX();
-            foreach (string name in x)
+            //catch (Exception ex)
             {
-                
+                Debugger.Break();
             }
         }
 

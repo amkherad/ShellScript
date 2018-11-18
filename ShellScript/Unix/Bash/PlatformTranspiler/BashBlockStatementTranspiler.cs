@@ -29,6 +29,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             if (statement == null) throw new ArgumentNullException(nameof(statement));
 
             var subScope = scope.BeginNewScope(scopeType);
+
+            if (IsEmptyBody(statement))
+            {
+                writer.WriteLine(':');
+                return;
+            }
             
             if (statement is BlockStatement block)
             {
@@ -54,6 +60,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             var subScope = scope.BeginNewScope(scopeType);
             
+            if (IsEmptyBody(statement))
+            {
+                writer.WriteLine(':');
+                return;
+            }
+
             if (statement is BlockStatement block)
             {
                 foreach (var stt in block.Statements)

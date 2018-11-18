@@ -8,16 +8,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="LSP" />
+      <Folder Include="Core\Language\Library\Base" />
       <Folder Include="Windows.Batch" />
     </ItemGroup>
 
     <ItemGroup>
       <None Remove="Unix.Bash\Api\ClassLibrary\Core\Math\ApiMath_Abs_Bash.txt" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Include="Unix\Bash\Api\ClassLibrary\Core\Math\ApiMath_Abs_Bash.txt" />
     </ItemGroup>
 
     <Import Project="..\ShellScript.Luncher\ShellScript.Luncher.projitems" Label="Shared" />

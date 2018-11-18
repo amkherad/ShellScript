@@ -48,8 +48,9 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             //{typeof(IncrementStatement), typeof(EvaluationStatement)},
             {typeof(LogicalEvaluationStatement), typeof(EvaluationStatement)},
             {typeof(NopStatement), typeof(EvaluationStatement)},
-            {typeof(ApiFunctionCallStatement), typeof(FunctionCallStatement)},
             {typeof(VariableAccessStatement), typeof(EvaluationStatement)},
+            
+            {typeof(TypeCastStatement), typeof(EvaluationStatement)},
             //{typeof(VariableDefinitionStatement), typeof(DefinitionStatement)},
             //{typeof(WhileStatement), typeof(ConditionalBlockStatement)},
         };

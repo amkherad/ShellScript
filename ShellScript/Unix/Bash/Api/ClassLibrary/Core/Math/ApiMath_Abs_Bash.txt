@@ -1,8 +1,0 @@
-#! \param $1 number
-function Math_Abs_Bash {
-    if [ $1 >= 0 ]; then
-        echo $1
-    else
-        echo $((-$1))
-    fi
-}

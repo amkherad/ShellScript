@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.XPath;
 using ShellScript.Core.Helpers;
+using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Lexing;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Statements.Operators;
@@ -148,6 +149,10 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     else if (nOp is AdditionOperator)
                     {
                         statements.Remove(nOp);
+                    }
+                    else if (nOp is TypeCastOperator && op is TypeCastOperator)
+                    {
+                        //continue
                     }
                     else //Invalid expression.
                     {
@@ -302,6 +307,48 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                         break;
                     }
+                    case TypeCastOperator typeCastOperator:
+                    {
+                        TypeCastStatement PopTypeCastOperator(TypeCastOperator typeCastOperator1,
+                            LinkedListNode<IStatement> currentNode)
+                        {
+                            var rightNode = currentNode.Next;
+                            EvaluationStatement right;
+                            var rightNodeValue = rightNode?.Value;
+
+                            if (rightNodeValue is EvaluationStatement evSttm)
+                            {
+                                right = evSttm;
+                            }
+                            else if (rightNodeValue is TypeCastOperator tpCastOp)
+                            {
+                                right = PopTypeCastOperator(tpCastOp, rightNode);
+                            }
+                            else
+                            {
+                                throw new InvalidStatementCompilerException(rightNodeValue, rightNodeValue?.Info);
+                            }
+
+                            if (right == null)
+                            {
+                                throw UnexpectedSyntax(token, context);
+                            }
+
+                            var stt = new TypeCastStatement(typeCastOperator1.TypeDescriptor, right,
+                                CreateStatementInfo(context, token));
+                            currentNode.Value = stt;
+
+                            right.ParentStatement = stt;
+
+                            statements.Remove(rightNode);
+
+                            return stt;
+                        }
+
+                        PopTypeCastOperator(typeCastOperator, node);
+
+                        break;
+                    }
                     case AssignmentOperator assignmentOperator:
                     {
                         var leftNode = node.Previous;
@@ -363,11 +410,29 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                 {
                     case TokenType.OpenParenthesis:
                     {
-                        if (!enumerator.MoveNext()) //open parenthesis
+                        if (!enumerator.MoveNext()) //first token after open parenthesis
                             throw EndOfFile(token, context);
 
                         token = enumerator.Current;
-                        statements.AddLast(ReadEvaluationStatement(token, enumerator, context));
+
+                        if (token.Type == TokenType.DataType /* || token.Type == TokenType.IdentifierName*/)
+                        {
+                            if (enumerator.TryPeek(out var closeParenthesisPeek) &&
+                                closeParenthesisPeek.Type == TokenType.CloseParenthesis)
+                            {
+                                var dataType = TokenTypeToDataType(token);
+
+                                statements.AddLast(new TypeCastOperator(dataType, CreateStatementInfo(context, token)));
+                            }
+                            else
+                            {
+                                statements.AddLast(ReadEvaluationStatement(token, enumerator, context));
+                            }
+                        }
+                        else
+                        {
+                            statements.AddLast(ReadEvaluationStatement(token, enumerator, context));
+                        }
 
                         if (!enumerator.MoveNext()) //close parenthesis
                             throw EndOfFile(token, context);
@@ -677,7 +742,8 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                 if (!enumerator.TryPeek(out peek))
                 {
-                    return new VariableAccessStatement(className.Value, functionName.Value, CreateStatementInfo(context, token));
+                    return new VariableAccessStatement(className.Value, functionName.Value,
+                        CreateStatementInfo(context, token));
                 }
             }
 
@@ -700,7 +766,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                 return result;
             }
-            
+
             if (peek.Type == TokenType.OpenParenthesis)
             {
                 enumerator.MoveNext(); //read the open parenthesis
@@ -769,7 +835,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                 return result;
             }
-            
+
             return new VariableAccessStatement(null, functionName.Value, CreateStatementInfo(context, token));
         }
 
@@ -990,6 +1056,11 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     }
 
                     return result;
+                }
+
+                if (peek.Type != TokenType.SequenceTerminator)
+                {
+                    throw UnexpectedSyntax(peek, context);
                 }
             }
 

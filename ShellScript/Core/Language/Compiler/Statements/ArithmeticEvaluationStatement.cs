@@ -4,7 +4,7 @@ namespace ShellScript.Core.Language.Compiler.Statements
 {
     public class ArithmeticEvaluationStatement : EvaluationStatement
     {
-        public override bool CanBeEmbedded => false;
+        public override bool CanBeEmbedded { get; }
         public override StatementInfo Info { get; }
 
         public EvaluationStatement Left { get; }
@@ -15,6 +15,21 @@ namespace ShellScript.Core.Language.Compiler.Statements
         public ArithmeticEvaluationStatement(EvaluationStatement left, ArithmeticOperator @operator,
             EvaluationStatement right, StatementInfo info, IStatement parentStatement = null)
         {
+            CanBeEmbedded = false;
+            Left = left;
+            Operator = @operator;
+            Right = right;
+            Info = info;
+            ParentStatement = parentStatement;
+
+            TraversableChildren = StatementHelpers.CreateChildren(left, @operator, right);
+        }
+        private ArithmeticEvaluationStatement(
+            bool canBeEmbedded,
+            EvaluationStatement left, ArithmeticOperator @operator,
+            EvaluationStatement right, StatementInfo info, IStatement parentStatement = null)
+        {
+            CanBeEmbedded = canBeEmbedded;
             Left = left;
             Operator = @operator;
             Right = right;
@@ -41,7 +56,7 @@ namespace ShellScript.Core.Language.Compiler.Statements
         public static ArithmeticEvaluationStatement CreatePostfixIncrement(IncrementOperator op,
             EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(operand, op, null, info)
+            return new ArithmeticEvaluationStatement(true, operand, op, null, info)
             {
                 ParentStatement = parentStatement
             };
@@ -50,7 +65,7 @@ namespace ShellScript.Core.Language.Compiler.Statements
         public static ArithmeticEvaluationStatement CreatePrefixIncrement(IncrementOperator op,
             EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(null, op, operand, info)
+            return new ArithmeticEvaluationStatement(true, null, op, operand, info)
             {
                 ParentStatement = parentStatement
             };
@@ -60,7 +75,7 @@ namespace ShellScript.Core.Language.Compiler.Statements
         public static ArithmeticEvaluationStatement CreatePostfixDecrement(DecrementOperator op,
             EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(operand, op, null, info)
+            return new ArithmeticEvaluationStatement(true, operand, op, null, info)
             {
                 ParentStatement = parentStatement
             };
@@ -69,7 +84,7 @@ namespace ShellScript.Core.Language.Compiler.Statements
         public static ArithmeticEvaluationStatement CreatePrefixDecrement(DecrementOperator op,
             EvaluationStatement operand, StatementInfo info, IStatement parentStatement = null)
         {
-            return new ArithmeticEvaluationStatement(null, op, operand, info)
+            return new ArithmeticEvaluationStatement(true, null, op, operand, info)
             {
                 ParentStatement = parentStatement
             };

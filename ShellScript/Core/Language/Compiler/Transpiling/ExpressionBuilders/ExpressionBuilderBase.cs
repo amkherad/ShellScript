@@ -8,6 +8,7 @@ using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Statements.Operators;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 using ShellScript.Core.Language.Library;
+using ShellScript.Core.Language.Library.Core.Convert;
 using ShellScript.Unix.Bash.PlatformTranspiler;
 
 namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
@@ -62,13 +63,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
             {
                 if (p.FormatString)
                 {
-                    var value = result.Expression;
-                    if (value[0] == '"' && value[value.Length - 1] == '"')
-                    {
-                        return value;
-                    }
-
-                    return $"\"{value}\"";
+                    return StringHelpers.EnQuote(result.Expression);
                 }
 
                 return result.Expression;
@@ -207,12 +202,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                         value = BashTranspilerHelpers.ToBashString(value, true, false);
                     }
 
-                    if (value[0] == '"' && value[value.Length - 1] == '"')
-                    {
-                        return value;
-                    }
-
-                    return $"\"{value}\"";
+                    return StringHelpers.EnQuote(value);
                 }
             }
 
@@ -234,12 +224,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                         value = BashTranspilerHelpers.ToBashString(value, true, false);
                     }
 
-                    if (value[0] == '"' && value[value.Length - 1] == '"')
-                    {
-                        return value;
-                    }
-
-                    return $"\"{value}\"";
+                    return StringHelpers.EnQuote(value);
                 }
             }
 
@@ -836,6 +821,55 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                     );
                 }
 
+                case TypeCastStatement typeCastStatement:
+                {
+                    var dataType = typeCastStatement.TypeDescriptor.DataType;
+
+                    if (dataType == DataTypes.Void)
+                    {
+                        throw new InvalidStatementStructureCompilerException(typeCastStatement,
+                            typeCastStatement.Info);
+                    }
+
+//                    var right = CreateExpressionRecursive(p, typeCastStatement.Target);
+//
+//                    if (right.TypeDescriptor == typeCastStatement.TypeDescriptor)
+//                    {
+//                        return right;
+//                    }
+
+                    switch (dataType)
+                    {
+                        case DataTypes.Array:
+                            throw new NotImplementedException();
+                        case DataTypes.Integer:
+                            return CallApiFunction<ApiConvert.ToInteger>(p, new[] {typeCastStatement.Target},
+                                typeCastStatement.ParentStatement, typeCastStatement.Info);
+                        case DataTypes.Float:
+                            return CallApiFunction<ApiConvert.ToFloat>(p, new[] {typeCastStatement.Target},
+                                typeCastStatement.ParentStatement, typeCastStatement.Info);
+                        case DataTypes.Numeric:
+                            return CallApiFunction<ApiConvert.ToNumber>(p, new[] {typeCastStatement.Target},
+                                typeCastStatement.ParentStatement, typeCastStatement.Info);
+                        case DataTypes.Boolean:
+                            return CallApiFunction<ApiConvert.ToBoolean>(p, new[] {typeCastStatement.Target},
+                                typeCastStatement.ParentStatement, typeCastStatement.Info);
+                        case DataTypes.String:
+                            return CallApiFunction<ApiConvert.ToString>(p, new[] {typeCastStatement.Target},
+                                typeCastStatement.ParentStatement, typeCastStatement.Info);
+                        case DataTypes.Class:
+                            throw new NotImplementedException();
+                        case DataTypes.Delegate:
+                            throw new NotImplementedException();
+                        case DataTypes.Lookup:
+                            throw new NotImplementedException();
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    //throw new NotImplementedException();
+                }
+
                 case AssignmentStatement assignmentStatement:
                 {
                     if (!(assignmentStatement.LeftSide is VariableAccessStatement variableAccessStatement))
@@ -988,6 +1022,33 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
             }
         }
 
+        protected virtual ExpressionResult CallApiFunction<TApiFunc>(ExpressionBuilderParams p,
+            EvaluationStatement[] parameters, IStatement parentStatement, StatementInfo statementInfo)
+            where TApiFunc : IApiFunc
+        {
+            if (!p.Context.Api.TryGetFunction(typeof(TApiFunc), out var func))
+            {
+                throw new InvalidOperationException();
+            }
+
+//            if (!p.Scope.TryGetFunctionInfo(func, out var apiFunc))
+//            {
+//                throw new InvalidOperationException();
+//            }
+
+            return CreateExpressionRecursive(
+                p,
+                new FunctionCallStatement(
+                    func.ClassName,
+                    func.Name,
+                    func.TypeDescriptor,
+                    parameters,
+                    statementInfo,
+                    parentStatement
+                )
+            );
+        }
+
         protected virtual IStatement UnWrapInlinedStatement(ExpressionBuilderParams p, FunctionInfo functionInfo,
             FunctionCallStatement functionCallStatement)
         {
@@ -1036,7 +1097,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                     nameMapping.Add(schemeParameters[i].Name, param);
                 }
 
-                FunctionStatementTranspilerBase.ReplaceEvaluation(inlined, key => nameMapping.ContainsKey(key),
+                ExpressionBuilderHelpers.ReplaceEvaluation(inlined, key => nameMapping.ContainsKey(key),
                     key => nameMapping[key], out inlined);
             }
 

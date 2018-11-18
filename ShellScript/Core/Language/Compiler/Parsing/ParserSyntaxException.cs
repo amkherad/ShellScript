@@ -10,7 +10,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
         public ParserSyntaxException(string message,
             int lineNumber, int columnNumber, ParserContext context)
-            : base($"{message} '{context}' at {lineNumber}:{columnNumber}")
+            : base($"{message} {context} at {lineNumber}:{columnNumber}")
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;
@@ -20,7 +20,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
         public ParserSyntaxException(string message,
             int lineNumber, int columnNumber, ParserContext context,
             Exception innerException)
-            : base($"{message} '{context}' at {lineNumber}:{columnNumber}", innerException)
+            : base($"{message} {context} at {lineNumber}:{columnNumber}", innerException)
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;
@@ -28,7 +28,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
         }
         
         public ParserSyntaxException(int lineNumber, int columnNumber, ParserContext context)
-            : base($"Parse exception '{context}' at {lineNumber}:{columnNumber}")
+            : base($"Parse exception {context} at {lineNumber}:{columnNumber}")
         {
             LineNumber = LineNumber;
             ColumnNumber = columnNumber;

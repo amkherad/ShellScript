@@ -32,7 +32,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
         public override string ToString()
         {
-            return $"\"in {File}\"";
+            return $"in '{File}'";
         }
     }
 }

@@ -2,7 +2,7 @@ namespace ShellScript.Core.Language.Compiler.Statements
 {
     public class AssignmentStatement : EvaluationStatement
     {
-        public override bool CanBeEmbedded => false;
+        public override bool CanBeEmbedded => true;
         public override StatementInfo Info { get; }
 
         public EvaluationStatement LeftSide { get; }

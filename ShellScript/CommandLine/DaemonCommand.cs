@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace ShellScript.CommandLine
 {
@@ -17,7 +18,12 @@ namespace ShellScript.CommandLine
         public ResultCodes Execute(TextWriter outputWriter, TextWriter errorWriter, TextWriter warningWriter,
             TextWriter logWriter, CommandContext context)
         {
-            outputWriter.WriteLine("Daemon started.");
+            SpinWait.SpinUntil(() =>
+            {
+                
+                
+                return false;
+            });
             
             return ResultCodes.Successful;
         }

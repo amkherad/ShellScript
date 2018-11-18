@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ShellScript.LSP;
 
 namespace ShellScript.CommandLine
 {
@@ -54,8 +55,9 @@ namespace ShellScript.CommandLine
                         limit = int.MaxValue;
                     }
 
-                    outputWriter.WriteLine("OK");
-                    break;
+                    var analyzer = new Analyzer();
+                    return analyzer.Execute(outputWriter, errorWriter, warningWriter, logWriter, context,
+                        fileSwitch.Value);
                 }
             }
             

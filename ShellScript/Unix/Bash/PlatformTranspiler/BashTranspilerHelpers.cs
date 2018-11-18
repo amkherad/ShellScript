@@ -1,4 +1,5 @@
 using System.IO;
+using ShellScript.Core;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling;
@@ -19,9 +20,9 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
         public static string StandardizeString(string value, bool deQuote)
         {
-            if (deQuote && value[0] == '"' && value[value.Length - 1] == '"')
+            if (deQuote)
             {
-                value = value.Substring(1, value.Length - 2);
+                value = StringHelpers.DeQuote(value);
             }
 
             return value.Replace(@"\r\n", @"\n");
@@ -29,10 +30,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
         public static string GetString(string value)
         {
-            if (value[0] == '"' && value[value.Length - 1] == '"')
-            {
-                value = value.Substring(1, value.Length - 2);
-            }
+            value = StringHelpers.DeQuote(value);
 
             return value;//.Replace(@"\r\n", @"\n");
         }

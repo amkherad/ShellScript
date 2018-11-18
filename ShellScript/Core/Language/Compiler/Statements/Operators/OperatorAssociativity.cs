@@ -5,6 +5,6 @@ namespace ShellScript.Core.Language.Compiler.Statements.Operators
         LeftToRight,
         RightToLeft,
         
-        ContextChangeable
+        Contextual
     }
 }

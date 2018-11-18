@@ -1,6 +1,6 @@
 namespace ShellScript.Core.Language.Compiler
 {
-    public struct CompilerFlags
+    public class CompilerFlags
     {
         //==========================
         // Syntax
