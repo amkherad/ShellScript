@@ -359,6 +359,27 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                     throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
                         variableAccessStatement.Info);
                 }
+                case IndexerAccessStatement indexerAccessStatement:
+                {
+                    var source = CreateExpressionRecursive(p, indexerAccessStatement.Source);
+                    var indexer = CreateExpressionRecursive(p, indexerAccessStatement.Indexer);
+
+                    var type = source.TypeDescriptor;
+
+                    if (!type.IsArray())
+                    {
+                        throw new TypeMismatchCompilerException(type,
+                            new TypeDescriptor(type.DataType | DataTypes.Array), indexerAccessStatement.Info);
+                    }
+                    
+                    var exp = $"{source.Expression}[{indexer.Expression}]";
+
+                    return new ExpressionResult(
+                        new TypeDescriptor(type ^ DataTypes.Array, type.Lookup),
+                        exp,
+                        indexerAccessStatement
+                    );
+                }
                 case BitwiseEvaluationStatement bitwiseEvaluationStatement: //~ & |
                 {
                     if (bitwiseEvaluationStatement.Operator is BitwiseNotOperator)

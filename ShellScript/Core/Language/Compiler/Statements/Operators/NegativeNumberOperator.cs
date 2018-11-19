@@ -4,7 +4,7 @@ namespace ShellScript.Core.Language.Compiler.Statements.Operators
     {
         public override StatementInfo Info { get; }
         public override OperatorAssociativity Associativity => OperatorAssociativity.RightToLeft;
-        public override int Order => 1000;
+        public override int Order => 70;
         
         
         public NegativeNumberOperator(StatementInfo info)

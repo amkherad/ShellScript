@@ -40,7 +40,18 @@ namespace ShellScript.Core.Language.Library
             return new ApiMethodBuilderInlineResult(statement);
         }
 
-        public static IApiMethodBuilderResult RecursiveCompileResource<TFunc>(
+
+        public static IApiMethodBuilderResult CompileMethod<TFunc>(
+            TFunc func, ExpressionBuilderParams p, string methodBody, FunctionInfo functionInfo,
+            EvaluationStatement[] parameters, StatementInfo statementInfo)
+            where TFunc : ApiBaseFunction
+        {
+            
+            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.TypeDescriptor,
+                parameters, statementInfo));
+        }
+
+        public static IApiMethodBuilderResult CompileResourceMethod<TFunc>(
             TFunc func, ExpressionBuilderParams p, string resourceName, FunctionInfo functionInfo,
             EvaluationStatement[] parameters, StatementInfo statementInfo)
             where TFunc : ApiBaseFunction

@@ -1,0 +1,14 @@
+bool ApiConvert_ParseBoolean(string input) {
+
+    if (String.IsNullOrWhitespace(input))
+        return false;
+        
+    switch (String.ToLower(input)) {
+        case "false":
+        case "0":
+            return false;
+        default:
+            return true;
+    }
+    
+}

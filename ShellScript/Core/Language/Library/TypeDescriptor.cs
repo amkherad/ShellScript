@@ -24,7 +24,7 @@ namespace ShellScript.Core.Language.Library
         public DataTypes DataType { get; }
         public LookupInfo? Lookup { get; }
 
-        public TypeDescriptor(DataTypes dataType, LookupInfo lookup)
+        public TypeDescriptor(DataTypes dataType, LookupInfo? lookup)
         {
             DataType = dataType;
             Lookup = lookup;
@@ -93,6 +93,7 @@ namespace ShellScript.Core.Language.Library
         }
 
 
+        public static TypeDescriptor Any => new TypeDescriptor(DataTypes.Any);
         public static TypeDescriptor Void => new TypeDescriptor(DataTypes.Void);
         public static TypeDescriptor Boolean => new TypeDescriptor(DataTypes.Boolean);
         public static TypeDescriptor Integer => new TypeDescriptor(DataTypes.Integer);

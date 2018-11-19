@@ -9,20 +9,22 @@ namespace ShellScript.Core.Language.Library
 
         Array = 0x4000,
 
-        Integer = 1,
+        Integer = 0x1,
 
-        Float = 2,
+        Float = 0x2,
 
-        Numeric = 3,
+        Numeric = 0x3,
 
-        Boolean = 4,
+        Boolean = 0x4,
 
-        String = 16,
+        String = 0x10,
 
-        Class = 32,
+        Class = 0x20,
 
-        Delegate = 64,
+        Delegate = 0x30,
+        
+        Any = 0x80,
 
-        Lookup = 0x100, //Should not be used in code.
+        Lookup = 0x1000, //Should not be used in code.
     }
 }

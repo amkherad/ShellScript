@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ShellScript.Core.Language.Compiler.Lexing
@@ -81,16 +82,16 @@ namespace ShellScript.Core.Language.Compiler.Lexing
             {TokenType.Throw, @"^throw(?!\w)"},
             {TokenType.Delegate, @"^delegate(?!\w)"},
             
-            {TokenType.Async, @"^async(?!\w)"},
-            {TokenType.Await, @"^await(?!\w)"},
+            //{TokenType.Async, @"^async(?!\w)"},
+            //{TokenType.Await, @"^await(?!\w)"},
 
-            {TokenType.In, @"^in(?!t)(?!\w)"},
-            {TokenType.NotIn, @"^notin(?!\w)"},
+            //{TokenType.In, @"^in(?!t)(?!\w)"},
+            //{TokenType.NotIn, @"^notin(?!\w)"},
 
-            {TokenType.Like, @"^like(?!\w)"},
-            {TokenType.NotLike, @"^notlike(?!\w)"},
+            //{TokenType.Like, @"^like(?!\w)"},
+            //{TokenType.NotLike, @"^notlike(?!\w)"},
 
-            {TokenType.Call, @"^call(?!\w)"},
+            //{TokenType.Call, @"^call(?!\w)"},
 
             {TokenType.Null, @"^(null|nil)(?!\w)"},
             
@@ -111,13 +112,50 @@ namespace ShellScript.Core.Language.Compiler.Lexing
         );
 
         public static readonly Regex Number = new Regex(@"^([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)", RegexOptions.Compiled);
-        public static readonly Regex DataType = new Regex(@"^(const|void|int(?!\[\])|long(?!\[\])|bool(?!\[\])|double(?!\[\])|float(?!\[\])|string(?!\[\])|object(?!\[\])|number(?!\[\])|int\[\]|long\[\]|bool\[\]|double\[\]|float\[\]|string\[\]|object\[\]|number\[\])(?!\w)", RegexOptions.Compiled);
         public static readonly Regex ValidIdentifierName = new Regex(@"^\w+", RegexOptions.Compiled);
         
         public static readonly Regex MultiLineCommentOpen = new Regex(@"^/\*", RegexOptions.Compiled);
         public static readonly Regex MultiLineCommentClose = new Regex(@"^\*/", RegexOptions.Compiled);
         public const string MultiLineCommentCloseText = "*/";
 
+        public static readonly string[] DataTypeKeywords =
+        {
+            "int",
+            "long",
+            "bool",
+            "double",
+            "float",
+            "number",
+            "string",
+            "object",
+            
+            "any",
+        };
+        
+        public static readonly Regex DataType;
+
+        static Lexer()
+        {
+            var pattern = new StringBuilder(400);
+            
+            //^(xxxx)(?!\w)
+            pattern.Append("^(const|void");
+
+            foreach (var type in DataTypeKeywords)
+            {
+                pattern.Append('|');
+                pattern.Append(type);
+                pattern.Append(@"(?!\s*\[\s*\])");
+                pattern.Append('|');
+                pattern.Append(type);
+                pattern.Append(@"\s*\[\s*\]");
+            }
+            
+            pattern.Append(@")(?!\w)");
+
+            DataType = new Regex(pattern.ToString(), RegexOptions.Compiled);
+        }
+        
         /// <summary>
         /// This method tokenize the input stream.
         /// </summary>

@@ -154,6 +154,11 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                         variableAccessStatement.Info);
                 }
 
+                case IndexerAccessStatement indexerAccessStatement:
+                {
+                    throw new NotImplementedException();
+                }
+
                 case BitwiseEvaluationStatement bitwiseEvaluationStatement:
                 {
                     switch (bitwiseEvaluationStatement.Operator)

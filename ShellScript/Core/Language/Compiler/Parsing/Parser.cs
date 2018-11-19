@@ -13,7 +13,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
     public partial class Parser
     {
         public const string ConstantKeyword = "const";
-        
+
         public static HashSet<string> Keywords = new HashSet<string>
         {
             "if",
@@ -74,7 +74,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             _lexer = new Lexer();
             _preProcessorParser = new PreProcessorParser(this, context);
         }
-        
+
         public Parser(Context context, Lexer lexer, PreProcessorParser preProcessorParser)
         {
             Context = context;
@@ -86,7 +86,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
         public IEnumerable<IStatement> Parse(TextReader reader, ParserContext context)
         {
             var tokens = _lexer.Tokenize(reader);
-            
+
             using (var tokensEnumerator = _preProcessorParser.CreateParserProxy(tokens.GetEnumerator(), context))
             {
                 IStatement statement;
@@ -134,7 +134,10 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                         case "void":
                             return TypeDescriptor.Void;
-                        
+
+                        case "any":
+                            return TypeDescriptor.Any;
+
                         case "int[]":
                         case "long[]":
                             return new TypeDescriptor(DataTypes.Integer | DataTypes.Array);
@@ -147,10 +150,14 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                             return new TypeDescriptor(DataTypes.String | DataTypes.Array);
                         case "object[]":
                             return new TypeDescriptor(DataTypes.Class | DataTypes.Array);
+
+                        case "any[]":
+                            return new TypeDescriptor(DataTypes.Any | DataTypes.Array);
                         //case "variant[]":
                         //    return DataTypes.Variant | DataTypes.Array;
-                        
+
                         case "null":
+                        case "nil":
                             return defaultValue;
                     }
 
@@ -160,7 +167,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     return defaultValue;
                 case TokenType.IdentifierName:
                     return new TypeDescriptor(DataTypes.Lookup, new TypeDescriptor.LookupInfo(null, token.Value));
-                
+
                 default:
                     throw new InvalidOperationException();
             }
@@ -179,12 +186,13 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     case TokenType.Echo:
                         return ReadEcho(token, enumerator, context);
                     case TokenType.IdentifierName:
-                        return ReadIdentifierName(token, enumerator, context); //ReadAssignmentOrFunctionCall(token, enumerator, context);
+                        return ReadIdentifierName(token, enumerator,
+                            context); //ReadAssignmentOrFunctionCall(token, enumerator, context);
                     case TokenType.DataType:
                         return ReadVariableOrFunctionDefinition(token, enumerator, context);
                     case TokenType.Delegate:
                         return ReadDelegateDefinition(token, enumerator, context);
-                    
+
                     case TokenType.If:
                         return ReadIf(token, enumerator, context);
                     case TokenType.For:
@@ -197,7 +205,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                         return ReadDoWhile(token, enumerator, context);
                     case TokenType.Loop:
                         return ReadLoop(token, enumerator, context);
-                    
+
                     //case TokenType.Class:
                     //    return ReadClass(token, enumerator, info);
                     //case TokenType.Function:
@@ -207,8 +215,8 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                     case TokenType.OpenBrace:
                         return ReadBlockStatement(token, enumerator, context);
-                    
-                    
+
+
                     case TokenType.OpenParenthesis:
                         break;
                     case TokenType.Throw:
@@ -219,12 +227,12 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                         break;
                     case TokenType.Call:
                         break;
-                    
-                    
+
+
                     case TokenType.SequenceTerminator:
                     case TokenType.SequenceTerminatorNewLine:
                         continue;
-                    
+
                     case TokenType.Comment:
                     case TokenType.MultiLineCommentOpen:
                     case TokenType.MultiLineCommentClose:
@@ -263,12 +271,12 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     case TokenType.StringValue1:
                     case TokenType.StringValue2:
                         throw UnexpectedSyntax(token, context);
-                    
+
                     case TokenType.NotDefined:
                         throw IllegalSyntax(token, context);
                     case TokenType.Invalid:
                         throw IllegalSyntax(token, context);
-                    
+
                     default:
                         throw UnexpectedSyntax(token, context);
                 }
@@ -312,6 +320,19 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             return new ParserSyntaxException(
                 $"Unexpected token of type {token.Type}({token.Value}) found",
                 token?.LineNumber ?? 0, token?.ColumnStart ?? 0, context);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="statement"></param>
+        /// <param name="context"></param>
+        /// <returns type="ParserSyntaxException">ParserSyntaxException</returns>
+        protected ParserException UnexpectedSyntax(IStatement statement, ParserContext context)
+        {
+            return new ParserSyntaxException(
+                $"Unexpected syntax of type {statement.GetType().Name}({statement}) found {statement.Info}",
+                statement.Info, context);
         }
 
         /// <summary>

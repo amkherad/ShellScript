@@ -1,6 +1,4 @@
-trait Math {
-    number Truncate(number num) {
-        string numStr = Convert.ToString(num, "F");
-        return Convert.Parse(String.GetBefore('.', numStr));
-    }
+number Truncate(number num) {
+    string numStr = Convert.ToString(num, "F");
+    return Convert.Parse(String.GetBefore('.', numStr));
 }

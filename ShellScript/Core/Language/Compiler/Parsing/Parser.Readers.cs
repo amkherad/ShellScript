@@ -125,7 +125,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                 //digit sign (negative/positive operator)
                 var next = node.Next;
-                if (next != null && next.Value is IOperator)
+                if (next?.Value is IOperator)
                 {
                     var nOp = next.Value;
                     var nNode = next.Next;
@@ -162,15 +162,33 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                 switch (op)
                 {
+                    case IndexerOperator indexerOperator:
+                    {
+                        var leftNode = prev;
+                        var array = leftNode?.Value as EvaluationStatement;
+                        if (array == null)
+                        {
+                            throw UnexpectedSyntax(indexerOperator, context); 
+                        }
+                        
+                        var stt = new IndexerAccessStatement(array, indexerOperator.Indexer, indexerOperator.Info);
+
+                        array.ParentStatement = stt;
+                        node.Value = stt;
+                        
+                        statements.Remove(leftNode);
+                        
+                        break;
+                    }
                     case BitwiseOperator bitwiseOperator:
                     {
                         if (op is BitwiseNotOperator bitwiseNotOperator)
                         {
-                            var operandNode = node.Next;
+                            var operandNode = next;
                             var operand = operandNode?.Value as EvaluationStatement;
                             if (operand == null)
                             {
-                                throw UnexpectedSyntax(token, context);
+                                throw UnexpectedSyntax(bitwiseNotOperator, context);
                             }
 
                             var stt = BitwiseEvaluationStatement.CreateNot(bitwiseNotOperator, operand,
@@ -183,14 +201,14 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                         }
                         else
                         {
-                            var leftNode = node.Previous;
+                            var leftNode = prev;
                             var left = leftNode?.Value as EvaluationStatement;
-                            var rightNode = node.Next;
+                            var rightNode = next;
                             var right = rightNode?.Value as EvaluationStatement;
 
                             if (left == null || right == null)
                             {
-                                throw UnexpectedSyntax(token, context);
+                                throw UnexpectedSyntax(bitwiseOperator, context);
                             }
 
                             var stt = new BitwiseEvaluationStatement(left, bitwiseOperator, right,
@@ -210,15 +228,14 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     {
                         if (op is NotOperator notOperator)
                         {
-                            var operandNode = node.Next;
+                            var operandNode = next;
                             var operand = operandNode?.Value as EvaluationStatement;
                             if (operand == null)
                             {
-                                throw UnexpectedSyntax(token, context);
+                                throw UnexpectedSyntax(logicalOperator, context);
                             }
 
-                            var stt = LogicalEvaluationStatement.CreateNot(notOperator, operand,
-                                CreateStatementInfo(context, token));
+                            var stt = LogicalEvaluationStatement.CreateNot(notOperator, operand, logicalOperator.Info);
 
                             operand.ParentStatement = stt;
                             node.Value = stt;
@@ -227,18 +244,18 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                         }
                         else
                         {
-                            var leftNode = node.Previous;
+                            var leftNode = prev;
                             var left = leftNode?.Value as EvaluationStatement;
-                            var rightNode = node.Next;
+                            var rightNode = next;
                             var right = rightNode?.Value as EvaluationStatement;
 
                             if (left == null || right == null)
                             {
-                                throw UnexpectedSyntax(token, context);
+                                throw UnexpectedSyntax(logicalOperator, context);
                             }
 
                             var stt = new LogicalEvaluationStatement(left, logicalOperator, right,
-                                CreateStatementInfo(context, token));
+                                logicalOperator.Info);
 
                             left.ParentStatement = stt;
                             right.ParentStatement = stt;
@@ -254,27 +271,27 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     {
                         if (op is IncrementOperator || op is DecrementOperator)
                         {
-                            var operandNode = node.Previous;
+                            var operandNode = prev;
                             var operand = operandNode?.Value as VariableAccessStatement;
 
                             EvaluationStatement statement;
                             if (operand == null)
                             {
-                                operandNode = node.Next;
+                                operandNode = next;
                                 operand = operandNode?.Value as VariableAccessStatement;
 
                                 if (operand == null)
                                 {
-                                    throw UnexpectedSyntax(token, context);
+                                    throw UnexpectedSyntax(arithmeticOperator, context);
                                 }
 
                                 statement = ArithmeticEvaluationStatement.CreatePrefix(arithmeticOperator, operand,
-                                    CreateStatementInfo(context, token));
+                                    arithmeticOperator.Info);
                             }
                             else
                             {
                                 statement = ArithmeticEvaluationStatement.CreatePostfix(arithmeticOperator, operand,
-                                    CreateStatementInfo(context, token));
+                                    arithmeticOperator.Info);
                             }
 
                             operand.ParentStatement = statement;
@@ -284,18 +301,18 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                         }
                         else
                         {
-                            var leftNode = node.Previous;
+                            var leftNode = prev;
                             var left = leftNode?.Value as EvaluationStatement;
-                            var rightNode = node.Next;
+                            var rightNode = next;
                             var right = rightNode?.Value as EvaluationStatement;
 
                             if (left == null || right == null)
                             {
-                                throw UnexpectedSyntax(token, context);
+                                throw UnexpectedSyntax(arithmeticOperator, context);
                             }
 
                             var stt = new ArithmeticEvaluationStatement(left, arithmeticOperator, right,
-                                CreateStatementInfo(context, token));
+                                arithmeticOperator.Info);
                             node.Value = stt;
 
                             left.ParentStatement = stt;
@@ -309,7 +326,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     }
                     case TypeCastOperator typeCastOperator:
                     {
-                        TypeCastStatement PopTypeCastOperator(TypeCastOperator typeCastOperator1,
+                        TypeCastStatement PopTypeCastStatement(TypeCastOperator typeCastOperator1,
                             LinkedListNode<IStatement> currentNode)
                         {
                             var rightNode = currentNode.Next;
@@ -322,7 +339,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                             }
                             else if (rightNodeValue is TypeCastOperator tpCastOp)
                             {
-                                right = PopTypeCastOperator(tpCastOp, rightNode);
+                                right = PopTypeCastStatement(tpCastOp, rightNode);
                             }
                             else
                             {
@@ -331,11 +348,11 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                             if (right == null)
                             {
-                                throw UnexpectedSyntax(token, context);
+                                throw UnexpectedSyntax(typeCastOperator1, context);
                             }
 
                             var stt = new TypeCastStatement(typeCastOperator1.TypeDescriptor, right,
-                                CreateStatementInfo(context, token));
+                                typeCastOperator1.Info);
                             currentNode.Value = stt;
 
                             right.ParentStatement = stt;
@@ -345,23 +362,23 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                             return stt;
                         }
 
-                        PopTypeCastOperator(typeCastOperator, node);
+                        PopTypeCastStatement(typeCastOperator, node);
 
                         break;
                     }
                     case AssignmentOperator assignmentOperator:
                     {
-                        var leftNode = node.Previous;
+                        var leftNode = prev;
                         var left = leftNode?.Value as EvaluationStatement;
-                        var rightNode = node.Next;
+                        var rightNode = next;
                         var right = rightNode?.Value as EvaluationStatement;
 
                         if (left == null || right == null)
                         {
-                            throw UnexpectedSyntax(token, context);
+                            throw UnexpectedSyntax(assignmentOperator, context);
                         }
 
-                        var stt = new AssignmentStatement(left, right, CreateStatementInfo(context, token));
+                        var stt = new AssignmentStatement(left, right, assignmentOperator.Info);
                         node.Value = stt;
 
                         left.ParentStatement = stt;
@@ -374,7 +391,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     }
                     default:
                     {
-                        throw UnexpectedSyntax(token, context); //WTF!
+                        throw UnexpectedSyntax(op, context); //WTF!
                     }
                 }
             }
@@ -443,6 +460,29 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                         break;
                     }
+
+                    case TokenType.OpenBracket:
+                    {
+                        var openBracketToken = token;
+                        
+                        if (!enumerator.MoveNext()) //first token after open bracket
+                            throw EndOfFile(token, context);
+
+                        var indexer = ReadEvaluationStatement(token, enumerator, context);
+                        
+                        if (!enumerator.MoveNext()) //close bracket
+                            throw EndOfFile(token, context);
+
+                        token = enumerator.Current;
+                        if (token.Type != TokenType.CloseBracket)
+                            throw UnexpectedSyntax(token, context);
+
+                        statements.AddLast(
+                            new IndexerOperator(indexer, CreateStatementInfo(context, openBracketToken)));
+                        
+                        break;
+                    }
+                    
                     case TokenType.IdentifierName:
                     {
                         statements.AddLast(ReadVariableOrAssignmentOrFunctionCall(token, enumerator, context));
@@ -608,6 +648,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     }
 
                     case TokenType.CloseParenthesis:
+                    case TokenType.CloseBracket:
                     case TokenType.SequenceTerminator:
                     case TokenType.OpenBrace:
                     case TokenType.SequenceTerminatorNewLine:
@@ -634,6 +675,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     switch (peek.Type)
                     {
                         case TokenType.CloseParenthesis:
+                        case TokenType.CloseBracket:
                         case TokenType.SequenceTerminator:
                         case TokenType.OpenBrace:
                         case TokenType.Comma:

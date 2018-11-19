@@ -45,7 +45,7 @@ namespace ShellScript.Shared.Api
         public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
             FunctionCallStatement functionCallStatement)
         {
-            return RecursiveCompileResource(this, p, ResourceName, _functionInfo, functionCallStatement.Parameters,
+            return CompileResourceMethod(this, p, ResourceName, _functionInfo, functionCallStatement.Parameters,
                 functionCallStatement.Info);
         }
     }

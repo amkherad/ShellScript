@@ -310,6 +310,18 @@ namespace ShellScript.Core.Language.Compiler.Statements
                     throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
                         variableAccessStatement.Info);
                 }
+                case IndexerAccessStatement indexerAccessStatement:
+                {
+                    var type = indexerAccessStatement.Source.GetDataType(context, scope);
+                    if (!type.IsArray())
+                    {
+                        throw new InvalidStatementStructureCompilerException(indexerAccessStatement,
+                            indexerAccessStatement.Info);
+                    }
+                    
+                    //NOTE: multi-dimensional arrays is not supported.
+                    return type ^ DataTypes.Array;
+                }
                 case FunctionCallStatement functionCallStatement:
                 {
                     var funcInfo = FunctionStatementTranspilerBase.GetFunctionInfoFromFunctionCall(context, scope,

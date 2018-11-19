@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using ShellScript.Core.Language.Compiler.Statements;
 
 namespace ShellScript.Core.Language.Library.Core.Convert
