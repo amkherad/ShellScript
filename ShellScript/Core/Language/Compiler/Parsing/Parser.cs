@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using ShellScript.Core.Helpers;
 using ShellScript.Core.Language.Compiler.Lexing;
 using ShellScript.Core.Language.Compiler.PreProcessors;
@@ -49,6 +50,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             "variant[]",
             "numeric[]",
             "integer[]",
+            "new",
             "for",
             "foreach",
             "loop",
@@ -56,6 +58,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             "async",
             "await",
             "throw",
+            "include",
             "in",
             "notin",
             "like",
@@ -103,13 +106,19 @@ namespace ShellScript.Core.Language.Compiler.Parsing
         }
 
 
-        public TypeDescriptor TokenTypeToDataType(Token token, DataTypes defaultValue = DataTypes.Void)
+        public TypeDescriptor TokenTypeToDataType(Token token, ParserContext context) =>
+            TokenTypeToDataType(token, DataTypes.Void, context);
+        public TypeDescriptor TokenTypeToDataType(Token token, DataTypes defaultValue, ParserContext context)
         {
             switch (token.Type)
             {
                 case TokenType.DataType:
                 {
-                    switch (token.Value.ToLower())
+                    var str = token.Value.ToLower();
+
+                    str = Regex.Replace(str, @"\s", string.Empty);
+                    
+                    switch (str)
                     {
                         case "int":
                         case "long":
@@ -161,7 +170,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                             return defaultValue;
                     }
 
-                    throw new InvalidOperationException();
+                    throw UnexpectedSyntax(token, context);
                 }
                 case TokenType.Null:
                     return defaultValue;
@@ -216,18 +225,21 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     case TokenType.OpenBrace:
                         return ReadBlockStatement(token, enumerator, context);
 
+                    case TokenType.Include:
+                    {
+                        return ReadIncludeStatement(token, enumerator, context);
+                    }
 
                     case TokenType.OpenParenthesis:
                         break;
-                    case TokenType.Throw:
-                        break;
-                    case TokenType.Async:
-                        break;
-                    case TokenType.Await:
-                        break;
-                    case TokenType.Call:
-                        break;
-
+//                    case TokenType.Throw:
+//                        break;
+//                    case TokenType.Async:
+//                        break;
+//                    case TokenType.Await:
+//                        break;
+//                    case TokenType.Call:
+//                        break;
 
                     case TokenType.SequenceTerminator:
                     case TokenType.SequenceTerminatorNewLine:

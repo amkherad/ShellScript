@@ -23,12 +23,14 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
 
         public CompilerFlags Flags { get; }
         
+        public Compiler Compiler { get; }
         
         public TextWriter ErrorWriter { get; }
         public TextWriter WarningWriter { get; }
         public TextWriter LogWriter { get; }
-        
-        
+        public HashSet<string> Includes { get; set; }
+
+
         private int _lastFunctionCallReferenceCount = 0;
         
         
@@ -53,14 +55,19 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             {typeof(TypeCastStatement), typeof(EvaluationStatement)},
             //{typeof(VariableDefinitionStatement), typeof(DefinitionStatement)},
             //{typeof(WhileStatement), typeof(ConditionalBlockStatement)},
+            
+            {typeof(IndexerAccessStatement), typeof(EvaluationStatement)},
+            {typeof(ArrayStatement), typeof(EvaluationStatement)},
         };
 
 
-        public Context(IPlatform platform, CompilerFlags flags,
+        public Context(Compiler compiler, IPlatform platform, CompilerFlags flags,
             TextWriter errorWriter, TextWriter warningWriter, TextWriter logWriter)
         {
             GeneralScope = new Scope(this);
 
+            Compiler = compiler;
+            
             Platform = platform;
             Transpilers = platform.Transpilers;
             Api = platform.Api;
@@ -70,10 +77,12 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             LogWriter = logWriter;
 
             _typeTranspilers = Transpilers.ToDictionary(key => key.StatementType);
-
+            
             CultureInfo = CultureInfo.CurrentCulture;
             StringComparer = StringComparer.CurrentCulture;
 
+            Includes = new HashSet<string>();
+            
             InitializeContext();
         }
 

@@ -84,6 +84,10 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
             TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext,
             EvaluationStatement statement);
 
+        public abstract ExpressionResult CallApiFunction<TApiFunc>(ExpressionBuilderParams p,
+            EvaluationStatement[] parameters,
+            IStatement parentStatement, StatementInfo statementInfo) where TApiFunc : IApiFunc;
+
 
         public static EvaluationStatement ProcessEvaluation(Context context, Scope scope,
             EvaluationStatement statement)
@@ -152,11 +156,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
 
                     throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
                         variableAccessStatement.Info);
-                }
-
-                case IndexerAccessStatement indexerAccessStatement:
-                {
-                    throw new NotImplementedException();
                 }
 
                 case BitwiseEvaluationStatement bitwiseEvaluationStatement:
@@ -921,13 +920,16 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                 {
                     var right = ProcessEvaluation(context, scope, typeCastStatement.Target);
 
-                    var result = new TypeCastStatement(typeCastStatement.TypeDescriptor, right, typeCastStatement.Info);
+                    var result = new TypeCastStatement(typeCastStatement.TypeDescriptor, right, typeCastStatement.Info)
+                    {
+                        ParentStatement = typeCastStatement.ParentStatement
+                    };
 
                     right.ParentStatement = result;
 
                     return result;
                 }
-                    
+
                 case AssignmentStatement assignmentStatement:
                 {
                     if (!(assignmentStatement.LeftSide is VariableAccessStatement variableAccessStatement))
@@ -943,10 +945,80 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
 
                     var right = ProcessEvaluation(context, scope, assignmentStatement.RightSide);
 
-                    var result = new AssignmentStatement(variableAccessStatement, right, assignmentStatement.Info);
+                    var result = new AssignmentStatement(variableAccessStatement, right, assignmentStatement.Info)
+                    {
+                        ParentStatement = assignmentStatement.ParentStatement
+                    };
 
                     variableAccessStatement.ParentStatement = result;
                     right.ParentStatement = result;
+
+                    return result;
+                }
+
+                case IndexerAccessStatement indexerAccessStatement:
+                {
+                    if (!(indexerAccessStatement.Source is VariableAccessStatement variableAccessStatement))
+                    {
+                        throw new InvalidStatementStructureCompilerException(indexerAccessStatement,
+                            indexerAccessStatement.Info);
+                    }
+
+                    if (!scope.TryGetVariableInfo(variableAccessStatement, out _))
+                    {
+                        throw new IdentifierNotFoundCompilerException(variableAccessStatement);
+                    }
+
+                    var indexer = ProcessEvaluation(context, scope, indexerAccessStatement.Indexer);
+
+                    var result =
+                        new IndexerAccessStatement(variableAccessStatement, indexer, indexerAccessStatement.Info)
+                        {
+                            ParentStatement = indexerAccessStatement.ParentStatement
+                        };
+
+                    variableAccessStatement.ParentStatement = result;
+                    indexer.ParentStatement = result;
+
+                    return result;
+                }
+
+                case ArrayStatement arrayStatement:
+                {
+                    if (arrayStatement.Elements == null)
+                    {
+                        return new ArrayStatement(arrayStatement.Type, arrayStatement.Length, null,
+                            arrayStatement.Info);
+                    }
+
+                    var elementType = arrayStatement.Type.DataType ^ DataTypes.Array;
+
+                    var items = new List<EvaluationStatement>();
+
+                    foreach (var element in arrayStatement.Elements)
+                    {
+                        var elem = ProcessEvaluation(context, scope, element);
+
+                        var elemType = elem.GetDataType(context, scope);
+                        
+                        if (!StatementHelpers.IsAssignableFrom(context, scope, elementType, elemType))
+                        {
+                            throw new TypeMismatchCompilerException(elemType, elementType, elem.Info);
+                        }
+
+                        items.Add(elem);
+                    }
+
+                    var itemsArray = items.ToArray();
+
+                    var result = new ArrayStatement(arrayStatement.Type, null, itemsArray, arrayStatement.Info)
+                    {
+                        ParentStatement = arrayStatement.ParentStatement
+                    };
+                    foreach (var element in itemsArray)
+                    {
+                        element.ParentStatement = result;
+                    }
 
                     return result;
                 }
@@ -958,10 +1030,11 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                             functionCallStatement, out var sourceObjectInfo);
 
                     if (!FunctionStatementTranspilerBase.ValidateFunctionCall(context, scope, funcInfo,
-                        functionCallStatement))
+                        functionCallStatement, out var exception))
                     {
-                        throw new InvalidStatementStructureCompilerException(functionCallStatement.Fqn,
-                            functionCallStatement.Info);
+//                        throw new InvalidStatementStructureCompilerException(functionCallStatement.Fqn,
+//                            functionCallStatement.Info);
+                        throw exception;
                     }
 
 //                  if (functionInfo.InlinedStatement != null)

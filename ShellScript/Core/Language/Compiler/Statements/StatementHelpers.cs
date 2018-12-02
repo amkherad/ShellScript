@@ -143,88 +143,6 @@ namespace ShellScript.Core.Language.Compiler.Statements
         }
 
 
-        public class ExpressionTypes
-        {
-            public List<TypeDescriptor> Types { get; set; }
-            public bool ContainsFunctionCall { get; set; }
-            public List<VariableAccessStatement> NonExistenceVariables { get; set; }
-
-            public HashSet<Type> OperatorTypes { get; set; }
-        }
-
-        public static ExpressionTypes TraverseTreeAndGetExpressionTypes(Context context, Scope scope,
-            IStatement statement)
-        {
-            var result = new ExpressionTypes();
-            var types = new List<TypeDescriptor>();
-            var nonExistenceVariables = new List<VariableAccessStatement>();
-            var operators = new HashSet<Type>();
-
-            result.Types = types;
-            result.NonExistenceVariables = nonExistenceVariables;
-            result.OperatorTypes = operators;
-
-            switch (statement)
-            {
-                case ConstantValueStatement constantValueStatement:
-                {
-                    types.Add(constantValueStatement.TypeDescriptor);
-                    break;
-                }
-                case VariableAccessStatement variableAccessStatement:
-                {
-                    if (scope.TryGetVariableInfo(variableAccessStatement, out VariableInfo varInfo))
-                    {
-                        types.Add(varInfo.TypeDescriptor);
-                    }
-                    else
-                    {
-                        nonExistenceVariables.Add(variableAccessStatement);
-                    }
-
-                    break;
-                }
-                case IOperator op:
-                {
-                    operators.Add(op.GetType());
-                    break;
-                }
-                case FunctionCallStatement functionCallStatement:
-                {
-                    types.Add(functionCallStatement.TypeDescriptor);
-                    break;
-                }
-                default:
-                {
-                    foreach (var child in statement.TraversableChildren)
-                    {
-                        if (child is IOperator)
-                        {
-                            operators.Add(child.GetType());
-                            continue;
-                        }
-
-                        var childResult = TraverseTreeAndGetExpressionTypes(context, scope, child);
-
-                        foreach (var t in childResult.Types)
-                            types.Add(t);
-
-                        foreach (var nev in childResult.NonExistenceVariables)
-                            nonExistenceVariables.Add(nev);
-
-                        foreach (var opType in childResult.OperatorTypes)
-                            operators.Add(opType);
-
-                        result.ContainsFunctionCall = result.ContainsFunctionCall || childResult.ContainsFunctionCall;
-                    }
-
-                    break;
-                }
-            }
-
-            return result;
-        }
-
         public static TypeDescriptor OperateDataTypes(IOperator op, TypeDescriptor a, TypeDescriptor b)
         {
             if (a == b)
@@ -310,18 +228,6 @@ namespace ShellScript.Core.Language.Compiler.Statements
                     throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
                         variableAccessStatement.Info);
                 }
-                case IndexerAccessStatement indexerAccessStatement:
-                {
-                    var type = indexerAccessStatement.Source.GetDataType(context, scope);
-                    if (!type.IsArray())
-                    {
-                        throw new InvalidStatementStructureCompilerException(indexerAccessStatement,
-                            indexerAccessStatement.Info);
-                    }
-                    
-                    //NOTE: multi-dimensional arrays is not supported.
-                    return type ^ DataTypes.Array;
-                }
                 case FunctionCallStatement functionCallStatement:
                 {
                     var funcInfo = FunctionStatementTranspilerBase.GetFunctionInfoFromFunctionCall(context, scope,
@@ -397,6 +303,22 @@ namespace ShellScript.Core.Language.Compiler.Statements
                 {
                     return typeCastStatement.TypeDescriptor;
                 }
+                case IndexerAccessStatement indexerAccessStatement:
+                {
+                    var type = indexerAccessStatement.Source.GetDataType(context, scope);
+                    if (!type.IsArray())
+                    {
+                        throw new InvalidStatementStructureCompilerException(indexerAccessStatement,
+                            indexerAccessStatement.Info);
+                    }
+                    
+                    //NOTE: multi-dimensional arrays is not supported.
+                    return type ^ DataTypes.Array;
+                }
+                case ArrayStatement arrayStatement:
+                {
+                    return arrayStatement.Type;
+                }
                 default:
                     throw new InvalidOperationException();
             }
@@ -432,6 +354,11 @@ namespace ShellScript.Core.Language.Compiler.Statements
                 {
                     return true;
                 }
+            }
+
+            if (destination.DataType == DataTypes.Array && (source & DataTypes.Array) == DataTypes.Array)
+            {
+                return true;
             }
 
             if (destination.DataType == DataTypes.Lookup && destination.Lookup != null)
@@ -791,5 +718,90 @@ namespace ShellScript.Core.Language.Compiler.Statements
             result = default;
             return false;
         }
+        
+        
+//        
+//        public class ExpressionTypes
+//        {
+//            public List<TypeDescriptor> Types { get; set; }
+//            public bool ContainsFunctionCall { get; set; }
+//            public List<VariableAccessStatement> NonExistenceVariables { get; set; }
+//
+//            public HashSet<Type> OperatorTypes { get; set; }
+//        }
+//
+//        public static ExpressionTypes TraverseTreeAndGetExpressionTypes(Context context, Scope scope,
+//            IStatement statement)
+//        {
+//            var result = new ExpressionTypes();
+//            var types = new List<TypeDescriptor>();
+//            var nonExistenceVariables = new List<VariableAccessStatement>();
+//            var operators = new HashSet<Type>();
+//
+//            result.Types = types;
+//            result.NonExistenceVariables = nonExistenceVariables;
+//            result.OperatorTypes = operators;
+//
+//            switch (statement)
+//            {
+//                case ConstantValueStatement constantValueStatement:
+//                {
+//                    types.Add(constantValueStatement.TypeDescriptor);
+//                    break;
+//                }
+//                case VariableAccessStatement variableAccessStatement:
+//                {
+//                    if (scope.TryGetVariableInfo(variableAccessStatement, out VariableInfo varInfo))
+//                    {
+//                        types.Add(varInfo.TypeDescriptor);
+//                    }
+//                    else
+//                    {
+//                        nonExistenceVariables.Add(variableAccessStatement);
+//                    }
+//
+//                    break;
+//                }
+//                case IOperator op:
+//                {
+//                    operators.Add(op.GetType());
+//                    break;
+//                }
+//                case FunctionCallStatement functionCallStatement:
+//                {
+//                    types.Add(functionCallStatement.TypeDescriptor);
+//                    break;
+//                }
+//                default:
+//                {
+//                    foreach (var child in statement.TraversableChildren)
+//                    {
+//                        if (child is IOperator)
+//                        {
+//                            operators.Add(child.GetType());
+//                            continue;
+//                        }
+//
+//                        var childResult = TraverseTreeAndGetExpressionTypes(context, scope, child);
+//
+//                        foreach (var t in childResult.Types)
+//                            types.Add(t);
+//
+//                        foreach (var nev in childResult.NonExistenceVariables)
+//                            nonExistenceVariables.Add(nev);
+//
+//                        foreach (var opType in childResult.OperatorTypes)
+//                            operators.Add(opType);
+//
+//                        result.ContainsFunctionCall = result.ContainsFunctionCall || childResult.ContainsFunctionCall;
+//                    }
+//
+//                    break;
+//                }
+//            }
+//
+//            return result;
+//        }
+
     }
 }

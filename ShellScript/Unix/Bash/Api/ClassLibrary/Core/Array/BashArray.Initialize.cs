@@ -4,19 +4,18 @@ using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
-using ShellScript.Unix.Bash.Api.ClassLibrary.Base;
 
-namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
+namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
 {
-    public partial class BashString
+    public partial class BashArray
     {
-        public class BashGetLength : GetLength
+        public class BashInitialize : Initialize
         {
-            private const string ApiMathAbsBashMethodName = "GetStringLength";
+            private const string ApiMathAbsBashMethodName = "Initialize";
 
             private FunctionInfo _functionInfo;
 
-            public BashGetLength()
+            public BashInitialize()
             {
                 _functionInfo = new FunctionInfo(TypeDescriptor.Integer, ApiMathAbsBashMethodName,
                     null, ClassAccessName, false, Parameters, null);

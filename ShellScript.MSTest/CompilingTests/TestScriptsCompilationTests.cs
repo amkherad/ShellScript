@@ -61,8 +61,9 @@ namespace ShellScript.MSTest.CompilingTests
                         using (var logWriter = new StringWriter())
                         {
                             Directory.CreateDirectory(tempOutputRoot);
-                            
-                            Compiler.CompileFromSource(file, tempOutputRoot, outputFile,
+
+                            var compiler = new Compiler();
+                            compiler.CompileFromSource(file, tempOutputRoot, outputFile,
                                 platform, compilerFlags, logWriter, logWriter, logWriter);
 
                             using (var assertionFileStream =

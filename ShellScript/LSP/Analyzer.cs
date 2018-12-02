@@ -30,20 +30,18 @@ namespace ShellScript.LSP
                 platform = new UnixBashPlatform();
             }
 
-            using (var file = new FileStream(sourceCode, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = new StreamReader(file))
-            {
-                var ctx = Compiler.CompileFromSource(platform,
-                    CompilerFlags.CreateDefault(),
-                    errorWriter,
-                    warningWriter,
-                    logWriter,
-                    TextWriter.Null,
-                    TextWriter.Null,
-                    reader,
-                    sourceCode
-                );
-            }
+            var compiler = new Compiler();
+
+            var ctx = compiler.CompileFromSource(
+                platform,
+                CompilerFlags.CreateDefault(),
+                errorWriter,
+                warningWriter,
+                logWriter,
+                TextWriter.Null,
+                TextWriter.Null,
+                sourceCode
+            );
 
             return ResultCodes.Successful;
         }

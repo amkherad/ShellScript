@@ -34,7 +34,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
             return Expression;
         }
 
-        public bool IsEmptyResult => TypeDescriptor.IsVoid() && Expression == null && Template == null && Notices == null;
+        public bool IsEmptyResult => TypeDescriptor.IsVoid() && Expression == null && Template == null;
         public static ExpressionResult EmptyResult => new ExpressionResult(TypeDescriptor.Void, null, null);
     }
 }

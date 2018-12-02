@@ -95,6 +95,7 @@ namespace ShellScript.Core.Language.Library
 
         public static TypeDescriptor Any => new TypeDescriptor(DataTypes.Any);
         public static TypeDescriptor Void => new TypeDescriptor(DataTypes.Void);
+        public static TypeDescriptor Array => new TypeDescriptor(DataTypes.Array);
         public static TypeDescriptor Boolean => new TypeDescriptor(DataTypes.Boolean);
         public static TypeDescriptor Integer => new TypeDescriptor(DataTypes.Integer);
         public static TypeDescriptor Float => new TypeDescriptor(DataTypes.Float);

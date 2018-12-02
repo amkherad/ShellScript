@@ -183,6 +183,14 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
 
                     break;
                 }
+                case IndexerOperator indexerOperator:
+                {
+                    throw new NotImplementedException();
+                }
+                case ArrayStatement arrayStatement:
+                {
+                    throw new NotImplementedException();
+                }
                 case FunctionCallStatement functionCallStatement:
                 {
                     var parameters = functionCallStatement.Parameters;

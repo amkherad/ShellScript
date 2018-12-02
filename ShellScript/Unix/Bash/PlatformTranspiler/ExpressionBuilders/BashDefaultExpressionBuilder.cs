@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using ShellScript.Core;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
@@ -6,6 +7,7 @@ using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Statements.Operators;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
+using ShellScript.Core.Language.Library.Core.Array;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 {
@@ -57,7 +59,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override bool ShouldBePinnedToFloatingPointVariable(
             ExpressionBuilderParams p, EvaluationStatement template,
-            TypeDescriptor left, EvaluationStatement leftTemplate, TypeDescriptor right, EvaluationStatement rightTemplate)
+            TypeDescriptor left, EvaluationStatement leftTemplate, TypeDescriptor right,
+            EvaluationStatement rightTemplate)
         {
             if (left.IsNumericOrFloat() || right.IsNumericOrFloat())
             {
@@ -200,7 +203,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override string FormatExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            if (result.Template is ConstantValueStatement || result.Template is VariableAccessStatement)
+            if (result.Template is ConstantValueStatement || result.Template is VariableAccessStatement ||
+                result.Template is IndexerAccessStatement || result.Template is ArrayStatement)
             {
                 if (result.TypeDescriptor.IsString())
                 {
@@ -256,7 +260,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string FormatVariableAccessExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            var exp = '$' + result.Expression;
+            //$10 should be surrounded by braces or it will considered $1 followed by a zero
+            var expression = result.Expression;
+            var exp = expression.All(char.IsDigit) && expression.Length > 1
+                ? $"${{{expression}}}"
+                : '$' + expression;
 
             if (!result.TypeDescriptor.IsString())
             {
@@ -281,7 +289,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         public override string FormatVariableAccessExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor,
             string expression, EvaluationStatement template)
         {
-            var exp = '$' + expression;
+            //$10 should be surrounded by braces or it will considered $1 followed by a zero
+            var exp = expression.All(char.IsDigit) && expression.Length > 1
+                ? $"${{{expression}}}"
+                : '$' + expression;
 
             if (!typeDescriptor.IsString())
             {
@@ -303,6 +314,17 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return StringHelpers.EnQuote(exp);
         }
 
+        public override string FormatArrayAccessExpression(ExpressionBuilderParams p, ExpressionResult source,
+            ExpressionResult indexer)
+        {
+            var sExp = source.Expression;
+            if (sExp.StartsWith('$'))
+            {
+                sExp = sExp.Substring(1);
+            }
+
+            return $"${{{sExp}[{indexer.Expression}]}}";
+        }
 
         public override PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p, string nameHint,
             ExpressionResult result)
@@ -437,14 +459,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         }
 
 
-        protected override ExpressionResult CreateExpressionRecursive(ExpressionBuilderParams px,
+        protected override ExpressionResult CreateExpressionRecursive(ExpressionBuilderParams p,
             EvaluationStatement statement)
         {
             switch (statement)
             {
                 case LogicalEvaluationStatement logicalEvaluationStatement:
                 {
-                    if (px.UsageContext is IfElseStatement)
+                    if (p.UsageContext is IfElseStatement)
                     {
                         break;
                     }
@@ -456,16 +478,18 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                         {
                             using (var writer = new StringWriter())
                             {
-                                var p = new ExpressionBuilderParams(px, writer);
+                                var expressionBuilderParams = new ExpressionBuilderParams(p, writer);
 
-                                var leftResult = CreateExpressionRecursive(p, logicalEvaluationStatement.Left);
-                                var rightResult = CreateExpressionRecursive(p, logicalEvaluationStatement.Right);
+                                var leftResult = CreateExpressionRecursive(expressionBuilderParams,
+                                    logicalEvaluationStatement.Left);
+                                var rightResult = CreateExpressionRecursive(expressionBuilderParams,
+                                    logicalEvaluationStatement.Right);
 
                                 if (leftResult.TypeDescriptor.IsString() && rightResult.TypeDescriptor.IsString())
                                 {
-                                    HandleNotices(p, ref leftResult, ref rightResult);
+                                    HandleNotices(expressionBuilderParams, ref leftResult, ref rightResult);
 
-                                    p.NonInlinePartWriter.WriteLine(
+                                    expressionBuilderParams.NonInlinePartWriter.WriteLine(
                                         $"[ {leftResult.Expression} {logicalEvaluationStatement.Operator} {rightResult.Expression} ]");
 
                                     string varName;
@@ -478,8 +502,9 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                     else
                                     {
                                         varName = BashVariableDefinitionStatementTranspiler
-                                            .WriteLastStatusCodeStoreVariableDefinition(p.Context, p.Scope,
-                                                p.NonInlinePartWriter, "cmp_strings");
+                                            .WriteLastStatusCodeStoreVariableDefinition(expressionBuilderParams.Context,
+                                                expressionBuilderParams.Scope,
+                                                expressionBuilderParams.NonInlinePartWriter, "cmp_strings");
                                     }
 
                                     var template = new VariableAccessStatement(
@@ -487,8 +512,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                         logicalEvaluationStatement.Info
                                     );
 
-                                    px.NonInlinePartWriter.Write(writer);
-                                    
+                                    p.NonInlinePartWriter.Write(writer);
+
                                     return new ExpressionResult(
                                         TypeDescriptor.Boolean,
                                         $"${varName}",
@@ -512,14 +537,16 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                         {
                             using (var writer = new StringWriter())
                             {
-                                var p = new ExpressionBuilderParams(px, writer);
+                                var expressionBuilderParams = new ExpressionBuilderParams(p, writer);
 
-                                var leftResult = CreateExpressionRecursive(p, arithmeticEvaluationStatement.Left);
-                                var rightResult = CreateExpressionRecursive(p, arithmeticEvaluationStatement.Right);
+                                var leftResult = CreateExpressionRecursive(expressionBuilderParams,
+                                    arithmeticEvaluationStatement.Left);
+                                var rightResult = CreateExpressionRecursive(expressionBuilderParams,
+                                    arithmeticEvaluationStatement.Right);
 
                                 if (leftResult.TypeDescriptor.IsString() || rightResult.TypeDescriptor.IsString())
                                 {
-                                    HandleNotices(p, ref leftResult, ref rightResult);
+                                    HandleNotices(expressionBuilderParams, ref leftResult, ref rightResult);
 
                                     var leftExp = leftResult.Expression;
                                     var rightExp = rightResult.Expression;
@@ -559,7 +586,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                     leftResult.Template.ParentStatement = newTemp;
                                     rightResult.Template.ParentStatement = newTemp;
 
-                                    px.NonInlinePartWriter.Write(writer);
+                                    p.NonInlinePartWriter.Write(writer);
 
                                     return new ExpressionResult(
                                         TypeDescriptor.String,
@@ -575,9 +602,57 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
                     break;
                 }
+
+                case ArrayStatement arrayStatement:
+                {
+                    string sourceName;
+
+                    if (arrayStatement.ParentStatement is VariableDefinitionStatement variableDefinitionStatement)
+                    {
+                        sourceName = variableDefinitionStatement.Name;
+                    }
+                    else if (arrayStatement.ParentStatement is AssignmentStatement assignmentStatement)
+                    {
+                        if (!(assignmentStatement.LeftSide is VariableAccessStatement variableAccessStatement))
+                        {
+                            throw new InvalidStatementStructureCompilerException(assignmentStatement,
+                                assignmentStatement.Info);
+                        }
+
+                        sourceName = variableAccessStatement.VariableName;
+                    }
+                    else
+                    {
+                        sourceName = p.Scope.NewHelperVariable(arrayStatement.Type, "array_helper");
+                    }
+
+                    if (arrayStatement.Elements != null)
+                    {
+                        for (var i = 0; i < arrayStatement.Elements.Length; i++)
+                        {
+                            p.NonInlinePartWriter.Write($"{sourceName}[{i}]=");
+
+                            var element = CreateExpression(p, arrayStatement.Elements[i]);
+
+                            p.NonInlinePartWriter.WriteLine(element);
+                        }
+
+                        return ExpressionResult.EmptyResult;
+                    }
+
+                    if (arrayStatement.Length != null)
+                    {
+                        var sourceNameEval = new VariableAccessStatement(sourceName, arrayStatement.Info);
+
+                        return CallApiFunction<ApiArray.Initialize>(p, new[] {sourceNameEval, arrayStatement.Length},
+                            arrayStatement.ParentStatement, arrayStatement.Info);
+                    }
+
+                    throw new InvalidStatementStructureCompilerException(arrayStatement, arrayStatement.Info);
+                }
             }
 
-            return base.CreateExpressionRecursive(px, statement);
+            return base.CreateExpressionRecursive(p, statement);
         }
     }
 }

@@ -6,13 +6,13 @@ using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Base;
 
-namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
+namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
 {
-    public partial class BashString
+    public partial class BashArray
     {
         public class BashGetLength : GetLength
         {
-            private const string ApiMathAbsBashMethodName = "GetStringLength";
+            private const string ApiMathAbsBashMethodName = "GetArrayLength";
 
             private FunctionInfo _functionInfo;
 

@@ -13,18 +13,19 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
             ExpressionResult left, ExpressionResult right);
 
         bool ShouldBePinnedToFloatingPointVariable(ExpressionBuilderParams p, EvaluationStatement template,
-            TypeDescriptor left, EvaluationStatement leftTemplate, TypeDescriptor right, EvaluationStatement rightTemplate);
+            TypeDescriptor left, EvaluationStatement leftTemplate, TypeDescriptor right,
+            EvaluationStatement rightTemplate);
 
 
-
-        PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p, string nameHint, ExpressionResult result);
+        PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p, string nameHint,
+            ExpressionResult result);
 
         PinnedVariableResult PinExpressionToVariable(ExpressionBuilderParams p,
             TypeDescriptor typeDescriptor, string nameHint, string expression, EvaluationStatement template);
 
         PinnedVariableResult PinFloatingPointExpressionToVariable(ExpressionBuilderParams p, string nameHint,
             ExpressionResult result);
-        
+
         PinnedVariableResult PinFloatingPointExpressionToVariable(ExpressionBuilderParams p,
             TypeDescriptor typeDescriptor, string nameHint, string expression, EvaluationStatement template);
 
@@ -65,19 +66,26 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
 
         string FormatVariableAccessExpression(ExpressionBuilderParams p, ExpressionResult result);
 
-        string FormatVariableAccessExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor, string expression,
-            EvaluationStatement template);
+        string FormatVariableAccessExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor,
+            string expression, EvaluationStatement template);
 
+        string FormatArrayAccessExpression(ExpressionBuilderParams p, ExpressionResult source,
+            ExpressionResult indexer);
 
         string FormatFunctionCallExpression(ExpressionBuilderParams p, ExpressionResult result);
 
-        string FormatFunctionCallExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor, string expression, EvaluationStatement template);
+        string FormatFunctionCallExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor, string expression,
+            EvaluationStatement template);
 
 
         string FormatConstantExpression(ExpressionBuilderParams p, ExpressionResult result);
 
-        string FormatConstantExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor, string expression, EvaluationStatement template);
+        string FormatConstantExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor, string expression,
+            EvaluationStatement template);
 
+        ExpressionResult CallApiFunction<TApiFunc>(ExpressionBuilderParams p,
+            EvaluationStatement[] parameters, IStatement parentStatement, StatementInfo statementInfo)
+            where TApiFunc : IApiFunc;
 
         ExpressionResult CreateExpression(ExpressionBuilderParams p, EvaluationStatement statement);
     }

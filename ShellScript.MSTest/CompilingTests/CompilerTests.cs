@@ -8,8 +8,6 @@ using ShellScript.Core.Language;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.Parsing;
 using ShellScript.Core.Language.Compiler.Statements;
-using ShellScript.Core.Language.Compiler.Transpiling;
-using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 using ShellScript.Unix.Bash;
 
 namespace ShellScript.MSTest.CompilingTests

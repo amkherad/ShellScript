@@ -1,0 +1,10 @@
+
+int[] array = new int[] {
+    2,
+    3,
+    4,
+};
+
+foreach (int item in array) {
+    echo item;
+}

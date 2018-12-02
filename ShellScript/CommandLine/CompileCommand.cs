@@ -59,7 +59,7 @@ namespace ShellScript.CommandLine
 
             foreach (var sw in _switches)
             {
-                //_setFlag(context, flags, sw.Value.Item1, sw.Key);
+                _setFlag(context, flags, sw.Value.Item1, sw.Key);
             }
 
             var result = compiler.CompileFromSource(

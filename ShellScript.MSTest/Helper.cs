@@ -11,6 +11,7 @@ namespace ShellScript.MSTest
         public static Context CreateBashContext()
         {
             return new Context(
+                new Compiler(),
                 new UnixBashPlatform(),
                 new CompilerFlags(),
                 Console.Out,

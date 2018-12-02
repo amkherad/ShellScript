@@ -75,7 +75,9 @@ namespace ShellScript.Core.Language.Compiler.Lexing
         //Function, //function
         Class, //class
         Return, //return
+        New, //new
         
+        Include, //include
         Like, //like
         NotLike, //notlike
         Call, //call

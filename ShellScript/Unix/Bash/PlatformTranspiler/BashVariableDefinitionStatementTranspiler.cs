@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using ShellScript.Core.Language;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
@@ -10,6 +9,7 @@ using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
+using ShellScript.Core.Language.Library.Core.Array;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
@@ -46,7 +46,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             throw new NotSupportedException();
         }
 
-        public override void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
+        public override void WriteBlock(Context context, Scope scope, TextWriter writer,
+            TextWriter metaWriter,
             IStatement statement)
         {
             if (!(statement is VariableDefinitionStatement varDefStt)) throw new InvalidOperationException();
@@ -77,6 +78,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
             else
             {
+                var skipDefinition = false;
                 if (varDefStt.HasDefaultValue)
                 {
                     var def = varDefStt.DefaultValue;
@@ -91,16 +93,30 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     //becomes:
                     //myFuncResult=myFunc()
                     //x=$((34 * myFuncResult))
-                    var result = transpiler.GetExpression(context, scope, metaWriter, writer, null, def);
-
-                    if (!StatementHelpers.IsAssignableFrom(context, scope, varDefStt.TypeDescriptor,
-                        result.TypeDescriptor))
+                    if (varDefStt.TypeDescriptor.IsArray())
                     {
-                        throw new TypeMismatchCompilerException(result.TypeDescriptor, varDefStt.TypeDescriptor,
-                            varDefStt.Info);
-                    }
+                        var p = new ExpressionBuilderParams(context, scope, metaWriter, writer,
+                            new BlockStatement(null, varDefStt.Info));
 
-                    WriteVariableDefinition(context, scope, writer, varDefStt.Name, result.Expression);
+                        scope.ReserveNewVariable(varDefStt.TypeDescriptor, varDefStt.Name);
+                        skipDefinition = true;
+
+                        var targetVar = new VariableAccessStatement(varDefStt.Name, varDefStt.Info);
+
+                        var call = transpiler.CallApiFunction<ApiArray.Copy>(p, new[] {targetVar, def}, varDefStt,
+                            varDefStt.Info);
+
+                        if (!call.IsEmptyResult)
+                        {
+                            WriteVariableDefinition(context, scope, writer, varDefStt.Name, call.Expression);
+                        }
+                    }
+                    else
+                    {
+                        var result = transpiler.GetExpression(context, scope, metaWriter, writer, null, def);
+
+                        WriteVariableDefinition(context, scope, writer, varDefStt.Name, result.Expression);
+                    }
                 }
                 else
                 {
@@ -108,7 +124,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                         context.Platform.GetDefaultValue(varDefStt.TypeDescriptor.DataType));
                 }
 
-                scope.ReserveNewVariable(varDefStt.TypeDescriptor, varDefStt.Name);
+                if (!skipDefinition)
+                {
+                    scope.ReserveNewVariable(varDefStt.TypeDescriptor, varDefStt.Name);
+                }
 
                 scope.IncrementStatements();
             }

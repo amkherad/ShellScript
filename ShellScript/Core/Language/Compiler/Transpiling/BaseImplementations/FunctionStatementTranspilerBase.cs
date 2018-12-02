@@ -1,13 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
-using ShellScript.Core.Language.Compiler.Statements.Operators;
-using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
@@ -299,11 +294,51 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
         /// <param name="scope"></param>
         /// <param name="funcInfo"></param>
         /// <param name="functionCallStatement"></param>
+        /// <param name="exception"></param>
         /// <returns></returns>
         public static bool ValidateFunctionCall(Context context, Scope scope, FunctionInfo funcInfo,
-            FunctionCallStatement functionCallStatement)
+            FunctionCallStatement functionCallStatement, out Exception exception)
         {
-            //TODO: implement
+            return ValidateParameters(context, scope, funcInfo.Parameters, functionCallStatement.Parameters,
+                out exception);
+        }
+
+        public static bool ValidateParameters(Context context, Scope scope,
+            FunctionParameterDefinitionStatement[] schemeParameters, EvaluationStatement[] parameters,
+            out Exception exception
+        )
+        {
+            var passedCount = parameters?.Length ?? 0;
+            var expectedCount = schemeParameters?.Length ?? 0;
+
+            if (passedCount != expectedCount)
+            {
+                exception = new InvalidFunctionCallParametersCompilerException(expectedCount, passedCount, null);
+                return false;
+            }
+
+            if (parameters != null && schemeParameters != null)
+            {
+                for (var i = 0; i < parameters.Length; i++)
+                {
+                    var passed = parameters[i];
+                    var scheme = schemeParameters[i];
+
+                    var passedType = passed.GetDataType(context, scope);
+                    if (!StatementHelpers.IsAssignableFrom(context, scope, scheme.TypeDescriptor, passedType))
+                    {
+                        if (scheme.DynamicType)
+                        {
+                            continue;
+                        }
+
+                        exception = new TypeMismatchCompilerException(passedType, scheme.TypeDescriptor, passed.Info);
+                        return false;
+                    }
+                }
+            }
+
+            exception = null;
             return true;
         }
     }

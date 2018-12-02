@@ -59,18 +59,15 @@ namespace ShellScript.Core.Language.Compiler
             }
         }
 
-        public static void CompileFromSource(string sourceCodePath, string outputObjPath, string outputFilePath,
-            IPlatform platform, CompilerFlags flags, TextWriter errorWriter, TextWriter warningWriter,
-            TextWriter logWriter)
+        public void CompileFromSource(string sourceCodePath, string outputObjPath,
+            string outputFilePath, IPlatform platform, CompilerFlags flags, TextWriter errorWriter,
+            TextWriter warningWriter, TextWriter logWriter)
         {
             var tempSrcPath = Path.Combine(outputObjPath,
                 Path.GetFileNameWithoutExtension(outputFilePath) + ".src" + Path.GetExtension(outputFilePath) + ".bin");
             var tempMetaPath = Path.Combine(outputObjPath,
                 Path.GetFileNameWithoutExtension(outputFilePath) + ".meta" + Path.GetExtension(outputFilePath) +
                 ".bin");
-
-            using (var inputFile = new FileStream(sourceCodePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = new StreamReader(inputFile))
 
             using (var codeOutputFile = new FileStream(tempSrcPath,
                 FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
@@ -95,10 +92,9 @@ namespace ShellScript.Core.Language.Compiler
                     logWriter,
                     metaWriter,
                     codeWriter,
-                    reader,
                     sourceCodePath
-                    );
-                
+                );
+
                 codeWriter.Flush();
                 metaWriter.Flush();
 
@@ -131,39 +127,59 @@ namespace ShellScript.Core.Language.Compiler
             }
         }
 
-        public static Context CompileFromSource(
-            IPlatform platform, 
+        public Context CompileFromSource(
+            IPlatform platform,
             CompilerFlags flags,
             TextWriter errorWriter,
             TextWriter warningWriter,
             TextWriter logWriter,
             TextWriter metaWriter,
             TextWriter codeWriter,
-            TextReader reader,
             string sourceCodePath
         )
         {
-            var context = new Context(platform, flags, errorWriter, warningWriter, logWriter);
+            var context = new Context(this, platform, flags, errorWriter, warningWriter, logWriter);
+
+            context.Includes.Add(Path.GetDirectoryName(sourceCodePath));
+
+            return CompileFromSource(context, metaWriter, codeWriter, true, sourceCodePath);
+        }
+
+        public static Context CompileFromSource(
+            Context context,
+            TextWriter metaWriter,
+            TextWriter codeWriter,
+            bool isFirstRun,
+            string sourceCodePath
+        )
+        {
             var scope = context.GeneralScope;
 
-            platform.Api.InitializeContext(context);
+            if (isFirstRun)
+            {
+                context.Platform.Api.InitializeContext(context);
 
-            var metaInfo = context.GetMetaInfoTranspiler();
-            metaInfo.WritePrologue(context, metaWriter);
-
+                var metaInfo = context.GetMetaInfoTranspiler();
+                metaInfo.WritePrologue(context, metaWriter);
+            }
+            
             var info = new ParserContext(
-                warningWriter,
-                logWriter,
-                flags.SemicolonRequired,
+                context.WarningWriter,
+                context.LogWriter,
+                context.Flags.SemicolonRequired,
                 sourceCodePath,
                 Path.GetFileName(sourceCodePath),
                 sourceCodePath);
 
             var parser = new Parser(context);
 
-            foreach (var statement in parser.Parse(reader, info))
+            using (var inputFile = new FileStream(sourceCodePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = new StreamReader(inputFile))
             {
-                Transpile(context, scope, statement, codeWriter, metaWriter);
+                foreach (var statement in parser.Parse(reader, info))
+                {
+                    Transpile(context, scope, statement, codeWriter, metaWriter);
+                }
             }
 
             return context;

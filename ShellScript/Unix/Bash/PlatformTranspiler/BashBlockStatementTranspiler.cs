@@ -20,15 +20,17 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is BlockStatement block)) throw new InvalidOperationException();
 
-            WriteBlockStatement(context, scope, writer, metaWriter, block, ScopeType.Block, null);
+            WriteBlockStatement(context, scope, writer, metaWriter, block, ScopeType.Block, false);
         }
 
         public static void WriteBlockStatement(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
-            IStatement statement, ScopeType scopeType)
+            IStatement statement, ScopeType scopeType, bool createSubScope)
         {
             if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-            var subScope = scope.BeginNewScope(scopeType);
+            var subScope = createSubScope
+                ? scope.BeginNewScope(scopeType)
+                : scope;
 
             if (IsEmptyBody(statement))
             {
@@ -54,11 +56,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         }
 
         public static void WriteBlockStatement(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
-            IStatement statement, ScopeType scopeType, Type breakOnStatementType)
+            IStatement statement, ScopeType scopeType, bool createSubScope, Type breakOnStatementType)
         {
             if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-            var subScope = scope.BeginNewScope(scopeType);
+            var subScope = createSubScope
+                ? scope.BeginNewScope(scopeType)
+                : scope;
             
             if (IsEmptyBody(statement))
             {

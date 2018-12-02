@@ -19,5 +19,9 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
 
         ExpressionResult GetConditionalExpression(Context context, Scope scope, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement usageContext, EvaluationStatement statement);
+        
+        ExpressionResult CallApiFunction<TApiFunc>(ExpressionBuilderParams p,
+            EvaluationStatement[] parameters, IStatement parentStatement, StatementInfo statementInfo)
+            where TApiFunc : IApiFunc;
     }
 }

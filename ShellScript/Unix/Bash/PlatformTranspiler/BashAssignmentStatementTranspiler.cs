@@ -3,6 +3,8 @@ using System.IO;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling;
+using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
+using ShellScript.Core.Language.Library.Core.Array;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
@@ -35,7 +37,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
                 nonInlinePartWriter.Write(writer);
             }
-            
+
             scope.IncrementStatements();
         }
 
@@ -67,13 +69,30 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 throw new IdentifierNotFoundCompilerException(target);
             }
 
+            var p =
+                new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter, assignmentStatement);
+
             var transpiler = context.GetEvaluationTranspilerForStatement(evaluation);
 
-            var result =
-                transpiler.GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
+            if (varInfo.TypeDescriptor.IsArray())
+            {
+                var call = transpiler.CallApiFunction<ApiArray.Copy>(p, new[] {target, evaluation}, assignmentStatement,
+                    assignmentStatement.Info);
 
-            writer.Write($"{varInfo.AccessName}=");
-            writer.WriteLine(result.Expression);
+                if (!call.IsEmptyResult)
+                {
+                    writer.Write($"{varInfo.AccessName}=");
+                    writer.WriteLine(call.Expression);
+                }
+            }
+            else
+            {
+                var result =
+                    transpiler.GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
+
+                writer.Write($"{varInfo.AccessName}=");
+                writer.WriteLine(result.Expression);
+            }
         }
     }
 }

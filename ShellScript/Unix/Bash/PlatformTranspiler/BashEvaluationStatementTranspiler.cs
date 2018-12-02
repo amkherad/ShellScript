@@ -25,8 +25,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ExpressionResult CreateBashConditionalExpression(
-            ExpressionBuilderParams p, EvaluationStatement evalStt)
+        public static ExpressionResult CreateBashConditionalExpression(ExpressionBuilderParams p,
+            EvaluationStatement evalStt)
         {
             evalStt = ProcessEvaluation(p.Context, p.Scope, evalStt);
 
@@ -69,7 +69,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             throw new NotSupportedException();
         }
 
-        public override PinnedVariableResult PinEvaluationToVariable(Context context, Scope scope, TextWriter metaWriter,
+        public override PinnedVariableResult PinEvaluationToVariable(Context context, Scope scope,
+            TextWriter metaWriter,
             TextWriter pinCodeWriter, EvaluationStatement statement)
         {
             if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -94,13 +95,25 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter, usageContext), statement);
 
         public override ExpressionResult GetConditionalExpression(ExpressionBuilderParams p,
-            EvaluationStatement statement) =>
-            CreateBashConditionalExpression(p, statement);
+            EvaluationStatement statement) => CreateBashConditionalExpression(p, statement);
 
         public override ExpressionResult GetConditionalExpression(Context context, Scope scope,
             TextWriter metaWriter, TextWriter nonInlinePartWriter, IStatement usageContext,
             EvaluationStatement statement) =>
             CreateBashConditionalExpression(
                 new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter, usageContext), statement);
+
+        public override ExpressionResult CallApiFunction<TApiFunc>(ExpressionBuilderParams p,
+            EvaluationStatement[] parameters, IStatement parentStatement, StatementInfo statementInfo)
+        {
+            var nParams = new List<EvaluationStatement>(parameters.Length);
+            foreach (var param in parameters)
+            {
+                nParams.Add(ProcessEvaluation(p.Context, p.Scope, param));
+            }
+
+            return BashDefaultExpressionBuilder.Instance.CallApiFunction<TApiFunc>(p, nParams.ToArray(),
+                parentStatement, statementInfo);
+        }
     }
 }

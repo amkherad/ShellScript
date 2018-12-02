@@ -44,7 +44,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 if (isTrue)
                 {
                     BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
-                        ifElseStatement.MainIf.Statement, ScopeType.Block);
+                        ifElseStatement.MainIf.Statement, ScopeType.Block, true);
 
                     return;
                 }
@@ -58,7 +58,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 writer.WriteLine();
                 writer.WriteLine("then");
                 BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
-                    ifElseStatement.MainIf.Statement, ScopeType.IfMainBlock);
+                    ifElseStatement.MainIf.Statement, ScopeType.IfMainBlock, true);
             }
 
             if (ifElseStatement.ElseIfs != null)
@@ -77,7 +77,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                             }
 
                             BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
-                                elseIf.Statement, ScopeType.IfElseBlock);
+                                elseIf.Statement, ScopeType.IfElseBlock, true);
 
                             skipElse = true;
                             break;
@@ -100,7 +100,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                         writer.WriteLine();
                         writer.WriteLine("then");
                         BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
-                            elseIf.Statement, ScopeType.IfIfElseBlock);
+                            elseIf.Statement, ScopeType.IfIfElseBlock, true);
                     }
                 }
             }
@@ -110,13 +110,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 if (ifEscaped)
                 {
                     BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
-                        ifElseStatement.Else, ScopeType.IfMainBlock);
+                        ifElseStatement.Else, ScopeType.IfMainBlock, true);
                 }
                 else
                 {
                     writer.WriteLine("else");
                     BashBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
-                        ifElseStatement.Else, ScopeType.IfElseBlock);
+                        ifElseStatement.Else, ScopeType.IfElseBlock, true);
                 }
             }
 

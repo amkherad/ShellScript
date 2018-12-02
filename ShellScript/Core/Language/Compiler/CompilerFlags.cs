@@ -43,6 +43,7 @@ namespace ShellScript.Core.Language.Compiler
 
         public bool PreferRandomHelperVariableNames { get; set; }
 
+        public int ArrayManipulationColumnCount { get; set; }
 
         //==========================
         // Info
@@ -76,6 +77,8 @@ namespace ShellScript.Core.Language.Compiler
                 UseSegments = true,
 
                 WriteShellScriptVersion = true,
+                
+                ArrayManipulationColumnCount = 80,
             };
         }
     }

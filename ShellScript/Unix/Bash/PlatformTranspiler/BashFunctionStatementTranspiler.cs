@@ -57,9 +57,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             writer.WriteLine($"function {functionName}() {{");
 
-
             BashBlockStatementTranspiler.WriteBlockStatement(context, funcScope, writer, metaWriter,
-                funcDefStt.Statement, ScopeType.MethodRoot, typeof(ReturnStatement));
+                funcDefStt.Statement, ScopeType.MethodRoot, false, typeof(ReturnStatement));
             TryGetInlinedStatement(context, funcScope, funcDefStt, out inlinedStatement);
 
 

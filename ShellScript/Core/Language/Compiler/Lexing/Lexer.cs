@@ -78,9 +78,12 @@ namespace ShellScript.Core.Language.Compiler.Lexing
             //{TokenType.Class, @"^class(?!\w)"},
             //{TokenType.Function, @"^function(?!\w)"},
             {TokenType.Return, @"^return(?!\w)"},
+            {TokenType.New, @"^new(?!\w)"},
 
             {TokenType.Throw, @"^throw(?!\w)"},
             {TokenType.Delegate, @"^delegate(?!\w)"},
+            
+            {TokenType.Include, @"^include(?!\w)"},
             
             //{TokenType.Async, @"^async(?!\w)"},
             //{TokenType.Await, @"^await(?!\w)"},

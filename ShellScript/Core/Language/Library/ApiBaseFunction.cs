@@ -9,6 +9,7 @@ using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling;
+using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Unix.Bash.PlatformTranspiler;
 
@@ -257,32 +258,10 @@ namespace ShellScript.Core.Language.Library
 
         public void AssertParameters(ExpressionBuilderParams p, EvaluationStatement[] parameters)
         {
-            var passedCount = parameters?.Length ?? 0;
-            var expectedCount = Parameters?.Length ?? 0;
-
-            if (passedCount != expectedCount)
+            if (!FunctionStatementTranspilerBase.ValidateParameters(p.Context, p.Scope, Parameters, parameters,
+                out var exception))
             {
-                throw new InvalidFunctionCallParametersCompilerException(expectedCount, passedCount, null);
-            }
-
-            if (parameters != null && Parameters != null)
-            {
-                for (var i = 0; i < parameters.Length; i++)
-                {
-                    var passed = parameters[i];
-                    var scheme = Parameters[i];
-
-                    var passedType = passed.GetDataType(p.Context, p.Scope);
-                    if (!StatementHelpers.IsAssignableFrom(p.Context, p.Scope, scheme.TypeDescriptor, passedType))
-                    {
-                        if (scheme.DynamicType)
-                        {
-                            continue;
-                        }
-                        
-                        throw new TypeMismatchCompilerException(passedType, scheme.TypeDescriptor, passed.Info);
-                    }
-                }
+                throw exception;
             }
         }
 

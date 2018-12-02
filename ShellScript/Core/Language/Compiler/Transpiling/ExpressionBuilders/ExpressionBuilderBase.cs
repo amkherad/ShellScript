@@ -177,6 +177,13 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public virtual string FormatArrayAccessExpression(ExpressionBuilderParams p, ExpressionResult source,
+            ExpressionResult indexer)
+        {
+            return $"{source.Expression}[{indexer.Expression}]";
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string FormatFunctionCallExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
             return result.Expression;
@@ -239,7 +246,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
             {
                 return result;
             }
-
+ 
             return new ExpressionResult(
                 result.TypeDescriptor,
                 FormatExpression(p, result),
@@ -358,27 +365,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
 
                     throw new IdentifierNotFoundCompilerException(variableAccessStatement.VariableName,
                         variableAccessStatement.Info);
-                }
-                case IndexerAccessStatement indexerAccessStatement:
-                {
-                    var source = CreateExpressionRecursive(p, indexerAccessStatement.Source);
-                    var indexer = CreateExpressionRecursive(p, indexerAccessStatement.Indexer);
-
-                    var type = source.TypeDescriptor;
-
-                    if (!type.IsArray())
-                    {
-                        throw new TypeMismatchCompilerException(type,
-                            new TypeDescriptor(type.DataType | DataTypes.Array), indexerAccessStatement.Info);
-                    }
-                    
-                    var exp = $"{source.Expression}[{indexer.Expression}]";
-
-                    return new ExpressionResult(
-                        new TypeDescriptor(type ^ DataTypes.Array, type.Lookup),
-                        exp,
-                        indexerAccessStatement
-                    );
                 }
                 case BitwiseEvaluationStatement bitwiseEvaluationStatement: //~ & |
                 {
@@ -918,7 +904,39 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                     );
                 }
 
-                case FunctionCallStatement functionCallStatement: //functions are always not-inlined.
+                case IndexerAccessStatement indexerAccessStatement:
+                {
+                    var source = CreateExpressionRecursive(p, indexerAccessStatement.Source);
+                    var indexer = CreateExpressionRecursive(p, indexerAccessStatement.Indexer);
+
+                    var type = source.TypeDescriptor;
+
+                    if (!type.IsArray())
+                    {
+                        throw new TypeMismatchCompilerException(type,
+                            new TypeDescriptor(type.DataType | DataTypes.Array), indexerAccessStatement.Info);
+                    }
+
+                    var exp = FormatArrayAccessExpression(p, source, indexer);
+
+                    return new ExpressionResult(
+                        new TypeDescriptor(type ^ DataTypes.Array, type.Lookup),
+                        exp,
+                        indexerAccessStatement
+                    );
+                }
+
+                case ArrayStatement arrayStatement:
+                {
+                    throw new NotImplementedException();
+//                    return new ExpressionResult(
+//                        arrayStatement.Type,
+//                        "",
+//                        arrayStatement
+//                        );
+                }
+
+                case FunctionCallStatement functionCallStatement:
                 {
                     var funcInfo =
                         FunctionStatementTranspilerBase.GetFunctionInfoFromFunctionCall(p.Context, p.Scope,
@@ -1043,7 +1061,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
             }
         }
 
-        protected virtual ExpressionResult CallApiFunction<TApiFunc>(ExpressionBuilderParams p,
+        public virtual ExpressionResult CallApiFunction<TApiFunc>(ExpressionBuilderParams p,
             EvaluationStatement[] parameters, IStatement parentStatement, StatementInfo statementInfo)
             where TApiFunc : IApiFunc
         {
@@ -1057,17 +1075,16 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
 //                throw new InvalidOperationException();
 //            }
 
-            return CreateExpressionRecursive(
-                p,
-                new FunctionCallStatement(
-                    func.ClassName,
-                    func.Name,
-                    func.TypeDescriptor,
-                    parameters,
-                    statementInfo,
-                    parentStatement
-                )
+            var funcCall = new FunctionCallStatement(
+                func.ClassName,
+                func.Name,
+                func.TypeDescriptor,
+                parameters,
+                statementInfo,
+                parentStatement
             );
+
+            return CreateExpressionRecursive(p, funcCall);
         }
 
         protected virtual IStatement UnWrapInlinedStatement(ExpressionBuilderParams p, FunctionInfo functionInfo,

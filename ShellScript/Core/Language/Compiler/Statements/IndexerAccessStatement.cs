@@ -17,5 +17,7 @@ namespace ShellScript.Core.Language.Compiler.Statements
 
             TraversableChildren = StatementHelpers.CreateChildren(source, indexer);
         }
+
+        public override string ToString() => $"{Source}[{Indexer}]";
     }
 }
