@@ -16,6 +16,20 @@ namespace ShellScript.MSTest.CompilingTests
     public class CompilerTests
     {
         [TestMethod]
+        public void TestXX()
+        {
+            int x = 10;
+            int sum = 0;
+            for (int i = 1; i < x; i++)
+            {
+                sum = sum + i;
+            }
+
+            Console.WriteLine(sum);
+            Debugger.Break();
+        }
+        
+        [TestMethod]
         public void TestCompiler()
         {
             //try

@@ -311,7 +311,7 @@ Here are all the operators with their order (first row has the most priority):
 `Some operators are not implemented yet.`
 
 ```csharp
-return (1024 ^ 1023) + 1024 * 2; //7 + 2048 = 2055
+return (1024 ^ 1023) + 1024 * 2; //2047 + 2048 = 4095
 ```
 
 Non-void functions are considered as evaluation expression:
