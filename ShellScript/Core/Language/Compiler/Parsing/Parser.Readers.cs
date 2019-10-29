@@ -1123,7 +1123,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             }
 
             var dataType = TokenTypeToDataType(token, context);
-
+            
             var definitionName = enumerator.Current;
             if (definitionName.Type != TokenType.IdentifierName)
                 throw UnexpectedSyntax(definitionName, context);

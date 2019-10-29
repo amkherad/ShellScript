@@ -83,8 +83,8 @@ ShellScript is a strong-typed/static-typed language, all data types are listed b
 | Boolean   | bool          | Representing a boolean value. (i.e. true or false)
 | Void      | void          | Void data type. (The only usage is to define a void method)
 | Object    | object        | Representing an instance of a class. (different from object in C#) `[NOT IMPLEMENTED YET]`
-| Array     | DATATYPE[]    | Represents an array of items of the given data type. (e.g. int[]) `[NOT IMPLEMENTED YET]`
-| Delegate  | delegate      | Holds a reference to a callable object (function). `[NOT IMPLEMENTED YET]`
+| Array     | DATATYPE[]    | Represents an array of items of the given data type. (e.g. int[])
+| Delegate  | delegate      | Holds a reference to a callable object (function).
 
 Example of data types in code:
 ```csharp
@@ -163,7 +163,7 @@ There are four places for assignments:
   void myFunction (int myParam1 = 10) { }
   ```
 
-* Assigning a variable inside an evaluation expression: `[NOT IMPLEMENTED YET]`
+* Assigning a variable inside an evaluation expression:
 
   ```csharp
   myVariable = x = 2;
@@ -289,11 +289,11 @@ do {
 There's no limitations on expressions, but it's highly suggested to use parenthesis to clarify expressions.
 
 Here are all the operators with their order (first row has the most priority):
-
+asdf
 | Category         | Operator                            | Associativity
 |------------------|-------------------------------------|-----------------
-| Primary/Postfix  | () `[]` ++ -- .                     | Left to right
-| Unary	           | + - ! ~ ++ - - `(type)`             | Right to left
+| Primary/Postfix  | () [] ++ -- .                       | Left to right
+| Unary	           | + - ! ~ ++ - - (type)               | Right to left
 | Multiplicative   | * / %                               | Left to right
 | Additive         | + -                                 | Left to right
 | Shift            | `<<` `>>`                           | Left to right

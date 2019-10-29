@@ -102,7 +102,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                         skipDefinition = true;
 
                         var targetVar = new VariableAccessStatement(varDefStt.Name, varDefStt.Info);
-
+                        
                         var call = transpiler.CallApiFunction<ApiArray.Copy>(p, new[] {targetVar, def}, varDefStt,
                             varDefStt.Info);
 

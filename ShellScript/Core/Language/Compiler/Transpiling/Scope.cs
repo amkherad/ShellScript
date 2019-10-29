@@ -174,6 +174,24 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             _variables.Add(new VariableInfo(typeDescriptor, name, null));
         }
 
+        public bool ReserveOrUpdateNewVariable(TypeDescriptor typeDescriptor, string name)
+        {
+            var varInfo = new VariableInfo(typeDescriptor, name, null);
+            
+            if (!_identifiers.Contains(name))
+            {
+                _identifiers.Add(name);
+                _variables.Add(varInfo);
+
+                return false;
+            }
+
+            _variables.Remove(varInfo);
+            _variables.Add(varInfo);
+
+            return true;
+        }
+
         public void ReserveNewParameter(TypeDescriptor typeDescriptor, string name, string rename)
         {
             _identifiers.Add(name);

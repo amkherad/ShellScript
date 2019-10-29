@@ -621,6 +621,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
                         sourceName = variableAccessStatement.VariableName;
                     }
+                    else if (arrayStatement.ParentStatement is ReturnStatement returnStatement)
+                    {
+                        sourceName = p.Context.GetLastFunctionCallStorageVariable(arrayStatement.Type, p.MetaWriter);
+                    }
                     else
                     {
                         sourceName = p.Scope.NewHelperVariable(arrayStatement.Type, "array_helper");

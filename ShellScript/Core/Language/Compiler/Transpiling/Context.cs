@@ -30,9 +30,6 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
         public TextWriter LogWriter { get; }
         public HashSet<string> Includes { get; set; }
 
-
-        private int _lastFunctionCallReferenceCount = 0;
-        
         
         private readonly Dictionary<Type, IPlatformStatementTranspiler> _typeTranspilers;
 
@@ -167,16 +164,18 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             return Transpilers.OfType<TTranspiler>().FirstOrDefault();
         }
         
-        public string GetLastFunctionCallStorageVariable(TextWriter metaTextWriter)
+        public string GetLastFunctionCallStorageVariable(TypeDescriptor typeDescriptor, TextWriter metaTextWriter)
         {
             const string VariableName = "LastFunctionCall";
             
-            if (Interlocked.Increment(ref _lastFunctionCallReferenceCount) == 1)
+            var existed = GeneralScope.ReserveOrUpdateNewVariable(typeDescriptor, VariableName);
+
+            if (!existed)
             {
                 BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(this, GeneralScope, metaTextWriter,
                     VariableName, "0");
             }
-
+            
             return VariableName;
         }
     }

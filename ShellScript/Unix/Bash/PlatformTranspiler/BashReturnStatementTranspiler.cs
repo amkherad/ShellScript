@@ -32,11 +32,28 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             if (returnResult != null)
             {
                 var transpiler = context.GetEvaluationTranspilerForStatement(returnResult);
-                var result = transpiler.GetExpression(context, scope, metaWriter, writer, null, returnResult);
 
-                writer.Write("echo ");
-                writer.Write(result.Expression);
-                writer.WriteLine();
+                var type = returnResult.GetDataType(context, scope);
+                
+                if (type.IsArray())
+                {
+                    var varName = context.GetLastFunctionCallStorageVariable(type, metaWriter);
+
+                    var leftSide = new VariableAccessStatement(varName, returnResult.Info);
+
+                    var stt = new AssignmentStatement(leftSide, returnResult, returnResult.Info, statement);
+                    
+                    transpiler.WriteInline(context, scope, writer, metaWriter, writer, returnResult);
+                }
+                else
+                {
+                    var result = transpiler.GetExpression(context, scope, metaWriter, writer, null, returnResult);
+
+                    writer.Write("echo ");
+                    writer.Write(result.Expression);
+                    writer.WriteLine();
+                    
+                }
             }
 
             if (scope.StatementCount > 1 && scope.Type != ScopeType.MethodRoot)

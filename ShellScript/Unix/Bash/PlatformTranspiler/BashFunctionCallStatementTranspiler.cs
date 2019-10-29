@@ -23,10 +23,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             {
                 return !funcInfo.TypeDescriptor.IsVoid();
             }
-            
+
             return false;
         }
-        
+
         public override void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
             TextWriter nonInlinePartWriter, IStatement statement)
         {
@@ -43,9 +43,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is FunctionCallStatement functionCallStatement)) throw new InvalidOperationException();
 
-            var blockUsageContext = new BlockStatement(new [] {statement}, statement.Info);
-            
-            var resultVar = context.GetLastFunctionCallStorageVariable(metaWriter);
+            var blockUsageContext = new BlockStatement(new[] {statement}, statement.Info);
 
             EvaluationStatement evalStt = functionCallStatement;
             var result = GetExpression(context, scope, metaWriter, writer, blockUsageContext, evalStt);
@@ -54,16 +52,22 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             {
                 return;
             }
-            
+
             if (result.TypeDescriptor.IsVoid() && !(result.Template is FunctionCallStatement))
             {
                 writer.WriteLine(result.Expression);
             }
+            else if (result.TypeDescriptor.IsArray())
+            {
+                writer.WriteLine(result.Expression.Trim('`'));
+            }
             else
             {
+                var resultVar = context.GetLastFunctionCallStorageVariable(result.TypeDescriptor, metaWriter);
+
                 writer.WriteLine($"{resultVar}={result.Expression}");
             }
-            
+
             scope.IncrementStatements();
         }
     }

@@ -1017,14 +1017,17 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                     call.Append(accessName);
 
                     var paramTemplates = new List<EvaluationStatement>();
-                    foreach (var param in functionCallStatement.Parameters)
+                    if (!(functionCallStatement.Parameters is null))
                     {
-                        var result = CreateExpressionRecursive(p, param);
+                        foreach (var param in functionCallStatement.Parameters)
+                        {
+                            var result = CreateExpressionRecursive(p, param);
 
-                        call.Append(' ');
-                        call.Append(FormatFunctionCallParameterSubExpression(p, result));
+                            call.Append(' ');
+                            call.Append(FormatFunctionCallParameterSubExpression(p, result));
 
-                        paramTemplates.Add(result.Template);
+                            paramTemplates.Add(result.Template);
+                        }
                     }
 
                     if (!p.VoidFunctionCall)

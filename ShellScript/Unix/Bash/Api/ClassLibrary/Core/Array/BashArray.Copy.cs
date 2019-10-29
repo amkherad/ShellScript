@@ -110,6 +110,58 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
                     p.NonInlinePartWriter.WriteLine();
                     p.NonInlinePartWriter.WriteLine("done");
                 }
+                else if (p1 is FunctionCallStatement funcCallStatement)
+                {
+                    if (!p.Scope.TryGetFunctionInfo(funcCallStatement, out var funcInfo))
+                    {
+                        throw new IdentifierNotFoundCompilerException(funcCallStatement);
+                    }
+
+                    var transpiler = p.Context.GetTranspilerForStatement(funcCallStatement);
+
+                    var srcVarName =
+                        p.Context.GetLastFunctionCallStorageVariable(funcInfo.TypeDescriptor, p.MetaWriter);
+
+                    var isQuoteNeeded = funcInfo.TypeDescriptor.IsString();
+
+                    //for i in ${!a[@]}; do
+                    //    b[$i]="${a[$i]}"
+                    //done
+
+                    //p.NonInlineP
+                    //artWriter.Write(funcInfo.AccessName);
+
+                    transpiler.WriteBlock(p.Context, p.Scope, p.NonInlinePartWriter, p.MetaWriter, funcCallStatement);
+
+                    //for i in ${!a[@]}; do
+                    p.NonInlinePartWriter.Write("for i in ${!");
+                    p.NonInlinePartWriter.Write(srcVarName);
+                    p.NonInlinePartWriter.WriteLine("[@]}; do");
+
+                    //b[$i]="${a[$i]}"
+                    p.NonInlinePartWriter.Write(dstVarName);
+                    if (isQuoteNeeded)
+                    {
+                        p.NonInlinePartWriter.Write("[$i]=\"${");
+                    }
+                    else
+                    {
+                        p.NonInlinePartWriter.Write("[$i]=${");
+                    }
+
+                    p.NonInlinePartWriter.Write(srcVarName);
+                    if (isQuoteNeeded)
+                    {
+                        p.NonInlinePartWriter.Write("[$i]}\"");
+                    }
+                    else
+                    {
+                        p.NonInlinePartWriter.Write("[$i]}");
+                    }
+
+                    p.NonInlinePartWriter.WriteLine();
+                    p.NonInlinePartWriter.WriteLine("done");
+                }
                 else
                 {
                     throw new InvalidStatementStructureCompilerException(p1, p1.Info);
