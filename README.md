@@ -288,8 +288,8 @@ do {
 
 There's no limitations on expressions, but it's highly suggested to use parenthesis to clarify expressions.
 
-Here are all the operators with their order (first row has the most priority):
-asdf
+Here are all the operators with their order (first row has the most priority): 
+
 | Category         | Operator                            | Associativity
 |------------------|-------------------------------------|-----------------
 | Primary/Postfix  | () [] ++ -- .                       | Left to right

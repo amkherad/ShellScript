@@ -4,7 +4,7 @@
 
 ### Array
 
-#### `void` Array.Copy(`any`[] destination, `any`[] source)
+#### `void` Array.Copy(`any[]` destination, `any[]` source)
 Copies a source array into destination array.
 ```csharp
     int[] destination;
@@ -18,7 +18,7 @@ Copies a source array into destination array.
     echo destination[3]; //40
 ```
 
-#### `int` Array.GetLength(`any`[] array)
+#### `int` Array.GetLength(`any[]` array)
 Returns the length of an array.
 ```csharp
     int[] array = new int[] { 10, 20 };
@@ -27,7 +27,7 @@ Returns the length of an array.
 ```
 
 
-#### `void` Array.Initialize(`any`[] array)
+#### `void` Array.Initialize(`any[]` array)
 Initializes an array with zero length.
 ```csharp
     int[] array;

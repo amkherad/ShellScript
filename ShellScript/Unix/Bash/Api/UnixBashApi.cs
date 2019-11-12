@@ -42,6 +42,7 @@ namespace ShellScript.Unix.Bash.Api
         {
             new AwkThirdPartyUtility(),
             new BcThirdPartyUtility(),
+            new BcThirdPartyUtility(),
         };
 
         public override IDictionary<string, IThirdPartyUtility> Utilities { get; }
