@@ -4,8 +4,10 @@ using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Convert;
+using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Environment;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Locale;
 using ShellScript.Unix.Bash.Api.ClassLibrary.IO.File;
+using ShellScript.Unix.Bash.Api.ClassLibrary.IO.Path;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Core.String;
@@ -23,6 +25,7 @@ namespace ShellScript.Unix.Bash.Api
         public override IApiClass[] Classes { get; } =
         {
             new BashConvert(),
+            new BashEnvironment(),
             
             new BashMath(),
             new BashString(),
@@ -32,6 +35,7 @@ namespace ShellScript.Unix.Bash.Api
             new BashUser(),
 
             new BashFile(),
+            new BashPath(),
             
             new BashLocale(),
             
@@ -42,7 +46,7 @@ namespace ShellScript.Unix.Bash.Api
         {
             new AwkThirdPartyUtility(),
             new BcThirdPartyUtility(),
-            new BcThirdPartyUtility(),
+            new PythonThirdPartyUtility(),
         };
 
         public override IDictionary<string, IThirdPartyUtility> Utilities { get; }

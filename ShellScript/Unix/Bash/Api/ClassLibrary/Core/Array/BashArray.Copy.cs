@@ -29,7 +29,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
                     throw new IdentifierNotFoundCompilerException(destination);
                 }
 
-                var dstVarName = destination.VariableName;
+                var dstVarName = dstInfo.AccessName;
 
 
                 if (p1 is ArrayStatement arrayStatement)
@@ -73,16 +73,18 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
                         throw new IdentifierNotFoundCompilerException(source);
                     }
 
-                    var srcVarName = source.VariableName;
+                    var srcVarName = srcInfo.AccessName;
 
-                    var isQuoteNeeded = srcInfo.TypeDescriptor.IsString();
+                    var isQuoteNeeded = (srcInfo.TypeDescriptor.DataType & ~DataTypes.Array) == DataTypes.String;
 
                     //for i in ${!a[@]}; do
                     //    b[$i]="${a[$i]}"
                     //done
 
-                    //for i in ${!a[@]}; do
-                    p.NonInlinePartWriter.Write("for i in ${!");
+                    var indexName = p.Scope.NewHelperVariable(TypeDescriptor.Integer, "array_index");
+                    p.NonInlinePartWriter.Write("for ");
+                    p.NonInlinePartWriter.Write(indexName);
+                    p.NonInlinePartWriter.Write(" in ${!");
                     p.NonInlinePartWriter.Write(srcVarName);
                     p.NonInlinePartWriter.WriteLine("[@]}; do");
 
@@ -90,21 +92,21 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
                     p.NonInlinePartWriter.Write(dstVarName);
                     if (isQuoteNeeded)
                     {
-                        p.NonInlinePartWriter.Write("[$i]=\"${");
+                        p.NonInlinePartWriter.Write("[$" + indexName + "]=\"${");
                     }
                     else
                     {
-                        p.NonInlinePartWriter.Write("[$i]=${");
+                        p.NonInlinePartWriter.Write("[$" + indexName + "]=${");
                     }
 
                     p.NonInlinePartWriter.Write(srcVarName);
                     if (isQuoteNeeded)
                     {
-                        p.NonInlinePartWriter.Write("[$i]}\"");
+                        p.NonInlinePartWriter.Write("[$" + indexName + "]}\"");
                     }
                     else
                     {
-                        p.NonInlinePartWriter.Write("[$i]}");
+                        p.NonInlinePartWriter.Write("[$" + indexName + "]}");
                     }
 
                     p.NonInlinePartWriter.WriteLine();
@@ -122,7 +124,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
                     var srcVarName =
                         p.Context.GetLastFunctionCallStorageVariable(funcInfo.TypeDescriptor, p.MetaWriter);
 
-                    var isQuoteNeeded = funcInfo.TypeDescriptor.IsString();
+                    var isQuoteNeeded = (funcInfo.TypeDescriptor.DataType & ~DataTypes.Array) == DataTypes.String;
 
                     //for i in ${!a[@]}; do
                     //    b[$i]="${a[$i]}"
@@ -133,8 +135,10 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
 
                     transpiler.WriteBlock(p.Context, p.Scope, p.NonInlinePartWriter, p.MetaWriter, funcCallStatement);
 
-                    //for i in ${!a[@]}; do
-                    p.NonInlinePartWriter.Write("for i in ${!");
+                    var indexName = p.Scope.NewHelperVariable(TypeDescriptor.Integer, "array_index");
+                    p.NonInlinePartWriter.Write("for ");
+                    p.NonInlinePartWriter.Write(indexName);
+                    p.NonInlinePartWriter.Write(" in ${!");
                     p.NonInlinePartWriter.Write(srcVarName);
                     p.NonInlinePartWriter.WriteLine("[@]}; do");
 
@@ -142,21 +146,21 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
                     p.NonInlinePartWriter.Write(dstVarName);
                     if (isQuoteNeeded)
                     {
-                        p.NonInlinePartWriter.Write("[$i]=\"${");
+                        p.NonInlinePartWriter.Write("[$" + indexName + "]=\"${");
                     }
                     else
                     {
-                        p.NonInlinePartWriter.Write("[$i]=${");
+                        p.NonInlinePartWriter.Write("[$" + indexName + "]=${");
                     }
 
                     p.NonInlinePartWriter.Write(srcVarName);
                     if (isQuoteNeeded)
                     {
-                        p.NonInlinePartWriter.Write("[$i]}\"");
+                        p.NonInlinePartWriter.Write("[$" + indexName + "]}\"");
                     }
                     else
                     {
-                        p.NonInlinePartWriter.Write("[$i]}");
+                        p.NonInlinePartWriter.Write("[$" + indexName + "]}");
                     }
 
                     p.NonInlinePartWriter.WriteLine();

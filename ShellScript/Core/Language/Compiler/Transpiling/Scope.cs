@@ -65,15 +65,15 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
 
         public Scope BeginNewScope(ScopeType type)
         {
-            var scope = new Scope(Context, this);
-            
-            if (type == ScopeType.Block)
+            var scope = new Scope(Context, this)
             {
-                scope.Type = Type | type;
-            }
+                Type = Type | type
+            };
 
             return scope;
         }
+
+        public bool IsInsideMethod => (Type & ScopeType.MethodRoot) == ScopeType.MethodRoot;
 
         public T GetConfig<T>(Expression<Func<IScopedConfig, T>> config, T defaultValue)
         {

@@ -12,12 +12,8 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.User
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
-                return BashTestCommand.CreateTestExpression(this, p, functionCallStatement, (p1, fcs) =>
-                    new ExpressionResult(
-                        TypeDescriptor,
-                        $"[ $(whoami) == 'root' ]",
-                        functionCallStatement
-                    ));
+                return BashTestCommand.CreateTestExpression(this, p, functionCallStatement, (parameters, call) =>
+                    new ExpressionResult(TypeDescriptor, "[ $(id -u) -eq 0 ]", call));
             }
         }
     }

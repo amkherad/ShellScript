@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add ShellScript Backend"
+  short_description: "Build and extend ShellScript target backends"
+  default_prompt: "Use $add-shellscript-backend to implement or extend a ShellScript target platform with complete transpiler and API coverage."

@@ -1,5 +1,4 @@
 using System.Globalization;
-using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
@@ -11,75 +10,63 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
     {
         public class BashInitialize : Initialize
         {
-            private const string ApiMathAbsBashMethodName = "Initialize";
-
-            private FunctionInfo _functionInfo;
-
-            public BashInitialize()
-            {
-                _functionInfo = new FunctionInfo(TypeDescriptor.Integer, ApiMathAbsBashMethodName,
-                    null, ClassAccessName, false, Parameters, null);
-            }
-
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
                 AssertParameters(p, functionCallStatement.Parameters);
 
-                var str = functionCallStatement.Parameters[0];
+                var array = functionCallStatement.Parameters[0] as VariableAccessStatement;
+                if (array == null)
+                    throw new InvalidStatementStructureCompilerException(functionCallStatement.Parameters[0],
+                        functionCallStatement.Parameters[0].Info);
 
-                switch (str)
+                if (!p.Scope.TryGetVariableInfo(array, out var variableInfo))
+                    throw new IdentifierNotFoundCompilerException(array);
+
+                if (!variableInfo.TypeDescriptor.IsArray())
+                    throw new TypeMismatchCompilerException(variableInfo.TypeDescriptor, TypeDescriptor.Array,
+                        array.Info);
+
+                var lengthStatement = functionCallStatement.Parameters[1];
+                var indexName = p.Scope.NewHelperVariable(TypeDescriptor.Integer, "array_index");
+                var elementType = variableInfo.TypeDescriptor.DataType & ~DataTypes.Array;
+                var defaultValue = p.Context.Platform.GetDefaultValue(elementType);
+                var constantLength = lengthStatement as ConstantValueStatement;
+                if (constantLength != null && long.TryParse(constantLength.Value,
+                    NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var length))
                 {
-                    case ConstantValueStatement constantValueStatement:
-                    {
-                        return InlineConstant(constantValueStatement.TypeDescriptor, constantValueStatement.Value,
-                            constantValueStatement);
-                    }
-                    case VariableAccessStatement variableAccessStatement:
-                    {
-                        if (p.Scope.TryGetVariableInfo(variableAccessStatement, out var varInfo))
-                        {
-                            if (varInfo.TypeDescriptor.IsString())
-                            {
-                                return new ApiMethodBuilderRawResult(new ExpressionResult(
-                                    TypeDescriptor,
-                                    $"${{#{varInfo.AccessName}}}",
-                                    variableAccessStatement
-                                ));
-                            }
+                    if (length < 0)
+                        throw new InvalidStatementStructureCompilerException(lengthStatement, lengthStatement.Info);
 
-                            throw new TypeMismatchCompilerException(varInfo.TypeDescriptor, TypeDescriptor.String,
-                                variableAccessStatement.Info);
-                        }
-
-                        if (p.Scope.TryGetConstantInfo(variableAccessStatement, out var constInfo))
-                        {
-                            return InlineConstant(constInfo.TypeDescriptor, constInfo.Value, variableAccessStatement);
-                        }
-
-                        throw new IdentifierNotFoundCompilerException(variableAccessStatement);
-                    }
-                    default:
+                    p.NonInlinePartWriter.Write(variableInfo.AccessName);
+                    p.NonInlinePartWriter.WriteLine("=()");
+                    if (length > 0)
                     {
-                        return WriteNativeMethod(this, p, "echo ${#1}", _functionInfo,
-                            functionCallStatement.Parameters, functionCallStatement.Info);
+                        p.NonInlinePartWriter.Write("for ((" + indexName + "=0; " + indexName + "<");
+                        p.NonInlinePartWriter.Write(length.ToString(NumberFormatInfo.InvariantInfo));
+                        p.NonInlinePartWriter.WriteLine("; " + indexName + "++)); do");
+                        p.NonInlinePartWriter.Write(variableInfo.AccessName);
+                        p.NonInlinePartWriter.WriteLine("[" + indexName + "]=" + defaultValue);
+                        p.NonInlinePartWriter.WriteLine("done");
                     }
                 }
-            }
-
-            public static ApiMethodBuilderInlineResult InlineConstant(TypeDescriptor typeDescriptor, string value,
-                IStatement statement)
-            {
-                if (typeDescriptor.IsString())
+                else
                 {
-                    return Inline(
-                        new ConstantValueStatement(TypeDescriptor.Integer,
-                            value.Length.ToString(NumberFormatInfo.InvariantInfo),
-                            statement.Info)
-                    );
+                    var transpiler = p.Context.GetEvaluationTranspilerForStatement(lengthStatement);
+                    var lengthResult = transpiler.GetExpression(p.Context, p.Scope, p.MetaWriter,
+                        p.NonInlinePartWriter, functionCallStatement, lengthStatement);
+
+                    p.NonInlinePartWriter.Write(variableInfo.AccessName);
+                    p.NonInlinePartWriter.WriteLine("=()");
+                    p.NonInlinePartWriter.Write("for ((" + indexName + "=0; " + indexName + "<");
+                    p.NonInlinePartWriter.Write(lengthResult.Expression);
+                    p.NonInlinePartWriter.WriteLine("; " + indexName + "++)); do");
+                    p.NonInlinePartWriter.Write(variableInfo.AccessName);
+                    p.NonInlinePartWriter.WriteLine("[" + indexName + "]=" + defaultValue);
+                    p.NonInlinePartWriter.WriteLine("done");
                 }
 
-                throw new TypeMismatchCompilerException(typeDescriptor, TypeDescriptor.String, statement.Info);
+                return new ApiMethodBuilderRawResult(ExpressionResult.EmptyResult);
             }
         }
     }

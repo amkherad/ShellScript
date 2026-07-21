@@ -1567,92 +1567,73 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             return ReadWhile(token, enumerator, context);
         }
 
-        //TODO: support multiple post loop evaluations
         public ForStatement ReadFor(Token token, IPeekingEnumerator<Token> enumerator, ParserContext context)
         {
-            throw new NotImplementedException();
             if (token.Type != TokenType.For)
                 throw UnexpectedSyntax(token, context);
 
-            if (!enumerator.MoveNext()) //open parenthesis
+            if (!enumerator.MoveNext() || enumerator.Current.Type != TokenType.OpenParenthesis)
+                throw UnexpectedSyntax(enumerator.Current, context);
+
+            if (!enumerator.MoveNext())
                 throw EndOfFile(token, context);
 
-            token = enumerator.Current;
-            if (token.Type != TokenType.OpenParenthesis)
-                throw UnexpectedSyntax(token, context);
-
-            if (!enumerator.MoveNext()) //next token (datatype, variable name, or semicolon)
-                throw EndOfFile(token, context);
-
-            IStatement[] preLoopAssignments = null;
+            IStatement[] initializations = null;
             EvaluationStatement condition = null;
-            IStatement[] postLoopEvaluations = null;
-
-            token = enumerator.Current;
-            if (token.Type == TokenType.DataType || token.Type == TokenType.IdentifierName)
-            {
-                //preLoopAssignments = ReadVariableDefinitionAndAssignment(token, enumerator, info);
-
-                if (!enumerator.MoveNext()) //semicolon
-                    throw EndOfFile(token, context);
-
-                token = enumerator.Current;
-                if (token.Type != TokenType.SequenceTerminator)
-                    throw UnexpectedSyntax(token, context);
-            }
-            else if (token.Type != TokenType.SequenceTerminator)
-            {
-                throw UnexpectedSyntax(token, context);
-            }
-
-            if (!enumerator.MoveNext()) //condition
-                throw EndOfFile(token, context);
+            IStatement[] increments = null;
 
             token = enumerator.Current;
             if (token.Type != TokenType.SequenceTerminator)
             {
-                condition = ReadEvaluationStatement(token, enumerator, context);
+                IStatement initialization = token.Type == TokenType.DataType
+                    ? ReadVariableOrFunctionDefinition(token, enumerator, context)
+                    : ReadVariableOrAssignmentOrFunctionCall(token, enumerator, context);
+                initializations = new[] {initialization};
 
-                if (!enumerator.MoveNext()) //semicolon
+                if (!enumerator.MoveNext())
                     throw EndOfFile(token, context);
-
                 token = enumerator.Current;
                 if (token.Type != TokenType.SequenceTerminator)
                     throw UnexpectedSyntax(token, context);
             }
 
-            if (!enumerator.MoveNext()) //post evaluations
+            if (!enumerator.MoveNext())
                 throw EndOfFile(token, context);
+            token = enumerator.Current;
+            if (token.Type != TokenType.SequenceTerminator)
+            {
+                condition = ReadEvaluationStatement(token, enumerator, context);
+                if (!enumerator.MoveNext())
+                    throw EndOfFile(token, context);
+                token = enumerator.Current;
+                if (token.Type != TokenType.SequenceTerminator)
+                    throw UnexpectedSyntax(token, context);
+            }
 
+            if (!enumerator.MoveNext())
+                throw EndOfFile(token, context);
+            token = enumerator.Current;
             if (token.Type != TokenType.CloseParenthesis)
             {
-                //postLoopEvaluations = ReadEvaluationStatement(token, enumerator, info);
-
-                if (!enumerator.MoveNext()) //close parenthesis
+                increments = new IStatement[] {ReadEvaluationStatement(token, enumerator, context)};
+                if (!enumerator.MoveNext())
                     throw EndOfFile(token, context);
-
                 token = enumerator.Current;
                 if (token.Type != TokenType.CloseParenthesis)
                     throw UnexpectedSyntax(token, context);
             }
 
-            if (!enumerator.MoveNext()) //open brace
+            if (!enumerator.MoveNext())
                 throw EndOfFile(token, context);
-
             token = enumerator.Current;
             if (token.Type != TokenType.OpenBrace)
                 throw UnexpectedSyntax(token, context);
 
-            IStatement block = ReadBlockStatement(token, enumerator, context);
-
-            var result = new ForStatement(preLoopAssignments, condition, postLoopEvaluations, block,
+            var block = ReadBlockStatement(token, enumerator, context);
+            var result = new ForStatement(initializations, condition, increments, block,
                 CreateStatementInfo(context, token));
-
             if (condition != null)
-            {
                 condition.ParentStatement = result;
-            }
-
             return result;
         }
 

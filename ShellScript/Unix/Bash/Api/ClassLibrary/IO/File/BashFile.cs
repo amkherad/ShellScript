@@ -12,6 +12,8 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.File
             new BashCanWrite(),
             new BashCanExecute(),
             new BashIsLink(),
+            new BashIsDirectory(),
+            new BashIsFile(),
         };
     }
 }

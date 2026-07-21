@@ -54,6 +54,7 @@ namespace ShellScript.Core.Language.Compiler.Lexing
             {TokenType.Division, @"^/(?!/)"},
             {TokenType.Increment, @"^\+\+"},
             {TokenType.Decrement, @"^--"},
+            {TokenType.Reminder, @"^%"},
 
             {TokenType.BackSlash, @"^\\"},
 
@@ -88,7 +89,7 @@ namespace ShellScript.Core.Language.Compiler.Lexing
             //{TokenType.Async, @"^async(?!\w)"},
             //{TokenType.Await, @"^await(?!\w)"},
 
-            //{TokenType.In, @"^in(?!t)(?!\w)"},
+            {TokenType.In, @"^in(?!t)(?!\w)"},
             //{TokenType.NotIn, @"^notin(?!\w)"},
 
             //{TokenType.Like, @"^like(?!\w)"},

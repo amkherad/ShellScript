@@ -7,12 +7,13 @@ namespace ShellScript.Core.Language.Library.Core.Locale
         public abstract class GetCurrentLocale : ApiBaseFunction
         {
             public override string Name => nameof(GetCurrentLocale);
-            public override string Summary { get; }
+            public override string Summary => "Returns the current process locale.";
             public override string ClassName => ClassAccessName;
             public override bool IsStatic => true;
             public override TypeDescriptor TypeDescriptor => TypeDescriptor.String;
 
-            public override FunctionParameterDefinitionStatement[] Parameters { get; }
+            public override FunctionParameterDefinitionStatement[] Parameters { get; } =
+                new FunctionParameterDefinitionStatement[0];
         }
     }
 }

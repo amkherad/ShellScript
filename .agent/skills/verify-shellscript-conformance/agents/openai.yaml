@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify ShellScript Conformance"
+  short_description: "Test language semantics and generated scripts"
+  default_prompt: "Use $verify-shellscript-conformance to build a conformance test matrix for ShellScript syntax, semantics, and backend output."

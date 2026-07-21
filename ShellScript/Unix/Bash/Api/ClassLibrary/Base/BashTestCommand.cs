@@ -13,72 +13,41 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Base
         public static IApiMethodBuilderResult CreateTestExpression(ApiBaseFunction func, ExpressionBuilderParams p,
             FunctionCallStatement functionCallStatement, string testChar)
         {
-            func.AssertParameters(p, functionCallStatement.Parameters);
-
-            var parameter = functionCallStatement.Parameters[0];
-
-            var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
-            var result = transpiler.GetExpression(p.Context, p.Scope, p.MetaWriter, p.NonInlinePartWriter, null,
-                parameter);
-
-            result = new ExpressionResult(
-                func.TypeDescriptor,
-                $"[ -{testChar} {result.Expression} ]",
-                functionCallStatement
-            );
-
-            if (p.UsageContext is IfElseStatement)
+            return CreateTestExpression(func, p, functionCallStatement, (parameters, call) =>
             {
-                return new ApiMethodBuilderRawResult(new ExpressionResult(
-                    func.TypeDescriptor,
-                    result.Expression,
-                    result.Template
-                ));
-            }
-
-            p.NonInlinePartWriter.WriteLine(result.Expression);
-
-            var varName = BashVariableDefinitionStatementTranspiler.WriteLastStatusCodeStoreVariableDefinition(
-                p.Context, p.Scope,
-                p.NonInlinePartWriter, $"{functionCallStatement.Fqn}_Result");
-
-            return new ApiMethodBuilderRawResult(new ExpressionResult(
-                func.TypeDescriptor,
-                $"${varName}",
-                new VariableAccessStatement(varName, functionCallStatement.Info),
-                ExpressionBuilderBase.PinRequiredNotice
-            ));
+                var parameter = call.Parameters[0];
+                var transpiler = parameters.Context.GetEvaluationTranspilerForStatement(parameter);
+                var result = transpiler.GetExpression(parameters.Context, parameters.Scope, parameters.MetaWriter,
+                    parameters.NonInlinePartWriter, call, parameter);
+                return new ExpressionResult(func.TypeDescriptor, $"[ -{testChar} {result.Expression} ]", call);
+            });
         }
-
 
         public static IApiMethodBuilderResult CreateTestExpression(ApiBaseFunction func, ExpressionBuilderParams p,
             FunctionCallStatement functionCallStatement, TestExpressionCreator createTestExpression)
         {
             func.AssertParameters(p, functionCallStatement.Parameters);
-
             var result = createTestExpression(p, functionCallStatement);
 
-            if (p.UsageContext is IfElseStatement)
-            {
-                return new ApiMethodBuilderRawResult(new ExpressionResult(
-                    func.TypeDescriptor,
-                    result.Expression,
-                    result.Template
-                ));
-            }
+            if (p.UsageContext is IfElseStatement || p.UsageContext is ConditionalBlockStatement)
+                return new ApiMethodBuilderRawResult(result);
 
-            p.NonInlinePartWriter.WriteLine(result.Expression);
-
-            var varName = BashVariableDefinitionStatementTranspiler.WriteLastStatusCodeStoreVariableDefinition(
-                p.Context, p.Scope,
-                p.NonInlinePartWriter, $"{functionCallStatement.Fqn}_Result");
+            var variableName = p.Scope.NewHelperVariable(TypeDescriptor.Boolean,
+                $"{functionCallStatement.Fqn}_Result");
+            p.NonInlinePartWriter.Write("if ");
+            p.NonInlinePartWriter.Write(result.Expression);
+            p.NonInlinePartWriter.WriteLine("; then");
+            BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(
+                p.Context, p.Scope, p.NonInlinePartWriter, variableName, "1");
+            p.NonInlinePartWriter.WriteLine("else");
+            BashVariableDefinitionStatementTranspiler.WriteVariableDefinition(
+                p.Context, p.Scope, p.NonInlinePartWriter, variableName, "0");
+            p.NonInlinePartWriter.WriteLine("fi");
 
             return new ApiMethodBuilderRawResult(new ExpressionResult(
-                func.TypeDescriptor,
-                $"${varName}",
-                new VariableAccessStatement(varName, functionCallStatement.Info),
-                ExpressionBuilderBase.PinRequiredNotice
-            ));
+                func.TypeDescriptor, $"${variableName}",
+                new VariableAccessStatement(variableName, functionCallStatement.Info),
+                ExpressionBuilderBase.PinRequiredNotice));
         }
     }
 }

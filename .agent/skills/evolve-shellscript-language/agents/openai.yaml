@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evolve ShellScript Language"
+  short_description: "Design and implement ShellScript language features"
+  default_prompt: "Use $evolve-shellscript-language to add a language feature across lexer, parser, semantics, backends, tests, and docs."

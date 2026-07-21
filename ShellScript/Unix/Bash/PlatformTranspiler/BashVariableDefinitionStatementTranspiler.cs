@@ -19,10 +19,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         public static void WriteVariableDefinition(Context context, Scope scope, TextWriter writer, string name,
             string expression)
         {
-            if (scope.IsRootScope)
-                writer.WriteLine($"{name}={expression}");
-            else
+            if (scope.IsInsideMethod)
                 writer.WriteLine($"local {name}={expression}");
+            else
+                writer.WriteLine($"{name}={expression}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -31,10 +31,10 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             var name = scope.NewHelperVariable(TypeDescriptor.Integer, nameHint);
 
-            if (scope.IsRootScope)
-                writer.WriteLine($"{name}=$?");
-            else
+            if (scope.IsInsideMethod)
                 writer.WriteLine($"local {name}=$?");
+            else
+                writer.WriteLine($"{name}=$?");
 
             return name;
         }

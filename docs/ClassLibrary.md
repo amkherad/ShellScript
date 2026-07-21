@@ -74,3 +74,15 @@ Forwards the call to native OS's ping command.
     Net.Ping();
 ```
 
+
+## Linux Bash Additions
+
+The Unix-Bash platform exposes native implementations for the following APIs:
+
+- `Environment.GetVariable`, `Environment.GetCurrentDirectory`, and `Environment.GetHomeDirectory`.
+- `Path.Combine`, `Path.GetFileName`, `Path.GetDirectoryName`, and `Path.GetExtension`.
+- `String.Contains`, `String.StartsWith`, and `String.EndsWith`.
+- `File.IsDirectory` and `File.IsFile`, alongside the existing file permission and existence checks.
+- `User.GetUserName`, `User.IsSuperUser`, `Locale.GetCurrentLocale`, and `Net.Ping`.
+
+Bash array operations use native expansions and loops. `Array.GetLength` emits `${#array[@]}`, while sized array initialization emits a collision-safe arithmetic loop and uses the element type's default value.
