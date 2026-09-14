@@ -1,35 +1,17 @@
-//using ShellScript.Core.Language.CompilerServices.Statements;
-//using ShellScript.Core.Language.CompilerServices.Transpiling.ExpressionBuilders;
-//using ShellScript.Core.Language.Library;
-//
-//namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
-//{
-//    public partial class ApiPlatform
-//    {
-//        public class CallArray : Call
-//        {
-//            public override string Name => nameof(CallArray);
-//            public override string Summary { get; }
-//            public override DataTypes DataType => DataTypes.Integer;
-//
-//
-//            public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
-//                FunctionCallStatement functionCallStatement)
-//            {
-//                AssertExpressionParameters(functionCallStatement.Parameters);
-//
-//                var parameter = functionCallStatement.Parameters[0];
-//
-//                var transpiler = p.Context.GetEvaluationTranspilerForStatement(parameter);
-//                var result = transpiler.GetExpression(p.Context, p.Scope, p.MetaWriter, p.NonInlinePartWriter,
-//                    p.UsageContext, parameter);
-//
-//                return new ApiMethodBuilderRawResult(new ExpressionResult(
-//                    DataType,
-//                    $"`awk \"BEGIN {result.Expression}\"`",
-//                    result.Template
-//                ));
-//            }
-//        }
-//    }
-//}
+using ShellScript.Core.Language.Library;
+
+namespace ShellScript.Core.Language.Library.Core.Platform
+{
+    public partial class ApiPlatform
+    {
+        public abstract class CallArray : Call
+        {
+            public override string Name => nameof(CallArray);
+            public override string Summary =>
+                "Executes a shell command and returns stdout split into an array of lines.";
+
+            public override TypeDescriptor TypeDescriptor =>
+                new TypeDescriptor(DataTypes.String | DataTypes.Array);
+        }
+    }
+}

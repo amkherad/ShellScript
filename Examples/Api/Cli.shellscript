@@ -1,0 +1,12 @@
+// @expect-out EXAMPLE_OK:Cli
+// @expect-exit 0
+// @args run --verbose value
+
+int count = Cli.GetArgumentCount();
+string first = Cli.GetArgument(0);
+bool verbose = Cli.HasFlag("--verbose");
+
+echo $"count={count}";
+echo first;
+echo $"verbose={verbose}";
+echo "EXAMPLE_OK:Cli";

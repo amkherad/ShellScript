@@ -1,0 +1,4 @@
+// @expect-err EXAMPLE_OK:Log
+// @expect-exit 0
+
+Log.Info("EXAMPLE_OK:Log");

@@ -10,10 +10,11 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Array
             new BashGetLength(),
             new BashCopy(),
             new BashInitialize(),
-            
-            //new ShellScriptResourceFunction(ClassAccessName, "Truncate", "ApiMath_Truncate.shellscript", null,
-            //    DataTypes.Numeric, false, true, new [] { NumberParameter }
-            //),
+            new BashIndexOf(),
+            new BashContains(),
+            new BashClear(),
+            new BashReverse(),
+            new BashAdd(),
         };
     }
 }

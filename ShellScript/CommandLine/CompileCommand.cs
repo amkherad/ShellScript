@@ -138,6 +138,38 @@ namespace ShellScript.CommandLine
                         "Determines whether meta-comments should be used in output code."
                     )
                 },
+
+                {
+                    "use-third-party-utilities",
+                    (
+                        x => x.UseThirdPartyUtilities,
+                        "When false, generated code uses pure-shell fallbacks instead of awk/bc/python."
+                    )
+                },
+
+                {
+                    "bind-utilities-at-init",
+                    (
+                        x => x.BindThirdPartyUtilitiesAtInit,
+                        "When true, utility choice is resolved once in the script prologue."
+                    )
+                },
+
+                {
+                    "disabled-utilities",
+                    (
+                        x => x.DisabledThirdPartyUtilities,
+                        "Comma-separated utility names to skip (awk, bc, python)."
+                    )
+                },
+
+                {
+                    "utility-order",
+                    (
+                        x => x.ThirdPartyUtilityOrder,
+                        "Preferred third-party utility order (default: awk,bc,python)."
+                    )
+                },
             };
 
         public Dictionary<string, string> SwitchesHelp { get; } =

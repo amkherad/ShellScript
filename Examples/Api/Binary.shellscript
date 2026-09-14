@@ -1,0 +1,8 @@
+// @expect-out EXAMPLE_OK:Binary
+// @expect-exit 0
+
+string encoded = Binary.ToBase64("hi");
+string decoded = Binary.FromBase64(encoded);
+
+echo decoded;
+echo "EXAMPLE_OK:Binary";

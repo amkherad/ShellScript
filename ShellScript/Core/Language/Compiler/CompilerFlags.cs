@@ -19,6 +19,26 @@ namespace ShellScript.Core.Language.Compiler
         //==========================
         public bool UseLastFunctionCallStorageVariable { get; set; }
 
+        /// <summary>
+        /// When true, generated code may call external utilities such as awk, bc, or python.
+        /// </summary>
+        public bool UseThirdPartyUtilities { get; set; }
+
+        /// <summary>
+        /// When true, utility choice is resolved once in the generated script prologue instead of on every call.
+        /// </summary>
+        public bool BindThirdPartyUtilitiesAtInit { get; set; }
+
+        /// <summary>
+        /// Comma- or semicolon-separated utility names to skip (e.g. "python" or "awk,python").
+        /// </summary>
+        public string DisabledThirdPartyUtilities { get; set; }
+
+        /// <summary>
+        /// Preferred utility order, most convenient first. Default: awk,bc,python.
+        /// </summary>
+        public string ThirdPartyUtilityOrder { get; set; }
+
         public int SuccessStatusCode { get; set; }
         public int FailureStatusCode { get; set; }
 
@@ -64,6 +84,11 @@ namespace ShellScript.Core.Language.Compiler
                 UseInlining = true,
                 InlineCascadingFunctionCalls = true,
                 InlineNonEvaluations = true,
+
+                UseThirdPartyUtilities = true,
+                BindThirdPartyUtilitiesAtInit = true,
+                DisabledThirdPartyUtilities = "",
+                ThirdPartyUtilityOrder = ThirdPartyUtilitySettings.DefaultUtilityOrder,
 
                 SuccessStatusCode = 0,
                 FailureStatusCode = 1,

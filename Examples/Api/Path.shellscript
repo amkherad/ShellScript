@@ -1,0 +1,12 @@
+// @expect-out EXAMPLE_OK:Path
+// @expect-exit 0
+
+string temp = Path.GetTempPath();
+string combined = Path.Combine(temp, "child");
+string name = Path.GetFileName(combined);
+bool rooted = Path.IsPathRooted(temp);
+
+echo $"temp={temp}";
+echo $"name={name}";
+echo $"rooted={rooted}";
+echo "EXAMPLE_OK:Path";

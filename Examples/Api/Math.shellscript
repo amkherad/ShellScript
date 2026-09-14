@@ -1,0 +1,9 @@
+// @expect-out EXAMPLE_OK:Math
+// @expect-exit 0
+
+number abs = Math.Abs(-7);
+number min = Math.Min(2, 9);
+
+echo abs;
+echo min;
+echo "EXAMPLE_OK:Math";

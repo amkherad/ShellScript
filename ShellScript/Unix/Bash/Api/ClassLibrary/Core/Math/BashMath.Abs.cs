@@ -19,8 +19,18 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
 
             private IDictionary<string, string> _absUtilityExpressions = new Dictionary<string, string>
             {
-                {BashFunction.AwkUtilityName, "awk \"BEGIN {if ($1 < 0) { print (-($1)) } else { print ($1) }}\""},
-                {BashFunction.BcUtilityName, "echo \"define abs(i) { if (i < 0) return (-i) return (i) } abs($1)\" | bc"},
+                {
+                    BashFunction.AwkUtilityName,
+                    "awk -v a=\"$1\" 'BEGIN { if (a < 0) print -a; else print a }'"
+                },
+                {
+                    BashFunction.BcUtilityName,
+                    "echo \"define abs(i) { if (i < 0) return (-i); return (i); } abs($1)\" | bc -l"
+                },
+                {
+                    BashFunction.PythonUtilityName,
+                    "python3 -c 'import sys,math; a=float(sys.argv[1]); print(abs(a))' \"$1\""
+                },
             };
 
             public BashAbs()
@@ -58,7 +68,8 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
 
                             return CreateNativeMethodWithUtilityExpressionSelector(this, p, _functionInfo,
                                 _absUtilityExpressions, functionCallStatement.Parameters,
-                                functionCallStatement.Info);
+                                functionCallStatement.Info,
+                                "if [ \"$1\" -lt 0 ]; then echo \"${1#-}\"; else echo \"$1\"; fi");
                         }
 
                         if (p.Scope.TryGetConstantInfo(variableAccessStatement, out var constInfo))
@@ -71,7 +82,8 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                     default:
                     {
                         return CreateNativeMethodWithUtilityExpressionSelector(this, p, _functionInfo,
-                            _absUtilityExpressions, functionCallStatement.Parameters, functionCallStatement.Info);
+                            _absUtilityExpressions, functionCallStatement.Parameters, functionCallStatement.Info,
+                            "if [ \"$1\" -lt 0 ]; then echo \"${1#-}\"; else echo \"$1\"; fi");
                     }
                 }
             }

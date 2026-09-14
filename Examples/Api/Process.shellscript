@@ -1,0 +1,11 @@
+// @expect-out EXAMPLE_OK:Process
+// @expect-exit 0
+
+int pid = Process.GetCurrentId();
+bool running = Process.Exists(pid);
+string captured = Process.RunAndCapture("printf capture-ok");
+
+echo $"pid={pid}";
+echo $"running={running}";
+echo captured;
+echo "EXAMPLE_OK:Process";

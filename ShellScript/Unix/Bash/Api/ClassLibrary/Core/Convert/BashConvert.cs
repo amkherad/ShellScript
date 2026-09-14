@@ -13,9 +13,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Convert
             new BashToBoolean(),
             
             new BashToString(),
-            //new ShellScriptResourceFunction(ClassAccessName, "Truncate", "ApiMath_Truncate.shellscript", null,
-            //    DataTypes.Numeric, false, true, new [] { NumberParameter }
-            //),
+            new BashParse(),
         };
     }
 }

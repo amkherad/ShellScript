@@ -1,0 +1,10 @@
+// @expect-out EXAMPLE_OK:Yaml
+// @expect-exit 0
+
+string yaml = "name: shell";
+bool valid = Yaml.IsValid(yaml);
+string name = Yaml.GetPath(yaml, "name");
+
+echo $"valid={valid}";
+echo name;
+echo "EXAMPLE_OK:Yaml";

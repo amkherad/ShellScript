@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -173,7 +174,8 @@ namespace ShellScript.Core.Language.Library
         public static IApiMethodBuilderResult CreateNativeMethodWithUtilityExpressionSelector<TFunc>(
             TFunc func, ExpressionBuilderParams p, FunctionInfo functionInfo,
             IDictionary<string, string> utilityCommands,
-            EvaluationStatement[] parameters, StatementInfo statementInfo)
+            EvaluationStatement[] parameters, StatementInfo statementInfo,
+            string pureBashFallbackBody = null)
             where TFunc : ApiBaseFunction
         {
             if (p.Scope.TryGetFunctionInfo(functionInfo, out var funcInfo))
@@ -182,45 +184,72 @@ namespace ShellScript.Core.Language.Library
                     parameters, statementInfo));
             }
 
+            var orderedImplementations =
+                ThirdPartyUtilitySettings.OrderImplementations(p.Context.Flags, utilityCommands).ToList();
+
+            if (p.Context.Flags.BindThirdPartyUtilitiesAtInit && orderedImplementations.Count > 0)
+            {
+                p.Context.RegisterUtilityFunctionInitBinding(new UtilityFunctionInitBinding(
+                    functionInfo.Fqn,
+                    orderedImplementations,
+                    pureBashFallbackBody));
+            }
+
             using (var funcWriter = new StringWriter())
             {
                 funcWriter.Write("function ");
                 funcWriter.Write(functionInfo.Fqn);
                 funcWriter.WriteLine("() {");
 
-                bool isFirst = true;
-                var utilities = p.Context.Api.Utilities;
-                foreach (var utility in utilityCommands)
+                if (p.Context.Flags.BindThirdPartyUtilitiesAtInit && orderedImplementations.Count > 0)
                 {
-                    if (utilities.TryGetValue(utility.Key, out var util))
+                    if (!string.IsNullOrWhiteSpace(pureBashFallbackBody))
                     {
+                        funcWriter.WriteLine(pureBashFallbackBody);
+                    }
+                    else
+                    {
+                        funcWriter.WriteLine(orderedImplementations[orderedImplementations.Count - 1].Value);
+                    }
+                }
+                else
+                {
+                    var isFirst = true;
+                    var wroteBranch = false;
+                    var utilities = p.Context.Api.Utilities;
+
+                    foreach (var utility in orderedImplementations)
+                    {
+                        if (!utilities.TryGetValue(utility.Key, out var util))
+                        {
+                            continue;
+                        }
+
                         var condition = GetUtilityLookupTestVariableName(p.Context, p.MetaWriter, util);
 
-                        if (isFirst)
-                        {
-                            funcWriter.Write("if [ ");
-
-                            isFirst = false;
-                        }
-                        else
-                        {
-                            funcWriter.Write("elif [ ");
-                        }
-
+                        funcWriter.Write(isFirst ? "if [ " : "elif [ ");
+                        isFirst = false;
+                        wroteBranch = true;
                         funcWriter.Write(condition);
                         funcWriter.WriteLine(" ]");
                         funcWriter.WriteLine("then");
                         funcWriter.WriteLine(utility.Value);
                     }
 
-                    //Just ignoring the utility!
-//                    else
-//                    {
-//                        throw new InvalidOperationException("Utility is not installed.");
-//                    }
+                    if (!string.IsNullOrWhiteSpace(pureBashFallbackBody))
+                    {
+                        funcWriter.WriteLine(wroteBranch ? "else" : "if true");
+                        funcWriter.WriteLine("then");
+                        funcWriter.WriteLine(pureBashFallbackBody);
+                        wroteBranch = true;
+                    }
+
+                    if (wroteBranch)
+                    {
+                        funcWriter.WriteLine("fi");
+                    }
                 }
 
-                funcWriter.WriteLine("fi");
                 funcWriter.WriteLine("}");
 
                 p.MetaWriter.Write(funcWriter);

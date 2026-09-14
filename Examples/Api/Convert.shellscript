@@ -1,0 +1,13 @@
+// @expect-out EXAMPLE_OK:Convert
+// @expect-exit 0
+
+int i = Convert.ToInteger("42");
+number n = Convert.Parse("3.5");
+bool b = Convert.ToBoolean("true");
+string s = Convert.ToString(i);
+
+echo $"i={i}";
+echo n;
+echo $"b={b}";
+echo s;
+echo "EXAMPLE_OK:Convert";

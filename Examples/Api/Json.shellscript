@@ -1,0 +1,10 @@
+// @expect-out EXAMPLE_OK:Json
+// @expect-exit 0
+
+string json = "{\"name\":\"shell\"}";
+bool valid = Json.IsValid(json);
+string name = Json.GetPath(json, ".name");
+
+echo $"valid={valid}";
+echo name;
+echo "EXAMPLE_OK:Json";

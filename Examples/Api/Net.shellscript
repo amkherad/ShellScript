@@ -1,0 +1,9 @@
+// @expect-out EXAMPLE_OK:Net
+// @expect-exit 0
+
+string loopback = Net.ResolveHost("localhost");
+bool alive = Net.Ping("127.0.0.1");
+
+echo $"loopback={loopback}";
+echo $"alive={alive}";
+echo "EXAMPLE_OK:Net";

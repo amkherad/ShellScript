@@ -1,0 +1,11 @@
+// @expect-out EXAMPLE_OK:OS
+// @expect-exit 0
+
+string host = OS.GetHostName();
+string kernel = OS.GetKernelName();
+string arch = OS.GetArchitecture();
+
+echo "host=" + host;
+echo "kernel=" + kernel;
+echo "arch=" + arch;
+echo "EXAMPLE_OK:OS";

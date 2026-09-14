@@ -12,8 +12,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
             new BashCallFloat(),
             new BashCallNumeric(),
             new BashCallString(),
-            
-            //new CallArray(),
+            new BashCallArray(),
         };
     }
 }

@@ -1,0 +1,10 @@
+// @expect-out EXAMPLE_OK:Array
+// @expect-exit 0
+
+int[] values = new int[] { 10, 20, 30 };
+int length = Array.GetLength(values);
+int index = Array.IndexOf(values, 20);
+
+echo $"length={length}";
+echo $"index={index}";
+echo "EXAMPLE_OK:Array";

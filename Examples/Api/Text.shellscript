@@ -1,0 +1,11 @@
+// @expect-out EXAMPLE_OK:Text
+// @expect-exit 0
+
+string normalized = Text.NormalizeWhitespace("  a   b  ");
+bool match = Regex.IsMatch("abc123", "[0-9]+");
+string replaced = Regex.Replace("a-b-c", "-", "_");
+
+echo normalized;
+echo $"match={match}";
+echo replaced;
+echo "EXAMPLE_OK:Text";

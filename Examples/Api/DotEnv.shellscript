@@ -1,0 +1,11 @@
+// @expect-out EXAMPLE_OK:DotEnv
+// @expect-exit 0
+
+string root = Environment.GetVariable("SHELLSCRIPT_EXAMPLE_ROOT");
+string envFile = Path.Combine(root, ".env");
+
+File.WriteAllText(envFile, "API_TOKEN=abc123");
+string token = DotEnv.Get(envFile, "API_TOKEN");
+
+echo token;
+echo "EXAMPLE_OK:DotEnv";

@@ -182,6 +182,8 @@ namespace ShellScript.Core.Language.Compiler
                 }
             }
 
+            context.WriteUtilityFunctionInitSection(metaWriter);
+
             return context;
         }
 

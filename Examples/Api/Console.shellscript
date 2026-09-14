@@ -1,0 +1,5 @@
+// @expect-out EXAMPLE_OK:Console
+// @expect-exit 0
+
+Console.WriteLine("console-line");
+echo "EXAMPLE_OK:Console";

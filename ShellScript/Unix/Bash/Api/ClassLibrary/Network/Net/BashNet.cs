@@ -8,6 +8,9 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Network.Net
         public override IApiFunc[] Functions { get; } =
         {
             new BashPing(),
+            new BashDownload(),
+            new BashHttpGet(),
+            new BashResolveHost(),
         };
     }
 }

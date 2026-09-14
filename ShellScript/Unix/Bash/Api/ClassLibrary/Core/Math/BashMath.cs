@@ -8,9 +8,15 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
         public override IApiFunc[] Functions { get; } =
         {
             new BashAbs(),
-            //new ShellScriptResourceFunction(ClassAccessName, "Truncate", "ApiMath_Truncate.shellscript", null,
-            //    DataTypes.Numeric, false, true, new [] { NumberParameter }
-            //),
+            new BashMin(),
+            new BashMax(),
+            new BashFloor(),
+            new BashCeiling(),
+            new BashRound(),
+            new BashTruncate(),
+            new BashSqrt(),
+            new BashPow(),
+            new BashSign(),
         };
     }
 }

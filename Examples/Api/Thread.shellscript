@@ -1,0 +1,6 @@
+// @expect-out EXAMPLE_OK:Thread
+// @expect-exit 0
+
+int id = Thread.GetCurrentId();
+echo $"threadId={id}";
+echo "EXAMPLE_OK:Thread";

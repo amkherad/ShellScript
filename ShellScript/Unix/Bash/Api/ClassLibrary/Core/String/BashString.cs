@@ -14,9 +14,15 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
             new BashContains(),
             new BashStartsWith(),
             new BashEndsWith(),
-            //new ShellScriptResourceFunction(ClassAccessName, "Truncate", "ApiMath_Truncate.shellscript", null,
-            //    DataTypes.Numeric, false, true, new [] { NumberParameter }
-            //),
+            new BashToLower(),
+            new BashToUpper(),
+            new BashTrim(),
+            new BashGetBefore(),
+            new BashGetAfter(),
+            new BashIndexOf(),
+            new BashSubstring(),
+            new BashEquals(),
+            new BashReplace(),
         };
     }
 }

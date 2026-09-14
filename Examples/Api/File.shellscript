@@ -1,0 +1,15 @@
+// @expect-out EXAMPLE_OK:File
+// @expect-exit 0
+
+string root = Environment.GetVariable("SHELLSCRIPT_EXAMPLE_ROOT");
+string file = Path.Combine(root, "sample.txt");
+
+File.WriteAllText(file, "hello");
+string text = File.ReadAllText(file);
+int len = File.GetLength(file);
+bool exists = File.Exists(file);
+
+echo text;
+echo $"len={len}";
+echo $"exists={exists}";
+echo "EXAMPLE_OK:File";

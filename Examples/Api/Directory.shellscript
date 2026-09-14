@@ -1,0 +1,11 @@
+// @expect-out EXAMPLE_OK:Directory
+// @expect-exit 0
+
+string root = Environment.GetVariable("SHELLSCRIPT_EXAMPLE_ROOT");
+string sub = Path.Combine(root, "subdir");
+
+Directory.Create(sub);
+bool exists = Directory.Exists(sub);
+
+echo $"exists={exists}";
+echo "EXAMPLE_OK:Directory";

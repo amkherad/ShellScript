@@ -8,7 +8,7 @@ namespace ShellScript.Unix.Utilities
     {
         public abstract string Name { get; }
 
-        public string WriteExistenceCondition(Context context, TextWriter nonInlinePartWriter)
+        public virtual string WriteExistenceCondition(Context context, TextWriter nonInlinePartWriter)
         {
             nonInlinePartWriter.WriteLine($"command -v {Name} > /dev/null");
             return "$? -eq 0";

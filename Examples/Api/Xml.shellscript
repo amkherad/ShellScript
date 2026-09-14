@@ -1,0 +1,10 @@
+// @expect-out EXAMPLE_OK:Xml
+// @expect-exit 0
+
+string xml = "<root><item>shell</item></root>";
+bool valid = Xml.IsValid(xml);
+string item = Xml.GetPath(xml, "item");
+
+echo $"valid={valid}";
+echo item;
+echo "EXAMPLE_OK:Xml";

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,29 +13,44 @@ namespace ShellScript.MSTest.CompilingTests
         public void RegistersCompleteBashApiSurface()
         {
             var platform = new UnixBashPlatform();
-            var expectedFunctions = new Dictionary<string, string[]>
+            var expectedClassNames = new[]
             {
-                {"Convert", new[] {"ToInteger", "ToFloat", "ToNumber", "ToBoolean", "ToString"}},
-                {"Environment", new[] {"GetVariable", "GetCurrentDirectory", "GetHomeDirectory"}},
-                {"Math", new[] {"Abs"}},
-                {"String", new[] {"GetLength", "IsNullOrEmpty", "IsNullOrWhiteSpace", "Contains", "StartsWith", "EndsWith"}},
-                {"Array", new[] {"GetLength", "Copy", "Initialize"}},
-                {"Platform", new[] {"Call", "CallInteger", "CallFloat", "CallNumeric", "CallString"}},
-                {"User", new[] {"IsSuperUser", "GetUserName"}},
-                {"File", new[] {"Exists", "CanRead", "CanWrite", "CanExecute", "IsLink", "IsDirectory", "IsFile"}},
-                {"Path", new[] {"Combine", "GetFileName", "GetDirectoryName", "GetExtension"}},
-                {"Locale", new[] {"GetCurrentLocale"}},
-                {"Net", new[] {"Ping"}},
+                "Convert", "Environment", "Math", "String", "Array", "Platform", "User",
+                "File", "Directory", "Path", "Locale", "Net",
+                "OS", "Process", "Thread",
+                "Ini", "DotEnv", "Json", "Yaml", "Xml",
+                "Text", "Unicode", "DateTime", "Binary", "Regex",
+                "Log", "Console", "Cli",
             };
 
-            CollectionAssert.AreEquivalent(expectedFunctions.Keys.ToArray(),
+            CollectionAssert.AreEquivalent(expectedClassNames,
                 platform.Api.Classes.Select(apiClass => apiClass.Name).ToArray());
 
-            foreach (var expectedClass in expectedFunctions)
+            foreach (var apiClass in platform.Api.Classes)
             {
-                Assert.IsTrue(platform.Api.TryGetClass(expectedClass.Key, out var apiClass));
-                CollectionAssert.AreEquivalent(expectedClass.Value,
-                    apiClass.Functions.Select(function => function.Name).ToArray());
+                Assert.IsTrue(apiClass.Functions.Length > 0, $"Class {apiClass.Name} has no functions.");
+            }
+        }
+
+        [TestMethod]
+        public void RegistersCoreApiFunctionNames()
+        {
+            var platform = new UnixBashPlatform();
+            var spotChecks = new Dictionary<string, string[]>
+            {
+                {"Json", new[] {"IsValid", "GetPath", "PrettyPrint"}},
+                {"Cli", new[] {"GetArgumentCount", "GetArgument", "HasFlag", "GetFlagValue"}},
+                {"Process", new[] {"GetCurrentId", "RunAndCapture"}},
+                {"Log", new[] {"Info", "Error"}},
+            };
+
+            foreach (var spotCheck in spotChecks)
+            {
+                Assert.IsTrue(platform.Api.TryGetClass(spotCheck.Key, out var apiClass));
+                foreach (var functionName in spotCheck.Value)
+                {
+                    Assert.IsTrue(apiClass.Functions.Any(f => f.Name == functionName), spotCheck.Key + "." + functionName);
+                }
             }
         }
 

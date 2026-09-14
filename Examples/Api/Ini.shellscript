@@ -1,0 +1,11 @@
+// @expect-out EXAMPLE_OK:Ini
+// @expect-exit 0
+
+string root = Environment.GetVariable("SHELLSCRIPT_EXAMPLE_ROOT");
+string ini = Path.Combine(root, "app.ini");
+
+Ini.SetValue(ini, "app", "key", "value");
+string value = Ini.GetValue(ini, "app", "key");
+
+echo value;
+echo "EXAMPLE_OK:Ini";

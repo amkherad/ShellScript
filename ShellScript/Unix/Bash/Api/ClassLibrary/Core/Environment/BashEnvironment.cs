@@ -10,6 +10,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Environment
             new BashGetVariable(),
             new BashGetCurrentDirectory(),
             new BashGetHomeDirectory(),
+            new BashSetVariable(),
         };
     }
 }

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.PlatformTranspiler;
@@ -29,6 +30,9 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
         public TextWriter WarningWriter { get; }
         public TextWriter LogWriter { get; }
         public HashSet<string> Includes { get; set; }
+
+        private readonly List<UtilityFunctionInitBinding> _utilityFunctionInitBindings =
+            new List<UtilityFunctionInitBinding>();
 
         
         private readonly Dictionary<Type, IPlatformStatementTranspiler> _typeTranspilers;
@@ -177,6 +181,77 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             }
             
             return VariableName;
+        }
+
+        public void RegisterUtilityFunctionInitBinding(UtilityFunctionInitBinding binding)
+        {
+            _utilityFunctionInitBindings.Add(binding);
+        }
+
+        public void WriteUtilityFunctionInitSection(TextWriter metaWriter)
+        {
+            if (!Flags.BindThirdPartyUtilitiesAtInit || _utilityFunctionInitBindings.Count == 0)
+            {
+                return;
+            }
+
+            if (Flags.UseSegments)
+            {
+                GetMetaInfoTranspiler().WriteSeparator(this, metaWriter);
+            }
+
+            if (Flags.UseComments)
+            {
+                GetMetaInfoTranspiler().WriteComment(this, metaWriter,
+                    "Resolve third-party utility backends once (keeps hot paths branch-free).");
+            }
+
+            foreach (var binding in _utilityFunctionInitBindings)
+            {
+                var isFirst = true;
+                var wroteBranch = false;
+
+                foreach (var implementation in binding.UtilityBodies)
+                {
+                    if (!Api.Utilities.TryGetValue(implementation.Key, out var utility))
+                    {
+                        continue;
+                    }
+
+                    var condition = ApiBaseFunction.GetUtilityLookupTestVariableName(this, metaWriter, utility);
+
+                    metaWriter.Write(isFirst ? "if [ " : "elif [ ");
+                    isFirst = false;
+                    wroteBranch = true;
+                    metaWriter.Write(condition);
+                    metaWriter.WriteLine(" ]");
+                    metaWriter.WriteLine("then");
+                    metaWriter.Write("function ");
+                    metaWriter.Write(binding.FunctionFqn);
+                    metaWriter.WriteLine("() {");
+                    metaWriter.WriteLine(implementation.Value);
+                    metaWriter.WriteLine("}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(binding.PureBashFallbackBody))
+                {
+                    metaWriter.WriteLine(wroteBranch ? "else" : "if true");
+                    metaWriter.WriteLine("then");
+                    metaWriter.Write("function ");
+                    metaWriter.Write(binding.FunctionFqn);
+                    metaWriter.WriteLine("() {");
+                    metaWriter.WriteLine(binding.PureBashFallbackBody);
+                    metaWriter.WriteLine("}");
+                    wroteBranch = true;
+                }
+
+                if (wroteBranch)
+                {
+                    metaWriter.WriteLine("fi");
+                }
+
+                metaWriter.WriteLine();
+            }
         }
     }
 }

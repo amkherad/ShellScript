@@ -11,6 +11,9 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.Path
             new BashGetFileName(),
             new BashGetDirectoryName(),
             new BashGetExtension(),
+            new BashGetTempPath(),
+            new BashIsPathRooted(),
+            new BashGetFullPath(),
         };
     }
 }

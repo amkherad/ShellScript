@@ -14,6 +14,19 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.File
             new BashIsLink(),
             new BashIsDirectory(),
             new BashIsFile(),
+            new BashReadAllText(),
+            new BashWriteAllText(),
+            new BashAppendAllText(),
+            new BashDelete(),
+            new BashCopy(),
+            new BashMove(),
+            new BashGetLength(),
+            new BashReadAllLines(),
+            new BashWriteAllLines(),
+            new BashReadAllBytesBase64(),
+            new BashWriteAllBytesBase64(),
+            new BashGetLastWriteTime(),
+            new BashCreateSymbolicLink(),
         };
     }
 }
