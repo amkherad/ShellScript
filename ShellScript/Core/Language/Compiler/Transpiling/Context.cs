@@ -59,6 +59,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             
             {typeof(IndexerAccessStatement), typeof(EvaluationStatement)},
             {typeof(ArrayStatement), typeof(EvaluationStatement)},
+            {typeof(ObjectCreationStatement), typeof(EvaluationStatement)},
         };
 
 

@@ -76,7 +76,7 @@ namespace ShellScript.Core.Language.Compiler.Lexing
             {TokenType.While, @"^while(?!\w)"},
             {TokenType.Loop, @"^loop(?!\w)"},
             
-            //{TokenType.Class, @"^class(?!\w)"},
+            {TokenType.Class, @"^class(?!\w)"},
             //{TokenType.Function, @"^function(?!\w)"},
             {TokenType.Return, @"^return(?!\w)"},
             {TokenType.New, @"^new(?!\w)"},

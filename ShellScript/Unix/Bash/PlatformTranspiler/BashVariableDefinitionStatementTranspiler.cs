@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Library;
 using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
@@ -78,7 +79,29 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
             else
             {
+                var typeDescriptor = varDefStt.TypeDescriptor;
+                if (typeDescriptor.DataType == DataTypes.Lookup && typeDescriptor.Lookup != null &&
+                    scope.TryGetUserClass(typeDescriptor.Lookup.Value.Name, out _))
+                {
+                    typeDescriptor = ObjectModelHelpers.UserClass(typeDescriptor.Lookup.Value.Name);
+                }
+
                 var skipDefinition = false;
+                if (varDefStt.HasDefaultValue && varDefStt.DefaultValue is ObjectCreationStatement objectCreation)
+                {
+                    if (!ObjectModelHelpers.IsUserClassType(typeDescriptor))
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    BashObjectModel.WriteDeclareInstance(context, scope, writer, varDefStt.Name);
+                    BashObjectModel.WriteConstructorInvocation(context, scope, writer, metaWriter,
+                        objectCreation.ClassName, varDefStt.Name, objectCreation.Arguments, varDefStt.Info, varDefStt);
+                    scope.ReserveNewVariable(typeDescriptor, varDefStt.Name);
+                    scope.IncrementStatements();
+                    return;
+                }
+
                 if (varDefStt.HasDefaultValue)
                 {
                     var def = varDefStt.DefaultValue;
@@ -93,12 +116,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     //becomes:
                     //myFuncResult=myFunc()
                     //x=$((34 * myFuncResult))
-                    if (varDefStt.TypeDescriptor.IsArray())
+                    if (typeDescriptor.IsArray())
                     {
                         var p = new ExpressionBuilderParams(context, scope, metaWriter, writer,
                             new BlockStatement(null, varDefStt.Info));
 
-                        scope.ReserveNewVariable(varDefStt.TypeDescriptor, varDefStt.Name);
+                        scope.ReserveNewVariable(typeDescriptor, varDefStt.Name);
                         skipDefinition = true;
 
                         var targetVar = new VariableAccessStatement(varDefStt.Name, varDefStt.Info);
@@ -120,13 +143,25 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 }
                 else
                 {
-                    WriteVariableDefinition(context, scope, writer, varDefStt.Name,
-                        context.Platform.GetDefaultValue(varDefStt.TypeDescriptor.DataType));
+                    if (ObjectModelHelpers.IsUserClassType(typeDescriptor))
+                    {
+                        BashObjectModel.WriteDeclareInstance(context, scope, writer, varDefStt.Name);
+                        skipDefinition = true;
+                    }
+                    else
+                    {
+                        WriteVariableDefinition(context, scope, writer, varDefStt.Name,
+                            context.Platform.GetDefaultValue(typeDescriptor.DataType));
+                    }
                 }
 
                 if (!skipDefinition)
                 {
-                    scope.ReserveNewVariable(varDefStt.TypeDescriptor, varDefStt.Name);
+                    scope.ReserveNewVariable(typeDescriptor, varDefStt.Name);
+                }
+                else if (ObjectModelHelpers.IsUserClassType(typeDescriptor))
+                {
+                    scope.ReserveNewVariable(typeDescriptor, varDefStt.Name);
                 }
 
                 scope.IncrementStatements();

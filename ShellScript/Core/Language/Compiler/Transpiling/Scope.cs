@@ -23,6 +23,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
         private readonly HashSet<VariableInfo> _variables;
         private readonly HashSet<FunctionInfo> _functions;
         private readonly HashSet<FunctionInfo> _functionPrototypes;
+        private readonly Dictionary<string, ClassInfo> _userClasses;
 
         private readonly Dictionary<string, string> _config;
 
@@ -34,6 +35,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
         public interface IScopedConfig
         {
             string ExplicitEchoStream { get; set; }
+            string InstanceUsesNameref { get; set; }
         }
 
         public Scope(Context context)
@@ -45,6 +47,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             _constants = new HashSet<ConstantInfo>();
             _functions = new HashSet<FunctionInfo>();
             _functionPrototypes = new HashSet<FunctionInfo>();
+            _userClasses = new Dictionary<string, ClassInfo>();
 
             _config = new Dictionary<string, string>();
         }
@@ -59,6 +62,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             _constants = new HashSet<ConstantInfo>();
             _functions = new HashSet<FunctionInfo>();
             _functionPrototypes = new HashSet<FunctionInfo>();
+            _userClasses = new Dictionary<string, ClassInfo>();
 
             _config = new Dictionary<string, string>();
         }
@@ -482,6 +486,27 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                 }
             } while ((that = that.Parent) != null);
 
+            return false;
+        }
+
+        public void RegisterUserClass(ClassInfo classInfo)
+        {
+            _identifiers.Add(classInfo.Name);
+            _userClasses[classInfo.Name] = classInfo;
+        }
+
+        public bool TryGetUserClass(string className, out ClassInfo classInfo)
+        {
+            var that = this;
+            do
+            {
+                if (that._userClasses.TryGetValue(className, out classInfo))
+                {
+                    return true;
+                }
+            } while ((that = that.Parent) != null);
+
+            classInfo = null;
             return false;
         }
 

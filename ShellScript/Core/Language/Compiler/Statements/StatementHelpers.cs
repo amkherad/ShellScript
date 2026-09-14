@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements.Operators;
 using ShellScript.Core.Language.Compiler.Transpiling;
@@ -208,6 +209,12 @@ namespace ShellScript.Core.Language.Compiler.Statements
                 }
                 case VariableAccessStatement variableAccessStatement:
                 {
+                    if (ObjectModelHelpers.TryResolveInstanceFieldAccess(scope, variableAccessStatement,
+                            out _, out var fieldType))
+                    {
+                        return fieldType;
+                    }
+
                     if (scope.TryGetVariableInfo(variableAccessStatement, out var variableInfo))
                     {
                         return variableInfo.TypeDescriptor;
@@ -303,6 +310,10 @@ namespace ShellScript.Core.Language.Compiler.Statements
                 {
                     return typeCastStatement.TypeDescriptor;
                 }
+                case ObjectCreationStatement objectCreationStatement:
+                {
+                    return objectCreationStatement.ClassType;
+                }
                 case IndexerAccessStatement indexerAccessStatement:
                 {
                     var type = indexerAccessStatement.Source.GetDataType(context, scope);
@@ -370,7 +381,10 @@ namespace ShellScript.Core.Language.Compiler.Statements
                     destination = new TypeDescriptor(DataTypes.Delegate, lookup);
                 }
 
-                //TODO: support for objects, (if added later)
+                if (scope.TryGetUserClass(lookup.Name, out _))
+                {
+                    destination = ObjectModelHelpers.UserClass(lookup.Name);
+                }
             }
 
             if (source.DataType == DataTypes.Lookup && source.Lookup != null)
@@ -381,8 +395,16 @@ namespace ShellScript.Core.Language.Compiler.Statements
                 {
                     source = new TypeDescriptor(DataTypes.Delegate, lookup);
                 }
+                else if (scope.TryGetUserClass(lookup.Name, out _))
+                {
+                    source = ObjectModelHelpers.UserClass(lookup.Name);
+                }
+            }
 
-                //TODO: support for objects, (if added later)
+            if (destination.DataType == DataTypes.Class && source.DataType == DataTypes.Class &&
+                destination.Lookup != null && source.Lookup != null)
+            {
+                return destination.Lookup.Value.Name == source.Lookup.Value.Name;
             }
 
             if (destination.DataType == source.DataType)

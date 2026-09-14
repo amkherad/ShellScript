@@ -1,0 +1,24 @@
+class Point {
+    int x;
+    int y;
+
+    void Point(int ax, int ay) {
+        this.x = ax;
+        this.y = ay;
+    }
+
+    void Move(int dx, int dy) {
+        this.x = this.x + dx;
+        this.y = this.y + dy;
+    }
+
+    int Sum() {
+        return this.x + this.y;
+    }
+}
+
+Point p = new Point(3, 4);
+p.Move(1, 1);
+echo p.Sum();
+
+// @expect-out: 9

@@ -65,6 +65,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             "notlike",
             "call",
             "echo",
+            "this",
         };
 
         public Context Context { get; }
@@ -215,8 +216,8 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     case TokenType.Loop:
                         return ReadLoop(token, enumerator, context);
 
-                    //case TokenType.Class:
-                    //    return ReadClass(token, enumerator, info);
+                    case TokenType.Class:
+                        return ReadClass(token, enumerator, context);
                     //case TokenType.Function:
                     //    return ReadFunction(token, enumerator, info);
                     case TokenType.Return:

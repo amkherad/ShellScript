@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Statements.Operators;
@@ -310,6 +311,17 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                 }
                 case VariableAccessStatement variableAccessStatement:
                 {
+                    if (ObjectModelHelpers.TryResolveInstanceFieldAccess(p.Scope, variableAccessStatement,
+                            out var instanceInfo, out var fieldType))
+                    {
+                        var usesNameref = p.Scope.GetConfig(s => s.InstanceUsesNameref, null) == "true" &&
+                                          variableAccessStatement.ClassName == ObjectModelHelpers.ThisKeyword;
+                        var fieldExp = BashObjectModel.GetInstanceFieldReadExpression(instanceInfo,
+                            variableAccessStatement.VariableName, usesNameref);
+
+                        return new ExpressionResult(fieldType, fieldExp, variableAccessStatement);
+                    }
+
                     if (p.Scope.TryGetVariableInfo(variableAccessStatement, out var varInfo))
                     {
                         return new ExpressionResult(
@@ -885,13 +897,30 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                             assignmentStatement.Info);
                     }
 
+                    var assignmentTranspiler = p.Context.GetTranspilerForStatement(assignmentStatement);
+
+                    if (ObjectModelHelpers.TryResolveInstanceFieldAccess(p.Scope, variableAccessStatement,
+                            out var instanceInfo, out var fieldType))
+                    {
+                        assignmentTranspiler.WriteBlock(p.Context, p.Scope, p.NonInlinePartWriter, p.MetaWriter,
+                            assignmentStatement);
+
+                        variableAccessStatement.ParentStatement = assignmentStatement.ParentStatement;
+
+                        var usesNameref = p.Scope.GetConfig(s => s.InstanceUsesNameref, null) == "true" &&
+                                          variableAccessStatement.ClassName == ObjectModelHelpers.ThisKeyword;
+                        var fieldExp = BashObjectModel.GetInstanceFieldReadExpression(instanceInfo,
+                            variableAccessStatement.VariableName, usesNameref);
+
+                        return new ExpressionResult(fieldType, fieldExp, variableAccessStatement, PinRequiredNotice);
+                    }
+
                     if (!p.Scope.TryGetVariableInfo(variableAccessStatement, out var varInfo))
                     {
                         throw new IdentifierNotFoundCompilerException(variableAccessStatement);
                     }
 
-                    var transpiler = p.Context.GetTranspilerForStatement(assignmentStatement);
-                    transpiler.WriteBlock(p.Context, p.Scope, p.NonInlinePartWriter, p.MetaWriter, assignmentStatement);
+                    assignmentTranspiler.WriteBlock(p.Context, p.Scope, p.NonInlinePartWriter, p.MetaWriter, assignmentStatement);
 
                     variableAccessStatement.ParentStatement = assignmentStatement.ParentStatement;
 
@@ -934,6 +963,13 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
 //                        "",
 //                        arrayStatement
 //                        );
+                }
+
+                case ObjectCreationStatement objectCreationStatement:
+                {
+                    throw new InvalidStatementStructureCompilerException(
+                        "Object creation must be used in a variable definition or assignment.",
+                        objectCreationStatement.Info);
                 }
 
                 case FunctionCallStatement functionCallStatement:
@@ -1004,17 +1040,37 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                         call.Append('`');
                     }
 
-                    var accessName = sourceObjectInfo.AccessName;
+                    var accessName = funcInfo.AccessName;
+                    var instancePrepended = false;
 
                     if (sourceObjectInfo is VariableInfo variableInfo)
                     {
-                        accessName =
-                            FormatVariableAccessExpression(p, variableInfo.TypeDescriptor, accessName,
+                        if (ObjectModelHelpers.IsUserClassType(variableInfo.TypeDescriptor))
+                        {
+                            accessName = funcInfo.AccessName;
+                            call.Append(accessName);
+                            call.Append(' ');
+                            call.Append(FormatVariableAccessExpression(p, variableInfo.TypeDescriptor,
+                                BashObjectModel.GetInstanceStorageName(variableInfo),
                                 new VariableAccessStatement(variableInfo.ClassName, variableInfo.Name,
-                                    functionCallStatement.Info));
+                                    functionCallStatement.Info)));
+                            instancePrepended = true;
+                        }
+                        else if (variableInfo.TypeDescriptor.DataType == DataTypes.Delegate ||
+                                 (variableInfo.TypeDescriptor.DataType == DataTypes.Lookup &&
+                                  variableInfo.TypeDescriptor.Lookup != null))
+                        {
+                            accessName =
+                                FormatVariableAccessExpression(p, variableInfo.TypeDescriptor, accessName,
+                                    new VariableAccessStatement(variableInfo.ClassName, variableInfo.Name,
+                                        functionCallStatement.Info));
+                        }
                     }
 
-                    call.Append(accessName);
+                    if (!instancePrepended)
+                    {
+                        call.Append(accessName);
+                    }
 
                     var paramTemplates = new List<EvaluationStatement>();
                     if (!(functionCallStatement.Parameters is null))

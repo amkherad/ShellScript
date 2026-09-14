@@ -43,6 +43,7 @@ namespace ShellScript.Unix.Bash
             new BashVariableDefinitionStatementTranspiler(),
             new BashEvaluationStatementTranspiler(),
             new BashFunctionStatementTranspiler(),
+            new BashClassDeclarationStatementTranspiler(),
             new BashDelegateStatementTranspiler(),
             
             new IncludeTranspilerBase()

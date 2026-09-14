@@ -6,6 +6,7 @@ using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
+using ShellScript.Core.Language.Library;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
@@ -22,9 +23,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             if (!(statement is FunctionStatement funcDefStt)) throw new InvalidOperationException();
 
-            var functionName = funcDefStt.Name;
+            var isClassMethod = !string.IsNullOrEmpty(funcDefStt.ClassName);
+            var functionName = isClassMethod
+                ? BashObjectModel.GetMethodFunctionName(funcDefStt.ClassName, funcDefStt.Name, funcDefStt.IsConstructor)
+                : funcDefStt.Name;
 
-            if (scope.IsIdentifierExists(functionName))
+            var skipNameCheck = isClassMethod && funcDefStt.IsConstructor && funcDefStt.Name == funcDefStt.ClassName;
+            if (!skipNameCheck && scope.IsIdentifierExists(functionName))
             {
                 throw new IdentifierNameExistsCompilerException(functionName, funcDefStt.Info);
             }
@@ -39,12 +44,22 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 BashTranspilerHelpers.WriteComment(writer, $"! {funcDefStt.TypeDescriptor} {functionName}");
             }
 
+            if (isClassMethod && funcDefStt.IsInstanceMethod)
+            {
+                funcScope.SetConfig(c => c.InstanceUsesNameref, "true");
+                funcScope.ReserveNewVariable(
+                    ObjectModelHelpers.UserClass(funcDefStt.ClassName),
+                    ObjectModelHelpers.ThisKeyword,
+                    BashObjectModel.SelfNameref);
+            }
+
             if (funcDefStt.Parameters != null && funcDefStt.Parameters.Length > 0)
             {
                 for (var i = 0; i < funcDefStt.Parameters.Length; i++)
                 {
                     var param = funcDefStt.Parameters[i];
-                    var paramMappedName = (i + 1).ToString(CultureInfo.InvariantCulture);
+                    var paramIndex = isClassMethod && funcDefStt.IsInstanceMethod ? i + 2 : i + 1;
+                    var paramMappedName = paramIndex.ToString(CultureInfo.InvariantCulture);
                     funcScope.ReserveNewParameter(param.TypeDescriptor, param.Name, paramMappedName);
 
                     if (context.Flags.UseComments && context.Flags.CommentParameterInfos)
@@ -57,15 +72,22 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             writer.WriteLine($"function {functionName}() {{");
 
+            if (isClassMethod && funcDefStt.IsInstanceMethod)
+            {
+                writer.WriteLine($"local -n {BashObjectModel.SelfNameref}=$1");
+            }
+
             BashBlockStatementTranspiler.WriteBlockStatement(context, funcScope, writer, metaWriter,
                 funcDefStt.Statement, ScopeType.MethodRoot, false, typeof(ReturnStatement));
             TryGetInlinedStatement(context, funcScope, funcDefStt, out inlinedStatement);
 
 
-            var func = new FunctionInfo(funcDefStt.TypeDescriptor, functionName, null, null, funcDefStt.IsParams,
+            var func = new FunctionInfo(funcDefStt.TypeDescriptor, funcDefStt.Name, functionName, funcDefStt.ClassName,
+                funcDefStt.IsParams,
                 funcDefStt.Parameters, inlinedStatement);
 
             scope.ReserveNewFunction(func);
+            scope.ReserveNewPrototype(func);
 
             writer.WriteLine("}");
 

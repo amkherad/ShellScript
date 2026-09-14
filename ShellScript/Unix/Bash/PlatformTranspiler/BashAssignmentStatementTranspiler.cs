@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling;
@@ -62,6 +63,22 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             {
                 throw new InvalidStatementStructureCompilerException(
                     "Unknown right side of an assignment found.", assignmentStatement.RightSide.Info);
+            }
+
+            if (ObjectModelHelpers.TryResolveInstanceFieldAccess(scope, target, out var instanceInfo, out _))
+            {
+                var p = new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter,
+                    assignmentStatement);
+                var transpiler = context.GetEvaluationTranspilerForStatement(evaluation);
+                var result =
+                    transpiler.GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
+                var usesNameref = scope.GetConfig(s => s.InstanceUsesNameref, null) == "true" &&
+                                  target.ClassName == ObjectModelHelpers.ThisKeyword;
+                var writeTarget = BashObjectModel.GetInstanceFieldWriteTarget(instanceInfo, target.VariableName,
+                    usesNameref);
+                writer.Write($"{writeTarget}=");
+                writer.WriteLine(result.Expression);
+                return;
             }
 
             if (!scope.TryGetVariableInfo(target, out var varInfo))

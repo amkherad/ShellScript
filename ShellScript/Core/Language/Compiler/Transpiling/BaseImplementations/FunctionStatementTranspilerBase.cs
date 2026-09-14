@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Library;
@@ -30,8 +31,11 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
             }
 
             var functionName = funcDefStt.Name;
+            var skipNameCheck = !string.IsNullOrEmpty(funcDefStt.ClassName) &&
+                                funcDefStt.IsConstructor &&
+                                functionName == funcDefStt.ClassName;
 
-            if (scope.IsIdentifierExists(functionName))
+            if (!skipNameCheck && scope.IsIdentifierExists(functionName))
             {
                 message = IdentifierNameExistsCompilerException.CreateMessage(functionName, funcDefStt.Info);
                 return false;
@@ -252,6 +256,19 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
             if (!scope.TryGetFunctionInfo(functionCallStatement, out var funcInfo) &&
                 !scope.TryGetPrototypeInfo(functionCallStatement, out funcInfo))
             {
+                if (functionCallStatement.ClassName != null &&
+                    scope.TryGetVariableInfo(functionCallStatement.ClassName, out var instanceVar) &&
+                    ObjectModelHelpers.IsUserClassType(instanceVar.TypeDescriptor))
+                {
+                    var userClassName = ObjectModelHelpers.GetUserClassName(instanceVar.TypeDescriptor);
+                    if (scope.TryGetFunctionInfo(userClassName, functionCallStatement.FunctionName, out funcInfo) ||
+                        scope.TryGetPrototypeInfo(userClassName, functionCallStatement.FunctionName, out funcInfo))
+                    {
+                        sourceObjectInfo = instanceVar;
+                        return funcInfo;
+                    }
+                }
+
                 if (!scope.TryGetVariableInfo(functionCallStatement, out var variableInfo))
                 {
                     throw new IdentifierNotFoundCompilerException(functionCallStatement.Fqn,

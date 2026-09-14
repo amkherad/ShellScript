@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.XPath;
 using ShellScript.Core.Helpers;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Lexing;
 using ShellScript.Core.Language.Compiler.Statements;
@@ -745,6 +746,12 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             if (!TryReadTypeDescriptor(token, enumerator, context, out var type))
             {
                 throw UnexpectedSyntax(token, context);
+            }
+
+            if (!type.IsArray() && enumerator.TryPeek(out var ctorPeek) &&
+                ctorPeek.Type == TokenType.OpenParenthesis)
+            {
+                return ReadObjectCreation(newToken, type, enumerator, context);
             }
 
             EvaluationStatement length = null;
@@ -1727,9 +1734,166 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             return result;
         }
 
+        public ObjectCreationStatement ReadObjectCreation(Token newToken, TypeDescriptor classType,
+            IPeekingEnumerator<Token> enumerator, ParserContext context)
+        {
+            if (!enumerator.MoveNext())
+                throw EndOfFile(newToken, context);
+
+            var token = enumerator.Current;
+            if (token.Type != TokenType.OpenParenthesis)
+                throw UnexpectedSyntax(token, context);
+
+            EvaluationStatement[] arguments = null;
+
+            if (!enumerator.MoveNext())
+                throw EndOfFile(token, context);
+
+            token = enumerator.Current;
+            if (token.Type != TokenType.CloseParenthesis)
+            {
+                arguments = ReadCommaSeparatedEvaluations(token, enumerator, context);
+
+                if (!enumerator.MoveNext())
+                    throw EndOfFile(token, context);
+
+                token = enumerator.Current;
+            }
+
+            if (token.Type != TokenType.CloseParenthesis)
+                throw UnexpectedSyntax(token, context);
+
+            if (classType.DataType != DataTypes.Lookup && classType.DataType != DataTypes.Class)
+            {
+                throw UnexpectedSyntax(newToken, context);
+            }
+
+            var resolvedType = classType.DataType == DataTypes.Lookup
+                ? ObjectModelHelpers.UserClass(classType.Lookup.Value.Name)
+                : classType;
+
+            return new ObjectCreationStatement(resolvedType, arguments, CreateStatementInfo(context, newToken));
+        }
+
         public IStatement ReadClass(Token token, IPeekingEnumerator<Token> enumerator, ParserContext context)
         {
-            return null;
+            if (token.Type != TokenType.Class)
+                throw UnexpectedSyntax(token, context);
+
+            if (!enumerator.MoveNext())
+                throw EndOfFile(token, context);
+
+            token = enumerator.Current;
+            if (token.Type != TokenType.IdentifierName)
+                throw UnexpectedSyntax(token, context);
+
+            var className = token.Value;
+            if (Keywords.Contains(className))
+                throw InvalidIdentifierName(className, token, context);
+
+            if (!enumerator.MoveNext())
+                throw EndOfFile(token, context);
+
+            token = enumerator.Current;
+            if (token.Type != TokenType.OpenBrace)
+                throw UnexpectedSyntax(token, context);
+
+            var fields = new List<VariableDefinitionStatement>();
+            var methods = new List<FunctionStatement>();
+
+            while (enumerator.MoveNext())
+            {
+                token = enumerator.Current;
+                if (token.Type == TokenType.CloseBrace)
+                {
+                    break;
+                }
+
+                if (token.Type != TokenType.DataType && token.Type != TokenType.IdentifierName)
+                    throw UnexpectedSyntax(token, context);
+
+                var memberType = TokenTypeToDataType(token, context);
+
+                if (!enumerator.MoveNext())
+                    throw EndOfFile(token, context);
+
+                token = enumerator.Current;
+                if (token.Type != TokenType.IdentifierName)
+                    throw UnexpectedSyntax(token, context);
+
+                var memberName = token.Value;
+
+                if (!enumerator.TryPeek(out var peek))
+                    throw EndOfFile(token, context);
+
+                if (peek.Type == TokenType.OpenParenthesis)
+                {
+                    enumerator.MoveNext();
+                    token = enumerator.Current;
+
+                    FunctionParameterDefinitionStatement[] parameters = null;
+                    if (token.Type == TokenType.OpenParenthesis)
+                    {
+                        if (enumerator.TryPeek(out peek) && peek.Type != TokenType.CloseParenthesis)
+                        {
+                            parameters = ReadParameterDefinitions(token, enumerator, context);
+                        }
+                        else
+                        {
+                            if (!enumerator.MoveNext())
+                                throw EndOfFile(token, context);
+                            token = enumerator.Current;
+                            if (token.Type != TokenType.CloseParenthesis)
+                                throw UnexpectedSyntax(token, context);
+                        }
+                    }
+                    else
+                    {
+                        throw UnexpectedSyntax(token, context);
+                    }
+
+                    if (!enumerator.MoveNext())
+                        throw EndOfFile(token, context);
+
+                    token = enumerator.Current;
+                    if (token.Type != TokenType.OpenBrace)
+                        throw UnexpectedSyntax(token, context);
+
+                    var block = ReadBlockStatement(token, enumerator, context);
+                    var isConstructor = string.Equals(memberName, className, StringComparison.Ordinal);
+
+                    methods.Add(new FunctionStatement(
+                        isConstructor ? TypeDescriptor.Void : memberType,
+                        memberName,
+                        parameters,
+                        block,
+                        CreateStatementInfo(context, token),
+                        className,
+                        isInstanceMethod: true,
+                        isConstructor: isConstructor));
+                }
+                else
+                {
+                    if (!memberType.IsVoid())
+                    {
+                        fields.Add(new VariableDefinitionStatement(memberType, memberName, false, null,
+                            CreateStatementInfo(context, token)));
+                    }
+
+                    if (!enumerator.MoveNext())
+                        throw EndOfFile(token, context);
+
+                    token = enumerator.Current;
+                    if (token.Type != TokenType.SequenceTerminator &&
+                        token.Type != TokenType.SequenceTerminatorNewLine)
+                    {
+                        throw UnexpectedSyntax(token, context);
+                    }
+                }
+            }
+
+            return new ClassDeclarationStatement(className, fields.ToArray(), methods.ToArray(),
+                CreateStatementInfo(context, token));
         }
 
 

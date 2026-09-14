@@ -9,6 +9,9 @@ namespace ShellScript.Core.Language.Compiler.Statements
         public StatementInfo Info { get; }
 
         public string Name { get; }
+        public string ClassName { get; }
+        public bool IsInstanceMethod { get; }
+        public bool IsConstructor { get; }
         public IStatement Statement { get; }
         public FunctionParameterDefinitionStatement[] Parameters { get; }
 
@@ -20,10 +23,14 @@ namespace ShellScript.Core.Language.Compiler.Statements
 
 
         public FunctionStatement(TypeDescriptor typeDescriptor, string name,
-            FunctionParameterDefinitionStatement[] parameters, IStatement statement, StatementInfo info)
+            FunctionParameterDefinitionStatement[] parameters, IStatement statement, StatementInfo info,
+            string className = null, bool isInstanceMethod = false, bool isConstructor = false)
         {
             TypeDescriptor = typeDescriptor;
             Name = name;
+            ClassName = className;
+            IsInstanceMethod = isInstanceMethod;
+            IsConstructor = isConstructor;
             Statement = statement;
             Info = info;
             Parameters = parameters;
