@@ -1,0 +1,20 @@
+// foreach iterates over an array.
+
+string[] colors = new string[] {
+    "red",
+    "green",
+    "blue",
+};
+
+foreach (string color in colors) {
+    echo color;
+}
+
+int[] values = new int[] { 2, 4, 6, 8 };
+int sum = 0;
+
+foreach (int value in values) {
+    sum = sum + value;
+}
+
+echo $"sum = {sum}";

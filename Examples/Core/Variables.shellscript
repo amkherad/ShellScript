@@ -1,0 +1,17 @@
+// Variable definitions and assignments (strong typing, no var keyword).
+
+int count = 10;
+long big = 1000 * 1000;
+float ratio = 3.5;
+double precise = +1.5e-2;
+number either = 42;
+number fractional = 3.14;
+
+string greeting = "Hello" + " " + "ShellScript";
+bool ready = true && !false;
+
+count = count + 1;
+greeting = $"count is {count}";
+
+echo greeting;
+echo ready;

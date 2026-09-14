@@ -1,0 +1,21 @@
+// switch / case (same structure as C#).
+
+string command = "list";
+
+switch (command) {
+    case "help": {
+        echo "Show help.";
+        break;
+    }
+    case "list": {
+        echo "List items.";
+        break;
+    }
+    case "quit": {
+        echo "Goodbye.";
+        break;
+    }
+    default: {
+        echo $"Unknown command: {command}";
+    }
+}

@@ -1,0 +1,14 @@
+// do-while runs the body at least once, then checks the condition.
+
+int attempt = 0;
+bool success = false;
+
+do {
+    attempt = attempt + 1;
+    echo $"attempt {attempt}";
+    if (attempt >= 3) {
+        success = true;
+    }
+} while (!success);
+
+echo "done";

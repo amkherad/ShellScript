@@ -1,0 +1,10 @@
+// echo is a special void statement (not a normal expression).
+
+echo "plain string";
+echo ('single quotes work too');
+
+string name = "ShellScript";
+int version = 1;
+
+echo "name: " + name;
+echo $"name: {name}, version {version}";

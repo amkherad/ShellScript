@@ -1,0 +1,19 @@
+// while repeats while the condition is true.
+
+int remaining = 3;
+
+while (remaining > 0) {
+    echo $"remaining = {remaining}";
+    remaining = remaining - 1;
+}
+
+bool found = false;
+int probe = 0;
+
+while (!found && probe < 10) {
+    if (probe == 7) {
+        found = true;
+        echo "found at 7";
+    }
+    probe = probe + 1;
+}

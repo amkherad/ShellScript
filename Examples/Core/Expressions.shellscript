@@ -1,0 +1,27 @@
+// Operators, casts, and the conditional (ternary) operator.
+
+int a = 17;
+int b = 5;
+
+echo a + b;
+echo a - b;
+echo a * b;
+echo a / b;
+echo a % b;
+
+echo a == b;
+echo a != b;
+echo a < b;
+echo a >= b;
+
+echo true && false;
+echo true || false;
+echo !false;
+
+double fromInt = a;
+int truncated = (int)fromInt;
+
+string label = (a > 10) ? "large" : "small";
+echo $"a is {label}";
+
+echo 80 * "-";

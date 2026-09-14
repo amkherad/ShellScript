@@ -1,0 +1,16 @@
+// Classic for loop and infinite for (;;).
+
+for (int i = 0; i < 5; i++) {
+    echo $"for i = {i}";
+}
+
+// Counter declared outside the loop (assignment form).
+int n = 0;
+for (n = 10; n > 0; n--) {
+    echo $"countdown {n}";
+}
+
+// Preferred style for an intentional infinite loop (exit with break elsewhere).
+// for (;;) {
+//     echo "tick";
+// }
