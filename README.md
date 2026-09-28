@@ -49,6 +49,28 @@ dotnet build ShellScript.sln
 
 * You can find the binaries in ShellScript/ShellScript/bin/[Release-Debug]/[Framework]
 
+### Dev Container (Docker)
+
+You can build and test without installing the .NET SDK on the host:
+
+1. Install [Docker](https://docs.docker.com/get-docker/) and the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension (VS Code / Cursor).
+2. Open this repository and run **Dev Containers: Reopen in Container**.
+3. After `postCreateCommand` finishes, use the integrated terminal:
+
+```
+dotnet build ShellScript.sln
+dotnet test ShellScript.sln
+```
+
+The image includes .NET SDK 8 (builds `netcoreapp2.1` projects), `bash`, `jq`, and `python3` for compiler and example tests.
+
+To build the image manually:
+
+```
+docker build -f .devcontainer/Dockerfile -t shellscript-dev .
+docker run --rm -it -v "$PWD:/workspace" -w /workspace shellscript-dev bash -lc "dotnet test ShellScript.sln"
+```
+
 ---
 
 ## Getting Started

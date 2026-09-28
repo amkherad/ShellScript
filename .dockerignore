@@ -1,0 +1,9 @@
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/.devcontainer
+**/bin
+**/obj
+**/*.user
+**/.DS_Store
