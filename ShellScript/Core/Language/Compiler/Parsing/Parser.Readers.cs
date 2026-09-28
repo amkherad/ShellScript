@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.XPath;
+using ShellScript.Core;
 using ShellScript.Core.Helpers;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
@@ -494,8 +497,16 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     case TokenType.StringValue1:
                     case TokenType.StringValue2:
                     {
-                        statements.AddLast(new ConstantValueStatement(TypeDescriptor.String, token.Value,
-                            CreateStatementInfo(context, token)));
+                        if (token.IsStringInterpolation)
+                        {
+                            statements.AddLast(ReadInterpolatedString(token, context));
+                        }
+                        else
+                        {
+                            statements.AddLast(new ConstantValueStatement(TypeDescriptor.String, token.Value,
+                                CreateStatementInfo(context, token)));
+                        }
+
                         break;
                     }
                     case TokenType.Number:
@@ -730,7 +741,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             }
         }
 
-        public ArrayStatement ReadArrayDefinition(Token token, IPeekingEnumerator<Token> enumerator,
+        public EvaluationStatement ReadArrayDefinition(Token token, IPeekingEnumerator<Token> enumerator,
             ParserContext context)
         {
             if (token.Type != TokenType.New)
@@ -826,6 +837,186 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             return false;
         }
 
+        public EvaluationStatement ReadInterpolatedString(Token token, ParserContext context)
+        {
+            if (!token.IsStringInterpolation || token.Value.Length < 3)
+            {
+                throw UnexpectedSyntax(token, context);
+            }
+
+            var content = token.Value.Substring(2, token.Value.Length - 3);
+            var info = CreateStatementInfo(context, token);
+            EvaluationStatement result = null;
+
+            var literal = new StringBuilder();
+            for (var i = 0; i < content.Length;)
+            {
+                var ch = content[i];
+                if (ch == '\\' && i + 1 < content.Length)
+                {
+                    literal.Append(content[i + 1]);
+                    i += 2;
+                    continue;
+                }
+
+                if (ch == '{')
+                {
+                    if (i + 1 < content.Length && content[i + 1] == '{')
+                    {
+                        literal.Append('{');
+                        i += 2;
+                        continue;
+                    }
+
+                    result = AppendInterpolatedPart(result, CreateLiteralPart(literal.ToString(), info), info);
+
+                    var holeStart = i + 1;
+                    var depth = 1;
+                    i++;
+                    while (i < content.Length && depth > 0)
+                    {
+                        if (content[i] == '\\' && i + 1 < content.Length)
+                        {
+                            i += 2;
+                            continue;
+                        }
+
+                        if (content[i] == '"' || content[i] == '\'')
+                        {
+                            if (!TrySkipQuotedInterpolationContent(content, ref i))
+                            {
+                                throw UnexpectedSyntax(token, context);
+                            }
+
+                            continue;
+                        }
+
+                        if (content[i] == '{')
+                        {
+                            depth++;
+                        }
+                        else if (content[i] == '}')
+                        {
+                            depth--;
+                        }
+
+                        i++;
+                    }
+
+                    if (depth != 0)
+                    {
+                        throw UnexpectedSyntax(token, context);
+                    }
+
+                    var holeText = content.Substring(holeStart, i - holeStart - 1);
+                    result = AppendInterpolatedPart(result, ParseInterpolationHole(holeText, context, info), info);
+                    literal.Clear();
+                    continue;
+                }
+
+                if (ch == '}' && i + 1 < content.Length && content[i + 1] == '}')
+                {
+                    literal.Append('}');
+                    i += 2;
+                    continue;
+                }
+
+                literal.Append(ch);
+                i++;
+            }
+
+            if (literal.Length > 0 || result == null)
+            {
+                result = AppendInterpolatedPart(result, CreateLiteralPart(literal.ToString(), info), info);
+            }
+
+            return result ?? new ConstantValueStatement(TypeDescriptor.String, "\"\"", info);
+        }
+
+        private static EvaluationStatement CreateLiteralPart(string literal, StatementInfo info)
+        {
+            if (literal.Length == 0)
+            {
+                return new ConstantValueStatement(TypeDescriptor.String, "\"\"", info);
+            }
+
+            return new ConstantValueStatement(TypeDescriptor.String, StringHelpers.EnQuote(literal), info);
+        }
+
+        private static EvaluationStatement AppendInterpolatedPart(EvaluationStatement left, EvaluationStatement right,
+            StatementInfo info)
+        {
+            if (left == null)
+            {
+                return right;
+            }
+
+            if (left is ConstantValueStatement leftConst && leftConst.Value == "\"\"" && leftConst.TypeDescriptor.IsString())
+            {
+                return right;
+            }
+
+            if (right is ConstantValueStatement rightConst && rightConst.Value == "\"\"" && rightConst.TypeDescriptor.IsString())
+            {
+                return left;
+            }
+
+            var addition = new AdditionOperator(info);
+            var result = new ArithmeticEvaluationStatement(left, addition, right, info);
+            left.ParentStatement = result;
+            right.ParentStatement = result;
+            return result;
+        }
+
+        private EvaluationStatement ParseInterpolationHole(string holeText, ParserContext context, StatementInfo info)
+        {
+            if (string.IsNullOrWhiteSpace(holeText))
+            {
+                throw new ParserSyntaxException("Empty interpolation expression.", info, context);
+            }
+
+            var lexer = new Lexer();
+            var tokens = lexer.Tokenize(new StringReader(holeText)).ToArray();
+            if (tokens.Length == 0)
+            {
+                throw new ParserSyntaxException("Empty interpolation expression.", info, context);
+            }
+
+            using (var enumerator = new PeekingEnumerator<Token>(((IEnumerable<Token>)tokens).GetEnumerator()))
+            {
+                if (!enumerator.MoveNext())
+                {
+                    throw new ParserSyntaxException("Empty interpolation expression.", info, context);
+                }
+
+                return ReadEvaluationStatement(enumerator.Current, enumerator, context);
+            }
+        }
+
+        private static bool TrySkipQuotedInterpolationContent(string content, ref int index)
+        {
+            var quote = content[index];
+            index++;
+            while (index < content.Length)
+            {
+                if (content[index] == '\\' && index + 1 < content.Length)
+                {
+                    index += 2;
+                    continue;
+                }
+
+                if (content[index] == quote)
+                {
+                    index++;
+                    return true;
+                }
+
+                index++;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Reads a constant VALUE (i.e. 3 or "test" or null)
         /// </summary>
@@ -882,9 +1073,22 @@ namespace ShellScript.Core.Language.Compiler.Parsing
 
                             enumerator.MoveNext(); //skip the comma
 
-                            if (!enumerator.MoveNext())
+                            if (!enumerator.TryPeek(out var afterComma))
                                 throw EndOfFile(token, context);
-                            token = enumerator.Current;
+
+                            switch (afterComma.Type)
+                            {
+                                case TokenType.CloseBrace:
+                                case TokenType.CloseParenthesis:
+                                case TokenType.CloseBracket:
+                                    continueRead = false;
+                                    break;
+                                default:
+                                    if (!enumerator.MoveNext())
+                                        throw EndOfFile(token, context);
+                                    token = enumerator.Current;
+                                    break;
+                            }
 
                             break;
                         }
@@ -1004,7 +1208,8 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                 return result;
             }
 
-            return new VariableAccessStatement(null, functionName.Value, CreateStatementInfo(context, token));
+            return new VariableAccessStatement(className?.Value, functionName.Value,
+                CreateStatementInfo(context, token));
         }
 
         public FunctionParameterDefinitionStatement ReadParameterDefinition(Token token,
@@ -1329,6 +1534,48 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             throw UnexpectedSyntax(token, context);
         }
 
+        public ThrowStatement ReadThrow(Token token, IPeekingEnumerator<Token> enumerator, ParserContext context)
+        {
+            if (token.Type != TokenType.Throw)
+                throw UnexpectedSyntax(token, context);
+
+            if (!enumerator.MoveNext())
+                throw EndOfFile(token, context);
+
+            token = enumerator.Current;
+            if (token.Type != TokenType.IdentifierName)
+                throw UnexpectedSyntax(token, context);
+
+            var exception = new VariableAccessStatement(token.Value, CreateStatementInfo(context, token));
+            return new ThrowStatement(exception, CreateStatementInfo(context, token));
+        }
+
+        private IStatement ReadEmbeddedStatement(Token token, IPeekingEnumerator<Token> enumerator,
+            ParserContext context)
+        {
+            switch (token.Type)
+            {
+                case TokenType.Throw:
+                    return ReadThrow(token, enumerator, context);
+                case TokenType.OpenBrace:
+                    return ReadBlockStatement(token, enumerator, context);
+                case TokenType.Echo:
+                    return ReadEcho(token, enumerator, context);
+                case TokenType.Return:
+                    return ReadReturn(token, enumerator, context);
+                case TokenType.IdentifierName:
+                    return ReadIdentifierName(token, enumerator, context);
+                case TokenType.DataType:
+                    return ReadVariableOrFunctionDefinition(token, enumerator, context);
+                case TokenType.If:
+                    return ReadIf(token, enumerator, context);
+                case TokenType.While:
+                    return ReadWhile(token, enumerator, context);
+                default:
+                    throw UnexpectedSyntax(token, context);
+            }
+        }
+
         public IfElseStatement ReadIf(Token token, IPeekingEnumerator<Token> enumerator, ParserContext context)
         {
             if (token.Type != TokenType.If)
@@ -1357,15 +1604,20 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             if (token.Type != TokenType.CloseParenthesis)
                 throw UnexpectedSyntax(token, context);
 
-            //TODO: missing support of single if statement.
-            if (!enumerator.MoveNext()) //open brace
+            if (!enumerator.MoveNext())
                 throw EndOfFile(token, context);
 
             token = enumerator.Current;
-            if (token.Type != TokenType.OpenBrace)
-                throw UnexpectedSyntax(token, context);
-
-            var block = ReadBlockStatement(token, enumerator, context);
+            BlockStatement block;
+            if (token.Type == TokenType.OpenBrace)
+            {
+                block = ReadBlockStatement(token, enumerator, context);
+            }
+            else
+            {
+                var bodyStatement = ReadEmbeddedStatement(token, enumerator, context);
+                block = new BlockStatement(new[] {bodyStatement}, CreateStatementInfo(context, token));
+            }
 
             if (!enumerator.TryPeek(out var peek) || peek.Type != TokenType.Else) //else or else if
             {
@@ -1458,7 +1710,129 @@ namespace ShellScript.Core.Language.Compiler.Parsing
         public SwitchCaseStatement ReadSwitchCase(Token token, IPeekingEnumerator<Token> enumerator,
             ParserContext context)
         {
-            return null;
+            if (token.Type != TokenType.Switch)
+                throw UnexpectedSyntax(token, context);
+
+            if (!enumerator.MoveNext() || enumerator.Current.Type != TokenType.OpenParenthesis)
+                throw UnexpectedSyntax(enumerator.Current, context);
+
+            if (!enumerator.MoveNext())
+                throw EndOfFile(token, context);
+
+            token = enumerator.Current;
+            var switchTarget = ReadEvaluationStatement(token, enumerator, context);
+
+            if (!enumerator.MoveNext() || enumerator.Current.Type != TokenType.CloseParenthesis)
+                throw UnexpectedSyntax(enumerator.Current, context);
+
+            if (!enumerator.MoveNext() || enumerator.Current.Type != TokenType.OpenBrace)
+                throw UnexpectedSyntax(enumerator.Current, context);
+
+            token = enumerator.Current;
+            var cases = new List<ConditionalBlockStatement>();
+            IStatement defaultCase = null;
+
+            while (enumerator.MoveNext())
+            {
+                token = enumerator.Current;
+                if (token.Type == TokenType.CloseBrace)
+                {
+                    break;
+                }
+
+                if (token.Type == TokenType.Case)
+                {
+                    if (!enumerator.MoveNext())
+                        throw EndOfFile(token, context);
+
+                    token = enumerator.Current;
+                    var caseValue = ReadEvaluationStatement(token, enumerator, context);
+
+                    if (!enumerator.MoveNext() || enumerator.Current.Type != TokenType.Colon)
+                        throw UnexpectedSyntax(enumerator.Current, context);
+
+                    if (!enumerator.MoveNext())
+                        throw EndOfFile(token, context);
+
+                    token = enumerator.Current;
+                    BlockStatement caseBlock;
+                    if (token.Type == TokenType.OpenBrace)
+                    {
+                        caseBlock = ReadBlockStatement(token, enumerator, context);
+                    }
+                    else
+                    {
+                        var body = ReadEmbeddedStatement(token, enumerator, context);
+                        caseBlock = new BlockStatement(new[] {body}, CreateStatementInfo(context, token));
+                    }
+
+                    var caseCondition = CreateSwitchCaseCondition(switchTarget, caseValue, context);
+                    var conditional = new ConditionalBlockStatement(caseCondition, caseBlock,
+                        CreateStatementInfo(context, token));
+                    caseCondition.ParentStatement = conditional;
+                    cases.Add(conditional);
+                    continue;
+                }
+
+                if (token.Type == TokenType.Default)
+                {
+                    if (!enumerator.MoveNext() || enumerator.Current.Type != TokenType.Colon)
+                        throw UnexpectedSyntax(enumerator.Current, context);
+
+                    if (!enumerator.MoveNext())
+                        throw EndOfFile(token, context);
+
+                    token = enumerator.Current;
+                    if (token.Type == TokenType.OpenBrace)
+                    {
+                        defaultCase = ReadBlockStatement(token, enumerator, context);
+                    }
+                    else
+                    {
+                        var body = ReadEmbeddedStatement(token, enumerator, context);
+                        defaultCase = new BlockStatement(new[] {body}, CreateStatementInfo(context, token));
+                    }
+
+                    continue;
+                }
+
+                throw UnexpectedSyntax(token, context);
+            }
+
+            var info = CreateStatementInfo(context, token);
+            switchTarget.ParentStatement = null;
+
+            if (defaultCase != null)
+            {
+                return new SwitchCaseStatement(switchTarget, cases.ToArray(), defaultCase, info);
+            }
+
+            return new SwitchCaseStatement(switchTarget, cases.ToArray(), info);
+        }
+
+        private static EvaluationStatement CreateSwitchCaseCondition(EvaluationStatement switchTarget,
+            EvaluationStatement caseValue, ParserContext context)
+        {
+            var targetClone = CloneEvaluationForSwitchCase(switchTarget);
+            var valueClone = CloneEvaluationForSwitchCase(caseValue);
+            var eq = new EqualOperator(valueClone.Info);
+            var condition = new LogicalEvaluationStatement(targetClone, eq, valueClone, eq.Info);
+            targetClone.ParentStatement = condition;
+            valueClone.ParentStatement = condition;
+            return condition;
+        }
+
+        private static EvaluationStatement CloneEvaluationForSwitchCase(EvaluationStatement source)
+        {
+            switch (source)
+            {
+                case VariableAccessStatement variable:
+                    return new VariableAccessStatement(variable.ClassName, variable.VariableName, variable.Info);
+                case ConstantValueStatement constant:
+                    return new ConstantValueStatement(constant.TypeDescriptor, constant.Value, constant.Info);
+                default:
+                    return source;
+            }
         }
 
         public WhileStatement ReadWhile(Token token, IPeekingEnumerator<Token> enumerator, ParserContext context)
@@ -1476,6 +1850,7 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             if (!enumerator.MoveNext()) //skip parenthesis to read evaluation
                 throw EndOfFile(token, context);
 
+            token = enumerator.Current;
             var condition = ReadEvaluationStatement(token, enumerator, context);
 
             if (!enumerator.MoveNext()) //close parenthesis
@@ -1522,9 +1897,6 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             if (token.Type != TokenType.OpenBrace)
                 throw UnexpectedSyntax(token, context);
 
-            if (!enumerator.MoveNext()) //skip parenthesis to read evaluation
-                throw EndOfFile(token, context);
-
             var statements = ReadBlockStatement(token, enumerator, context);
 
             if (!enumerator.MoveNext()) //while
@@ -1541,9 +1913,10 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             if (token.Type != TokenType.OpenParenthesis)
                 throw UnexpectedSyntax(token, context);
 
-            if (!enumerator.MoveNext()) //skip parenthesis to read evaluation
+            if (!enumerator.MoveNext()) //first token of condition
                 throw EndOfFile(token, context);
 
+            token = enumerator.Current;
             var condition = ReadEvaluationStatement(token, enumerator, context);
 
             if (!enumerator.MoveNext()) //close parenthesis

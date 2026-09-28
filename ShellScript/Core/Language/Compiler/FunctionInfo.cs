@@ -16,12 +16,17 @@ namespace ShellScript.Core.Language.Compiler
         {
             get
             {
-                if (ClassName != null)
+                if (!string.IsNullOrEmpty(ReName))
                 {
-                    return $"{ClassName}_{ReName ?? Name}";
+                    return ReName;
                 }
 
-                return ReName ?? Name;
+                if (ClassName != null)
+                {
+                    return $"{ClassName}_{Name}";
+                }
+
+                return Name;
             }
         }
 

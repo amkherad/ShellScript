@@ -209,9 +209,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
 
             foreach (var binding in _utilityFunctionInitBindings)
             {
-                var isFirst = true;
-                var wroteBranch = false;
-
+                var branches = new List<KeyValuePair<string, string>>();
                 foreach (var implementation in binding.UtilityBodies)
                 {
                     if (!Api.Utilities.TryGetValue(implementation.Key, out var utility))
@@ -220,24 +218,38 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
                     }
 
                     var condition = ApiBaseFunction.GetUtilityLookupTestVariableName(this, metaWriter, utility);
+                    branches.Add(new KeyValuePair<string, string>(condition, implementation.Value));
+                }
 
+                var isFirst = true;
+                var wroteBranch = false;
+
+                foreach (var branch in branches)
+                {
                     metaWriter.Write(isFirst ? "if [ " : "elif [ ");
                     isFirst = false;
                     wroteBranch = true;
-                    metaWriter.Write(condition);
+                    metaWriter.Write(branch.Key);
                     metaWriter.WriteLine(" ]");
                     metaWriter.WriteLine("then");
                     metaWriter.Write("function ");
                     metaWriter.Write(binding.FunctionFqn);
                     metaWriter.WriteLine("() {");
-                    metaWriter.WriteLine(implementation.Value);
+                    metaWriter.WriteLine(branch.Value);
                     metaWriter.WriteLine("}");
                 }
 
                 if (!string.IsNullOrWhiteSpace(binding.PureBashFallbackBody))
                 {
-                    metaWriter.WriteLine(wroteBranch ? "else" : "if true");
-                    metaWriter.WriteLine("then");
+                    if (wroteBranch)
+                    {
+                        metaWriter.WriteLine("else");
+                    }
+                    else
+                    {
+                        metaWriter.WriteLine("if true");
+                        metaWriter.WriteLine("then");
+                    }
                     metaWriter.Write("function ");
                     metaWriter.Write(binding.FunctionFqn);
                     metaWriter.WriteLine("() {");

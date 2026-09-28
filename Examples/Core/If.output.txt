@@ -1,0 +1,2 @@
+Score 85 => grade B
+Score is in valid range.

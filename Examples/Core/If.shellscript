@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 // Conditional branches: if, else if, else.
 
 int score = 85;

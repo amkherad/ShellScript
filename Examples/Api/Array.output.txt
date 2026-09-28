@@ -1,0 +1,5 @@
+length=3
+index=
+hasTwenty=0
+copyLen=3
+EXAMPLE_OK:Array

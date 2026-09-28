@@ -489,6 +489,31 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
             return false;
         }
 
+        public bool TryGetNativeFunctionInfo(string className, string functionName, out FunctionInfo functionInfo)
+        {
+            var that = this;
+            do
+            {
+                foreach (var candidate in that._functions)
+                {
+                    if (candidate is ApiFunctionInfo)
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(candidate.ClassName, className, StringComparison.Ordinal) &&
+                        string.Equals(candidate.Name, functionName, StringComparison.Ordinal))
+                    {
+                        functionInfo = candidate;
+                        return true;
+                    }
+                }
+            } while ((that = that.Parent) != null);
+
+            functionInfo = null;
+            return false;
+        }
+
         public void RegisterUserClass(ClassInfo classInfo)
         {
             _identifiers.Add(classInfo.Name);

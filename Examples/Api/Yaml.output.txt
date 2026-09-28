@@ -1,0 +1,3 @@
+valid=
+
+EXAMPLE_OK:Yaml

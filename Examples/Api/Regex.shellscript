@@ -1,0 +1,10 @@
+#!/usr/bin/env shellscript
+// @expect-out EXAMPLE_OK:Regex
+// @expect-exit 0
+
+bool digits = Regex.IsMatch("item42", "[0-9]+");
+string cleaned = Regex.Replace("a1b2c3", "[0-9]", "");
+
+echo $"digits={digits}";
+echo cleaned;
+echo "EXAMPLE_OK:Regex";

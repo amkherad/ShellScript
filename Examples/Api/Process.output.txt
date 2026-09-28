@@ -1,0 +1,3 @@
+running=0
+capture-ok
+EXAMPLE_OK:Process

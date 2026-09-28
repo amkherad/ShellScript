@@ -8,11 +8,25 @@ namespace ShellScript.Core.Language.Compiler
         public bool SemicolonRequired { get; set; }
 
         //==========================
+        // Constant folding (compile-time evaluation of literal expressions)
+        //==========================
+        public bool UseConstantFolding { get; set; }
+
+        //==========================
         // Inlining
         //==========================
         public bool UseInlining { get; set; }
         public bool InlineCascadingFunctionCalls { get; set; }
         public bool InlineNonEvaluations { get; set; }
+        public bool UseStrongInlining { get; set; }
+        public int MaxInlineDepth { get; set; }
+        public int StrongInliningMaxStatements { get; set; }
+
+        //==========================
+        // Other optimizations
+        //==========================
+        public bool UseDeadBranchElimination { get; set; }
+        public bool UsePinElimination { get; set; }
 
         //==========================
         // Environmental Features
@@ -81,9 +95,15 @@ namespace ShellScript.Core.Language.Compiler
             {
                 SemicolonRequired = true,
 
+                UseConstantFolding = true,
                 UseInlining = true,
                 InlineCascadingFunctionCalls = true,
                 InlineNonEvaluations = true,
+                UseStrongInlining = true,
+                MaxInlineDepth = 8,
+                StrongInliningMaxStatements = 3,
+                UseDeadBranchElimination = true,
+                UsePinElimination = true,
 
                 UseThirdPartyUtilities = true,
                 BindThirdPartyUtilitiesAtInit = true,

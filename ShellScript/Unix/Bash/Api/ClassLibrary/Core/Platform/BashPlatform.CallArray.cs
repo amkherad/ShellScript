@@ -9,18 +9,17 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
     {
         public class BashCallArray : CallArray
         {
-            private readonly FunctionInfo _functionInfo =
-                new FunctionInfo(new TypeDescriptor(DataTypes.String | DataTypes.Array), nameof(CallArray), null,
+            private FunctionInfo FunctionInfo => new FunctionInfo(new TypeDescriptor(DataTypes.String | DataTypes.Array), nameof(CallArray), null,
                     ClassAccessName, false, Parameters, null);
 
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
                 AssertParameters(p, functionCallStatement.Parameters);
-                p.Context.GetLastFunctionCallStorageVariable(_functionInfo.TypeDescriptor, p.MetaWriter);
+                p.Context.GetLastFunctionCallStorageVariable(FunctionInfo.TypeDescriptor, p.MetaWriter);
                 return WriteNativeMethod(this, p,
                     "mapfile -t LastFunctionCall < <(eval \"$1\")",
-                    _functionInfo, functionCallStatement.Parameters, functionCallStatement.Info);
+                    FunctionInfo, functionCallStatement.Parameters, functionCallStatement.Info);
             }
         }
     }

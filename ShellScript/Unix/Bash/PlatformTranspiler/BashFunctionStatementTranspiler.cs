@@ -47,7 +47,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             if (isClassMethod && funcDefStt.IsInstanceMethod)
             {
                 funcScope.SetConfig(c => c.InstanceUsesNameref, "true");
-                funcScope.ReserveNewVariable(
+                funcScope.ReserveNewParameter(
                     ObjectModelHelpers.UserClass(funcDefStt.ClassName),
                     ObjectModelHelpers.ThisKeyword,
                     BashObjectModel.SelfNameref);

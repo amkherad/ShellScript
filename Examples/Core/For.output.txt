@@ -1,0 +1,15 @@
+for i = 0
+for i = 1
+for i = 2
+for i = 3
+for i = 4
+countdown 10
+countdown 9
+countdown 8
+countdown 7
+countdown 6
+countdown 5
+countdown 4
+countdown 3
+countdown 2
+countdown 1

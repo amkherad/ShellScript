@@ -13,6 +13,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
 
         public bool FormatString { get; set; } = true;
         public bool VoidFunctionCall { get; set; }
+        public int InlineDepth { get; set; }
         
         [CanBeNull]
         public IStatement UsageContext { get; }
@@ -34,6 +35,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
             MetaWriter = p.MetaWriter;
             NonInlinePartWriter = p.NonInlinePartWriter;
             UsageContext = p.UsageContext;
+            InlineDepth = p.InlineDepth;
         }
 
         public ExpressionBuilderParams(ExpressionBuilderParams p, TextWriter nonInlinePartWriter)
@@ -43,6 +45,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
             MetaWriter = p.MetaWriter;
             NonInlinePartWriter = nonInlinePartWriter;
             UsageContext = p.UsageContext;
+            InlineDepth = p.InlineDepth;
         }
     }
 }

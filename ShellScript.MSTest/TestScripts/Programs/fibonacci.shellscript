@@ -1,7 +1,8 @@
+#!/usr/bin/env shellscript
 
 const string NegativeMaxIsNotAllowed = "Maximum should be positive non-zero value.";
 
-void printEntry(string entry) {
+void printEntry(int entry) {
     echo entry;
 }
 

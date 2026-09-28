@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
+using System.Text;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
@@ -13,6 +14,7 @@ using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Unix.Bash.PlatformTranspiler;
+using ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders;
 
 namespace ShellScript.Core.Language.Library
 {
@@ -40,6 +42,41 @@ namespace ShellScript.Core.Language.Library
         public static ApiMethodBuilderInlineResult Inline(EvaluationStatement statement)
         {
             return new ApiMethodBuilderInlineResult(statement);
+        }
+
+        private static IApiMethodBuilderResult InvokeRegisteredNativeFunction(ExpressionBuilderParams p,
+            FunctionInfo registeredFunction, EvaluationStatement[] parameters, StatementInfo statementInfo)
+        {
+            var builder = BashDefaultExpressionBuilder.Instance;
+            var call = new StringBuilder();
+            call.Append('`');
+            call.Append(registeredFunction.AccessName);
+
+            var paramTemplates = new List<EvaluationStatement>();
+            if (parameters != null)
+            {
+                foreach (var param in parameters)
+                {
+                    var result = builder.CreateExpression(p, param);
+                    call.Append(' ');
+                    call.Append(builder.FormatFunctionCallParameterSubExpression(p, result));
+                    paramTemplates.Add(result.Template);
+                }
+            }
+
+            call.Append('`');
+
+            var template = new FunctionCallStatement(
+                registeredFunction.ClassName,
+                registeredFunction.Name,
+                registeredFunction.TypeDescriptor,
+                paramTemplates.ToArray(),
+                statementInfo);
+
+            return new ApiMethodBuilderRawResult(new ExpressionResult(
+                registeredFunction.TypeDescriptor,
+                call.ToString(),
+                template));
         }
 
 
@@ -88,10 +125,9 @@ namespace ShellScript.Core.Language.Library
             EvaluationStatement[] parameters, StatementInfo statementInfo)
             where TFunc : ApiBaseFunction
         {
-            if (p.Scope.TryGetFunctionInfo(functionInfo, out var funcInfo))
+            if (p.Scope.TryGetNativeFunctionInfo(functionInfo.ClassName, functionInfo.Name, out var funcInfo))
             {
-                return Inline(new FunctionCallStatement(funcInfo.ClassName, funcInfo.Name, funcInfo.TypeDescriptor,
-                    parameters, statementInfo));
+                return InvokeRegisteredNativeFunction(p, funcInfo, parameters, statementInfo);
             }
 
             using (var funcWriter = new StringWriter())
@@ -109,8 +145,7 @@ namespace ShellScript.Core.Language.Library
 
             p.Context.GeneralScope.ReserveNewFunction(functionInfo);
 
-            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.TypeDescriptor,
-                parameters, statementInfo));
+            return InvokeRegisteredNativeFunction(p, functionInfo, parameters, statementInfo);
         }
 
         public static IApiMethodBuilderResult UseNativeResourceMethod<TFunc>(
@@ -118,10 +153,9 @@ namespace ShellScript.Core.Language.Library
             EvaluationStatement[] parameters, StatementInfo statementInfo)
             where TFunc : ApiBaseFunction
         {
-            if (p.Scope.TryGetFunctionInfo(functionInfo, out var funcInfo))
+            if (p.Scope.TryGetNativeFunctionInfo(functionInfo.ClassName, functionInfo.Name, out var funcInfo))
             {
-                return Inline(new FunctionCallStatement(funcInfo.ClassName, funcInfo.Name, funcInfo.TypeDescriptor,
-                    parameters, statementInfo));
+                return InvokeRegisteredNativeFunction(p, funcInfo, parameters, statementInfo);
             }
 
             using (var file = Assembly.GetCallingAssembly()
@@ -139,8 +173,7 @@ namespace ShellScript.Core.Language.Library
 
             p.Context.GeneralScope.ReserveNewFunction(functionInfo);
 
-            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.TypeDescriptor,
-                parameters, statementInfo));
+            return InvokeRegisteredNativeFunction(p, functionInfo, parameters, statementInfo);
         }
 
         public static string GetUtilityLookupTestVariableName(Context context, TextWriter metaWriter,
@@ -178,10 +211,9 @@ namespace ShellScript.Core.Language.Library
             string pureBashFallbackBody = null)
             where TFunc : ApiBaseFunction
         {
-            if (p.Scope.TryGetFunctionInfo(functionInfo, out var funcInfo))
+            if (p.Scope.TryGetNativeFunctionInfo(functionInfo.ClassName, functionInfo.Name, out var funcInfo))
             {
-                return Inline(new FunctionCallStatement(funcInfo.ClassName, funcInfo.Name, funcInfo.TypeDescriptor,
-                    parameters, statementInfo));
+                return InvokeRegisteredNativeFunction(p, funcInfo, parameters, statementInfo);
             }
 
             var orderedImplementations =
@@ -193,6 +225,8 @@ namespace ShellScript.Core.Language.Library
                     functionInfo.Fqn,
                     orderedImplementations,
                     pureBashFallbackBody));
+                p.Context.GeneralScope.ReserveNewFunction(functionInfo);
+                return InvokeRegisteredNativeFunction(p, functionInfo, parameters, statementInfo);
             }
 
             using (var funcWriter = new StringWriter())
@@ -201,53 +235,39 @@ namespace ShellScript.Core.Language.Library
                 funcWriter.Write(functionInfo.Fqn);
                 funcWriter.WriteLine("() {");
 
-                if (p.Context.Flags.BindThirdPartyUtilitiesAtInit && orderedImplementations.Count > 0)
+                var isFirst = true;
+                var wroteBranch = false;
+                var utilities = p.Context.Api.Utilities;
+
+                foreach (var utility in orderedImplementations)
                 {
-                    if (!string.IsNullOrWhiteSpace(pureBashFallbackBody))
+                    if (!utilities.TryGetValue(utility.Key, out var util))
                     {
-                        funcWriter.WriteLine(pureBashFallbackBody);
+                        continue;
                     }
-                    else
-                    {
-                        funcWriter.WriteLine(orderedImplementations[orderedImplementations.Count - 1].Value);
-                    }
+
+                    var condition = GetUtilityLookupTestVariableName(p.Context, p.MetaWriter, util);
+
+                    funcWriter.Write(isFirst ? "if [ " : "elif [ ");
+                    isFirst = false;
+                    wroteBranch = true;
+                    funcWriter.Write(condition);
+                    funcWriter.WriteLine(" ]");
+                    funcWriter.WriteLine("then");
+                    funcWriter.WriteLine(utility.Value);
                 }
-                else
+
+                if (!string.IsNullOrWhiteSpace(pureBashFallbackBody))
                 {
-                    var isFirst = true;
-                    var wroteBranch = false;
-                    var utilities = p.Context.Api.Utilities;
+                    funcWriter.WriteLine(wroteBranch ? "else" : "if true");
+                    funcWriter.WriteLine("then");
+                    funcWriter.WriteLine(pureBashFallbackBody);
+                    wroteBranch = true;
+                }
 
-                    foreach (var utility in orderedImplementations)
-                    {
-                        if (!utilities.TryGetValue(utility.Key, out var util))
-                        {
-                            continue;
-                        }
-
-                        var condition = GetUtilityLookupTestVariableName(p.Context, p.MetaWriter, util);
-
-                        funcWriter.Write(isFirst ? "if [ " : "elif [ ");
-                        isFirst = false;
-                        wroteBranch = true;
-                        funcWriter.Write(condition);
-                        funcWriter.WriteLine(" ]");
-                        funcWriter.WriteLine("then");
-                        funcWriter.WriteLine(utility.Value);
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(pureBashFallbackBody))
-                    {
-                        funcWriter.WriteLine(wroteBranch ? "else" : "if true");
-                        funcWriter.WriteLine("then");
-                        funcWriter.WriteLine(pureBashFallbackBody);
-                        wroteBranch = true;
-                    }
-
-                    if (wroteBranch)
-                    {
-                        funcWriter.WriteLine("fi");
-                    }
+                if (wroteBranch)
+                {
+                    funcWriter.WriteLine("fi");
                 }
 
                 funcWriter.WriteLine("}");
@@ -257,8 +277,7 @@ namespace ShellScript.Core.Language.Library
 
             p.Context.GeneralScope.ReserveNewFunction(functionInfo);
 
-            return Inline(new FunctionCallStatement(func.ClassName, functionInfo.Name, functionInfo.TypeDescriptor,
-                parameters, statementInfo));
+            return InvokeRegisteredNativeFunction(p, functionInfo, parameters, statementInfo);
         }
 
 

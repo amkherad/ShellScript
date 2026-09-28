@@ -9,14 +9,14 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.Path
     {
         public class BashGetExtension : GetExtension
         {
-            private readonly FunctionInfo _functionInfo = new FunctionInfo(TypeDescriptor.String,
+            private FunctionInfo FunctionInfo => new FunctionInfo(TypeDescriptor.String,
                 "GetExtension", null, ClassAccessName, false, Parameters, null);
 
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
                 AssertParameters(p, functionCallStatement.Parameters);
-                return WriteNativeMethod(this, p, "path=${1%/}\nname=${path##*/}\nif [[ $name == *.* && $name != .* && $name != *. ]]; then\n    printf '.%s' \"${name##*.}\"\nfi", _functionInfo,
+                return WriteNativeMethod(this, p, "path=${1%/}\nname=${path##*/}\nif [[ $name == *.* && $name != .* && $name != *. ]]; then\n    printf '.%s' \"${name##*.}\"\nfi", FunctionInfo,
                     functionCallStatement.Parameters, functionCallStatement.Info);
             }
         }

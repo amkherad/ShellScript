@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ShellScript.Core;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Statements.Operators;
@@ -33,6 +34,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             ExpressionBuilderParams p, EvaluationStatement template,
             ExpressionResult left, ExpressionResult right)
         {
+            if (PinElimination.CanElideFloatingPointPin(p, template, left, right))
+            {
+                return false;
+            }
+
             if (left.TypeDescriptor.IsNumericOrFloat() || right.TypeDescriptor.IsNumericOrFloat())
             {
                 if (template is LogicalEvaluationStatement)
@@ -62,6 +68,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             TypeDescriptor left, EvaluationStatement leftTemplate, TypeDescriptor right,
             EvaluationStatement rightTemplate)
         {
+            if (p.Context.Flags.UsePinElimination &&
+                (leftTemplate is ConstantValueStatement || leftTemplate is VariableAccessStatement) &&
+                (rightTemplate is ConstantValueStatement || rightTemplate is VariableAccessStatement) &&
+                template is ArithmeticEvaluationStatement)
+            {
+                return false;
+            }
+
             if (left.IsNumericOrFloat() || right.IsNumericOrFloat())
             {
                 if (template is LogicalEvaluationStatement)

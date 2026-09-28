@@ -55,7 +55,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
         public override string FormatVariableAccessExpression(ExpressionBuilderParams p, ExpressionResult result)
         {
-            if (result.TypeDescriptor.IsBoolean() && result.Template.ParentStatement is ConditionalBlockStatement)
+            if (result.TypeDescriptor.IsBoolean())
             {
                 return _formatBoolVariable(
                     base.FormatVariableAccessExpression(p, result)
@@ -68,7 +68,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         public override string FormatVariableAccessExpression(ExpressionBuilderParams p, TypeDescriptor typeDescriptor,
             string expression, EvaluationStatement template)
         {
-            if (typeDescriptor.IsBoolean() && template.ParentStatement is ConditionalBlockStatement)
+            if (typeDescriptor.IsBoolean())
             {
                 return _formatBoolVariable(
                     base.FormatVariableAccessExpression(p, typeDescriptor, expression, template)
@@ -76,6 +76,44 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             }
 
             return base.FormatVariableAccessExpression(p, typeDescriptor, expression, template);
+        }
+
+        protected override ExpressionResult CreateExpressionRecursive(ExpressionBuilderParams p,
+            EvaluationStatement statement)
+        {
+            if (statement is LogicalEvaluationStatement logical && logical.Operator is NotOperator)
+            {
+                var inner = base.CreateExpressionRecursive(p, logical.Right);
+                if (!inner.TypeDescriptor.IsBoolean())
+                {
+                    throw new InvalidStatementCompilerException(logical, logical.Info);
+                }
+
+                var exp = inner.Expression.Trim();
+                const string notEqualZeroSuffix = "-ne 0";
+                if (exp.StartsWith("[") && exp.EndsWith("]"))
+                {
+                    var core = exp.Substring(1, exp.Length - 2).Trim();
+                    if (core.EndsWith(notEqualZeroSuffix, StringComparison.Ordinal))
+                    {
+                        var varPart = core.Substring(0, core.Length - notEqualZeroSuffix.Length).TrimEnd();
+                        return new ExpressionResult(TypeDescriptor.Boolean, $"[ {varPart} -eq 0 ]", logical);
+                    }
+                }
+
+                if (logical.Right is VariableAccessStatement)
+                {
+                    var varPart = exp;
+                    if (varPart.StartsWith("$", StringComparison.Ordinal))
+                    {
+                        varPart = varPart.Substring(1).Trim('{', '}');
+                    }
+
+                    return new ExpressionResult(TypeDescriptor.Boolean, $"[ {varPart} -eq 0 ]", logical);
+                }
+            }
+
+            return base.CreateExpressionRecursive(p, statement);
         }
 
 //        public override string FormatLogicalExpression(ExpressionBuilderParams p, ExpressionResult result)

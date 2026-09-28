@@ -126,6 +126,26 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                     return (0, null);
                 }
 
+                case IfElseStatement ifElseStatement:
+                {
+                    if (ifElseStatement.Else == null &&
+                        (ifElseStatement.ElseIfs == null || ifElseStatement.ElseIfs.Length == 0))
+                    {
+                        return (1, ifElseStatement);
+                    }
+
+                    foreach (var branch in ifElseStatement.Branches)
+                    {
+                        var result = CheckReturnOnAllPaths(context, scope, assertTypeDescriptor, branch);
+                        if (result.Item1 != 0)
+                        {
+                            return result;
+                        }
+                    }
+
+                    return (0, null);
+                }
+
                 case IBranchWrapperStatement branchWrapperStatement:
                 {
                     foreach (var branch in branchWrapperStatement.Branches)
@@ -156,12 +176,18 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                         }
 
                         var check = CheckReturnOnAllPaths(context, scope, assertTypeDescriptor, stt);
-                        if (check.Item1 == 0)
+                        if (StatementAlwaysTerminates(context, scope, assertTypeDescriptor, stt))
                         {
                             isUnreachable = true;
+                            if (check.Item1 == 2)
+                            {
+                                return check;
+                            }
+
                             continue;
                         }
-                        else if (check.Item1 == 2)
+
+                        if (check.Item1 == 2)
                         {
                             return check;
                         }
@@ -174,6 +200,69 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
             }
         }
 
+        private static bool StatementAlwaysTerminates(Context context, Scope scope,
+            TypeDescriptor assertTypeDescriptor, IStatement statement)
+        {
+            switch (statement)
+            {
+                case ReturnStatement _:
+                case ThrowStatement _:
+                    return true;
+                case IfElseStatement ifElseStatement:
+                {
+                    if (ifElseStatement.Else == null)
+                    {
+                        return false;
+                    }
+
+                    return StatementAlwaysTerminates(context, scope, assertTypeDescriptor,
+                               ifElseStatement.MainIf.Statement) &&
+                           StatementAlwaysTerminates(context, scope, assertTypeDescriptor, ifElseStatement.Else);
+                }
+                case BlockStatement blockStatement:
+                {
+                    foreach (var child in blockStatement.Statements)
+                    {
+                        if (StatementAlwaysTerminates(context, scope, assertTypeDescriptor, child))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+                default:
+                    return false;
+            }
+        }
+
+        private static bool TryGetStrongInlineStatement(BlockStatement block, out IStatement statement)
+        {
+            statement = null;
+            var statements = block.Statements;
+            if (statements == null || statements.Length == 0)
+            {
+                return false;
+            }
+
+            var last = statements[statements.Length - 1];
+            if (!(last is ReturnStatement returnStatement) || returnStatement.Result == null)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < statements.Length - 1; i++)
+            {
+                if (!(statements[i] is EchoStatement))
+                {
+                    return false;
+                }
+            }
+
+            statement = returnStatement;
+            return true;
+        }
+
         public static bool TryGetInlinedStatement(Context context, Scope scope, FunctionStatement function,
             out IStatement inlinedStatement)
         {
@@ -183,17 +272,24 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                 return false;
             }
 
-            IStatement stt;
+            IStatement stt = null;
 
             if (function.Statement is BlockStatement blockStatement)
             {
-                if (blockStatement.Statements.Length != 1)
+                if (blockStatement.Statements.Length == 1)
+                {
+                    stt = blockStatement.Statements[0];
+                }
+                else if (context.Flags.UseStrongInlining &&
+                         blockStatement.Statements.Length <= context.Flags.StrongInliningMaxStatements &&
+                         TryGetStrongInlineStatement(blockStatement, out stt))
+                {
+                }
+                else
                 {
                     inlinedStatement = null;
                     return false;
                 }
-
-                stt = blockStatement.Statements.First();
             }
             else
             {
@@ -210,13 +306,14 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                         return false;
                     }
 
-                    if (!scope.TryGetFunctionInfo(functionCallStatement, out var functionInfo))
+                    if (!scope.TryGetFunctionInfo(functionCallStatement, out var functionInfo) ||
+                        functionInfo.InlinedStatement == null)
                     {
-                        inlinedStatement = functionInfo.InlinedStatement;
-                        return inlinedStatement != null;
+                        inlinedStatement = null;
+                        return false;
                     }
 
-                    inlinedStatement = functionCallStatement;
+                    inlinedStatement = functionInfo.InlinedStatement;
                     return true;
                 }
                 case EvaluationStatement evaluationStatement:
@@ -247,7 +344,39 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
         public static EvaluationStatement GetSchemeParameterValueByIndex(Context context, Scope scope,
             FunctionInfo functionInfo, FunctionCallStatement functionCallStatement, int index)
         {
-            return functionCallStatement.Parameters[index];
+            var passed = functionCallStatement.Parameters;
+            if (passed != null && index < passed.Length)
+            {
+                return passed[index];
+            }
+
+            var scheme = functionInfo.Parameters;
+            if (scheme != null && index < scheme.Length && scheme[index].HasDefaultValue)
+            {
+                return scheme[index].DefaultValue;
+            }
+
+            throw new InvalidFunctionCallParametersCompilerException(scheme?.Length ?? 0, passed?.Length ?? 0,
+                functionCallStatement.Info);
+        }
+
+        public static int GetRequiredParameterCount(FunctionParameterDefinitionStatement[] schemeParameters)
+        {
+            if (schemeParameters == null || schemeParameters.Length == 0)
+            {
+                return 0;
+            }
+
+            var count = 0;
+            foreach (var parameter in schemeParameters)
+            {
+                if (!parameter.HasDefaultValue)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         public static FunctionInfo GetFunctionInfoFromFunctionCall(Context context, Scope scope,
@@ -265,7 +394,8 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                         scope.TryGetPrototypeInfo(userClassName, functionCallStatement.FunctionName, out funcInfo))
                     {
                         sourceObjectInfo = instanceVar;
-                        return funcInfo;
+                        return PreferNativeFunctionImplementation(scope, functionCallStatement, funcInfo,
+                            ref sourceObjectInfo);
                     }
                 }
 
@@ -301,6 +431,21 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                 sourceObjectInfo = funcInfo;
             }
 
+            return PreferNativeFunctionImplementation(scope, functionCallStatement, funcInfo, ref sourceObjectInfo);
+        }
+
+        private static FunctionInfo PreferNativeFunctionImplementation(Scope scope,
+            FunctionCallStatement functionCallStatement, FunctionInfo funcInfo,
+            ref ILanguageObjectInfo sourceObjectInfo)
+        {
+            if (funcInfo is ApiFunctionInfo && functionCallStatement.ClassName != null &&
+                scope.TryGetNativeFunctionInfo(functionCallStatement.ClassName, functionCallStatement.FunctionName,
+                    out var nativeFunctionInfo))
+            {
+                sourceObjectInfo = nativeFunctionInfo;
+                return nativeFunctionInfo;
+            }
+
             return funcInfo;
         }
 
@@ -326,11 +471,12 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
         )
         {
             var passedCount = parameters?.Length ?? 0;
-            var expectedCount = schemeParameters?.Length ?? 0;
+            var requiredCount = GetRequiredParameterCount(schemeParameters);
+            var maxCount = schemeParameters?.Length ?? 0;
 
-            if (passedCount != expectedCount)
+            if (passedCount < requiredCount || passedCount > maxCount)
             {
-                exception = new InvalidFunctionCallParametersCompilerException(expectedCount, passedCount, null);
+                exception = new InvalidFunctionCallParametersCompilerException(maxCount, passedCount, null);
                 return false;
             }
 

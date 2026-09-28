@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 // @expect-err EXAMPLE_OK:Log
 // @expect-exit 0
 

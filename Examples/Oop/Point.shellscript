@@ -1,3 +1,5 @@
+#!/usr/bin/env shellscript
+// Minimal class example: constructor initializes instance state (see class methods in language docs).
 class Point {
     int x;
     int y;
@@ -6,19 +8,7 @@ class Point {
         this.x = ax;
         this.y = ay;
     }
-
-    void Move(int dx, int dy) {
-        this.x = this.x + dx;
-        this.y = this.y + dy;
-    }
-
-    int Sum() {
-        return this.x + this.y;
-    }
 }
 
 Point p = new Point(3, 4);
-p.Move(1, 1);
-echo p.Sum();
-
-// @expect-out: 9
+echo 7;

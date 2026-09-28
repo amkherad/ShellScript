@@ -67,11 +67,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
 
             if (ObjectModelHelpers.TryResolveInstanceFieldAccess(scope, target, out var instanceInfo, out _))
             {
-                var p = new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter,
+                var instanceParams = new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter,
                     assignmentStatement);
-                var transpiler = context.GetEvaluationTranspilerForStatement(evaluation);
+                var instanceTranspiler = context.GetEvaluationTranspilerForStatement(evaluation);
                 var result =
-                    transpiler.GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
+                    instanceTranspiler.GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
                 var usesNameref = scope.GetConfig(s => s.InstanceUsesNameref, null) == "true" &&
                                   target.ClassName == ObjectModelHelpers.ThisKeyword;
                 var writeTarget = BashObjectModel.GetInstanceFieldWriteTarget(instanceInfo, target.VariableName,

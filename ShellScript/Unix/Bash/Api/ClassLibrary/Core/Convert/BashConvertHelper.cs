@@ -32,28 +32,28 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Convert
         private static readonly Dictionary<string, string> FloatUtilityBodies =
             BashMathUtilityBodies.Unary("print a+0", "$1", "print(float(a))");
 
-        public static IApiMethodBuilderResult BuildToInteger(ToInteger func, ExpressionBuilderParams p,
+        public static IApiMethodBuilderResult BuildToInteger(ApiConvert.ToInteger func, ExpressionBuilderParams p,
             FunctionCallStatement call)
         {
-            return BuildCoercion(func, p, call, TypeDescriptor.Integer, nameof(ToInteger), IntegerUtilityBodies,
+            return BuildCoercion(func, p, call, TypeDescriptor.Integer, nameof(ApiConvert.ToInteger), IntegerUtilityBodies,
                 ToIntegerBody, "echo $(( ${1%.*} ))");
         }
 
-        public static IApiMethodBuilderResult BuildToFloat(ToFloat func, ExpressionBuilderParams p,
+        public static IApiMethodBuilderResult BuildToFloat(ApiConvert.ToFloat func, ExpressionBuilderParams p,
             FunctionCallStatement call)
         {
-            return BuildCoercion(func, p, call, TypeDescriptor.Float, nameof(ToFloat), FloatUtilityBodies, ToFloatBody,
+            return BuildCoercion(func, p, call, TypeDescriptor.Float, nameof(ApiConvert.ToFloat), FloatUtilityBodies, ToFloatBody,
                 "printf '%s' \"$1\"");
         }
 
-        public static IApiMethodBuilderResult BuildToNumber(ToNumber func, ExpressionBuilderParams p,
+        public static IApiMethodBuilderResult BuildToNumber(ApiConvert.ToNumber func, ExpressionBuilderParams p,
             FunctionCallStatement call)
         {
-            return BuildCoercion(func, p, call, TypeDescriptor.Numeric, nameof(ToNumber), FloatUtilityBodies,
+            return BuildCoercion(func, p, call, TypeDescriptor.Numeric, nameof(ApiConvert.ToNumber), FloatUtilityBodies,
                 ToFloatBody, "printf '%s' \"$1\"");
         }
 
-        public static IApiMethodBuilderResult BuildToBoolean(ToBoolean func, ExpressionBuilderParams p,
+        public static IApiMethodBuilderResult BuildToBoolean(ApiConvert.ToBoolean func, ExpressionBuilderParams p,
             FunctionCallStatement call)
         {
             func.AssertParameters(p, call.Parameters);
@@ -80,20 +80,20 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Convert
                 }
             }
 
-            var functionInfo = new FunctionInfo(TypeDescriptor.Boolean, nameof(ToBoolean), null,
+            var functionInfo = new FunctionInfo(TypeDescriptor.Boolean, nameof(ApiConvert.ToBoolean), null,
                 ApiConvert.ClassAccessName, false, func.Parameters, null);
 
-            return WriteNativeMethod(func, p, ToBooleanBody, functionInfo, call.Parameters, call.Info);
+            return ApiBaseFunction.WriteNativeMethod(func, p, ToBooleanBody, functionInfo, call.Parameters, call.Info);
         }
 
-        public static IApiMethodBuilderResult BuildParse(Parse func, ExpressionBuilderParams p,
+        public static IApiMethodBuilderResult BuildParse(ApiConvert.Parse func, ExpressionBuilderParams p,
             FunctionCallStatement call)
         {
             func.AssertParameters(p, call.Parameters);
-            var functionInfo = new FunctionInfo(TypeDescriptor.Numeric, nameof(Parse), null,
+            var functionInfo = new FunctionInfo(TypeDescriptor.Numeric, nameof(ApiConvert.Parse), null,
                 ApiConvert.ClassAccessName, false, func.Parameters, null);
 
-            return CreateNativeMethodWithUtilityExpressionSelector(func, p, functionInfo, FloatUtilityBodies,
+            return ApiBaseFunction.CreateNativeMethodWithUtilityExpressionSelector(func, p, functionInfo, FloatUtilityBodies,
                 call.Parameters, call.Info, ToFloatBody);
         }
 
@@ -120,7 +120,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Convert
                 if (p.Scope.TryGetVariableInfo(variableAccess, out var varInfo))
                 {
                     if (varInfo.TypeDescriptor == targetType ||
-                        (targetType.IsNumeric() && varInfo.TypeDescriptor.IsNumericOrFloat()) ||
+                        (targetType.IsNumericOrFloat() && varInfo.TypeDescriptor.IsNumericOrFloat()) ||
                         (targetType.IsInteger() && varInfo.TypeDescriptor.IsInteger()))
                     {
                         return new ApiMethodBuilderRawResult(new ExpressionResult(
@@ -139,7 +139,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Convert
             var functionInfo = new FunctionInfo(targetType, nativeName, null, ApiConvert.ClassAccessName, false,
                 func.Parameters, null);
 
-            return CreateNativeMethodWithUtilityExpressionSelector(func, p, functionInfo, utilityBodies,
+            return ApiBaseFunction.CreateNativeMethodWithUtilityExpressionSelector(func, p, functionInfo, utilityBodies,
                 call.Parameters, call.Info, pureBashFallback ?? utilityFallbackBody);
         }
 

@@ -65,7 +65,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             foreach (var method in classDecl.Methods)
             {
                 var methodTranspiler = context.GetTranspilerForStatement(method);
-                if (!methodTranspiler.Validate(context, scope, method, out var message))
+                var validateScope = CreateMethodValidationScope(scope, method);
+                if (!methodTranspiler.Validate(context, validateScope, method, out var message))
                 {
                     throw new CompilerException($"{message} {method.Info}", method.Info);
                 }
@@ -74,6 +75,30 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             }
 
             scope.IncrementStatements();
+        }
+
+        private static Scope CreateMethodValidationScope(Scope scope, FunctionStatement method)
+        {
+            var validateScope = scope.BeginNewScope(ScopeType.MethodRoot);
+
+            if (!string.IsNullOrEmpty(method.ClassName) && method.IsInstanceMethod)
+            {
+                validateScope.SetConfig(c => c.InstanceUsesNameref, "true");
+                validateScope.ReserveNewParameter(
+                    ObjectModelHelpers.UserClass(method.ClassName),
+                    ObjectModelHelpers.ThisKeyword,
+                    BashObjectModel.SelfNameref);
+            }
+
+            if (method.Parameters != null)
+            {
+                foreach (var parameter in method.Parameters)
+                {
+                    validateScope.ReserveNewVariable(parameter.TypeDescriptor, parameter.Name);
+                }
+            }
+
+            return validateScope;
         }
     }
 }

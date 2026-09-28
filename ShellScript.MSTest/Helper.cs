@@ -13,7 +13,7 @@ namespace ShellScript.MSTest
             return new Context(
                 new Compiler(),
                 new UnixBashPlatform(),
-                new CompilerFlags(),
+                CompilerFlags.CreateDefault(),
                 Console.Out,
                 Console.Out,
                 Console.Out);

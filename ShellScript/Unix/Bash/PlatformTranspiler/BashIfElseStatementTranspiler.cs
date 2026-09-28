@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Statements;
@@ -39,7 +40,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             var condition =
                 EvaluationStatementTranspilerBase.ProcessEvaluation(context, scope, ifElseStatement.MainIf.Condition);
 
-            if (StatementHelpers.IsAbsoluteBooleanValue(condition, out var isTrue))
+            if (DeadBranchElimination.IsEnabled(context) &&
+                StatementHelpers.IsAbsoluteBooleanValue(condition, out var isTrue))
             {
                 if (isTrue)
                 {
@@ -67,7 +69,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 {
                     condition = EvaluationStatementTranspilerBase.ProcessEvaluation(context, scope, elseIf.Condition);
 
-                    if (StatementHelpers.IsAbsoluteBooleanValue(condition, out isTrue))
+                    if (DeadBranchElimination.IsEnabled(context) &&
+                        StatementHelpers.IsAbsoluteBooleanValue(condition, out isTrue))
                     {
                         if (isTrue)
                         {

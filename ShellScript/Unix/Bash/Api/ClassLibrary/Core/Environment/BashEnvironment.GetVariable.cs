@@ -9,14 +9,14 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Environment
     {
         public class BashGetVariable : GetVariable
         {
-            private readonly FunctionInfo _functionInfo = new FunctionInfo(TypeDescriptor.String,
+            private FunctionInfo FunctionInfo => new FunctionInfo(TypeDescriptor.String,
                 "GetVariable", null, ClassAccessName, false, Parameters, null);
 
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
                 AssertParameters(p, functionCallStatement.Parameters);
-                return WriteNativeMethod(this, p, "printf '%s' \"${!1-}\"", _functionInfo,
+                return WriteNativeMethod(this, p, "printf '%s' \"${!1-}\"", FunctionInfo,
                     functionCallStatement.Parameters, functionCallStatement.Info);
             }
         }

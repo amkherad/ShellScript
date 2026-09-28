@@ -1,0 +1,21 @@
+#!/usr/bin/env shellscript
+// @expect-out EXAMPLE_OK:String
+// @expect-exit 0
+
+string sample = "  ShellScript API  ";
+string trimmed = String.Trim(sample);
+string lower = String.ToLower("AbC");
+string sub = String.Substring("ShellScript", 5);
+string part = String.GetBefore("a=b=c", "=");
+bool same = String.Equals("x", "x");
+string replaced = String.Replace("one-two", "-", "_");
+int at = String.IndexOf("abc", "b");
+
+echo trimmed;
+echo lower;
+echo sub;
+echo part;
+echo $"same={same}";
+echo replaced;
+echo $"at={at}";
+echo "EXAMPLE_OK:String";

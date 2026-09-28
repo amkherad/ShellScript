@@ -9,14 +9,14 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.Path
     {
         public class BashCombine : Combine
         {
-            private readonly FunctionInfo _functionInfo = new FunctionInfo(TypeDescriptor.String,
+            private FunctionInfo FunctionInfo => new FunctionInfo(TypeDescriptor.String,
                 "Combine", null, ClassAccessName, false, Parameters, null);
 
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
                 AssertParameters(p, functionCallStatement.Parameters);
-                return WriteNativeMethod(this, p, "if [[ -z $1 ]]; then\n    printf '%s' \"$2\"\nelif [[ -z $2 ]]; then\n    printf '%s' \"$1\"\nelif [[ $1 == */ ]]; then\n    printf '%s%s' \"$1\" \"${2#/}\"\nelse\n    printf '%s/%s' \"$1\" \"${2#/}\"\nfi", _functionInfo,
+                return WriteNativeMethod(this, p, "if [[ -z $1 ]]; then\n    printf '%s' \"$2\"\nelif [[ -z $2 ]]; then\n    printf '%s' \"$1\"\nelif [[ $1 == */ ]]; then\n    printf '%s%s' \"$1\" \"${2#/}\"\nelse\n    printf '%s/%s' \"$1\" \"${2#/}\"\nfi", FunctionInfo,
                     functionCallStatement.Parameters, functionCallStatement.Info);
             }
         }

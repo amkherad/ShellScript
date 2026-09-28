@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 // foreach iterates over an array.
 
 string[] colors = new string[] {

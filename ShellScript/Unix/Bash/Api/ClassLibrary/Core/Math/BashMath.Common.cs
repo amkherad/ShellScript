@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
@@ -8,157 +9,144 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
 {
     public partial class BashMath
     {
-        private abstract class BashUnaryNumericMathFunction<TApi> : TApi where TApi : ApiBaseFunction
+        private static IApiMethodBuilderResult BuildUnaryNumericMath(
+            ApiBaseFunction func,
+            ExpressionBuilderParams p,
+            FunctionCallStatement functionCallStatement,
+            string nativeName,
+            FunctionParameterDefinitionStatement[] parameters,
+            IDictionary<string, string> utilityBodies,
+            string pureBashFallback)
         {
-            private readonly FunctionInfo _functionInfo;
-            private readonly System.Collections.Generic.Dictionary<string, string> _utilityBodies;
-            private readonly string _pureBashFallback;
+            func.AssertParameters(p, functionCallStatement.Parameters);
+            var functionInfo = new FunctionInfo(TypeDescriptor.Numeric, nativeName, null, ClassAccessName, false,
+                parameters, null);
+            return ApiBaseFunction.CreateNativeMethodWithUtilityExpressionSelector(func, p, functionInfo, utilityBodies,
+                functionCallStatement.Parameters, functionCallStatement.Info, pureBashFallback);
+        }
 
-            protected BashUnaryNumericMathFunction(
-                string nativeName,
-                System.Collections.Generic.Dictionary<string, string> utilityBodies,
-                string pureBashFallback = null)
-            {
-                _functionInfo = new FunctionInfo(TypeDescriptor.Numeric, nativeName, null, ClassAccessName, false,
-                    Parameters, null);
-                _utilityBodies = utilityBodies;
-                _pureBashFallback = pureBashFallback;
-            }
+        private static IApiMethodBuilderResult BuildBinaryNumericMath(
+            ApiBaseFunction func,
+            ExpressionBuilderParams p,
+            FunctionCallStatement functionCallStatement,
+            string nativeName,
+            FunctionParameterDefinitionStatement[] parameters,
+            IDictionary<string, string> utilityBodies,
+            string pureBashFallback)
+        {
+            func.AssertParameters(p, functionCallStatement.Parameters);
+            var functionInfo = new FunctionInfo(TypeDescriptor.Numeric, nativeName, null, ClassAccessName, false,
+                parameters, null);
+            return ApiBaseFunction.CreateNativeMethodWithUtilityExpressionSelector(func, p, functionInfo, utilityBodies,
+                functionCallStatement.Parameters, functionCallStatement.Info, pureBashFallback);
+        }
 
+        public class BashMin : Min
+        {
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
-                FunctionCallStatement functionCallStatement)
-            {
-                AssertParameters(p, functionCallStatement.Parameters);
-                return CreateNativeMethodWithUtilityExpressionSelector(this, p, _functionInfo, _utilityBodies,
-                    functionCallStatement.Parameters, functionCallStatement.Info, _pureBashFallback);
-            }
+                FunctionCallStatement functionCallStatement) =>
+                BuildBinaryNumericMath(this, p, functionCallStatement, nameof(Min), Parameters,
+                    BashMathUtilityBodies.Binary(
+                        "print (a < b ? a : b)",
+                        "if ($1<$2) $1 else $2",
+                        "print(min(a,b))"),
+                    "if [ \"$1\" -lt \"$2\" ]; then echo \"$1\"; else echo \"$2\"; fi");
         }
 
-        private abstract class BashBinaryNumericMathFunction<TApi> : TApi where TApi : ApiBaseFunction
+        public class BashMax : Max
         {
-            private readonly FunctionInfo _functionInfo;
-            private readonly System.Collections.Generic.Dictionary<string, string> _utilityBodies;
-            private readonly string _pureBashFallback;
-
-            protected BashBinaryNumericMathFunction(
-                string nativeName,
-                System.Collections.Generic.Dictionary<string, string> utilityBodies,
-                string pureBashFallback = null)
-            {
-                _functionInfo = new FunctionInfo(TypeDescriptor.Numeric, nativeName, null, ClassAccessName, false,
-                    Parameters, null);
-                _utilityBodies = utilityBodies;
-                _pureBashFallback = pureBashFallback;
-            }
-
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
-                FunctionCallStatement functionCallStatement)
-            {
-                AssertParameters(p, functionCallStatement.Parameters);
-                return CreateNativeMethodWithUtilityExpressionSelector(this, p, _functionInfo, _utilityBodies,
-                    functionCallStatement.Parameters, functionCallStatement.Info, _pureBashFallback);
-            }
+                FunctionCallStatement functionCallStatement) =>
+                BuildBinaryNumericMath(this, p, functionCallStatement, nameof(Max), Parameters,
+                    BashMathUtilityBodies.Binary(
+                        "print (a > b ? a : b)",
+                        "if ($1>$2) $1 else $2",
+                        "print(max(a,b))"),
+                    "if [ \"$1\" -gt \"$2\" ]; then echo \"$1\"; else echo \"$2\"; fi");
         }
 
-        public class BashMin : BashBinaryNumericMathFunction<Min>
+        public class BashFloor : Floor
         {
-            public BashMin() : base(nameof(Min), BashMathUtilityBodies.Binary(
-                "print (a < b ? a : b)",
-                "if ($1<$2) $1 else $2",
-                "print(min(a,b))"),
-                "if [ \"$1\" -lt \"$2\" ]; then echo \"$1\"; else echo \"$2\"; fi")
-            {
-            }
+            public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
+                FunctionCallStatement functionCallStatement) =>
+                BuildUnaryNumericMath(this, p, functionCallStatement, nameof(Floor), Parameters,
+                    BashMathUtilityBodies.Unary(
+                        "print int(a)",
+                        "($1)/1",
+                        "print(math.floor(a))"),
+                    "echo \"$1\" | awk '{print int($1)}'");
         }
 
-        public class BashMax : BashBinaryNumericMathFunction<Max>
+        public class BashCeiling : Ceiling
         {
-            public BashMax() : base(nameof(Max), BashMathUtilityBodies.Binary(
-                "print (a > b ? a : b)",
-                "if ($1>$2) $1 else $2",
-                "print(max(a,b))"),
-                "if [ \"$1\" -gt \"$2\" ]; then echo \"$1\"; else echo \"$2\"; fi")
-            {
-            }
+            public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
+                FunctionCallStatement functionCallStatement) =>
+                BuildUnaryNumericMath(this, p, functionCallStatement, nameof(Ceiling), Parameters,
+                    BashMathUtilityBodies.Unary(
+                        "print (a == int(a) ? a : int(a) + 1)",
+                        "($1+0.999999)/1",
+                        "print(math.ceil(a))"),
+                    "echo \"$1\" | awk '{x=$1; print (x==int(x)?x:int(x)+1)}'");
         }
 
-        public class BashFloor : BashUnaryNumericMathFunction<Floor>
+        public class BashRound : Round
         {
-            public BashFloor() : base(nameof(Floor), BashMathUtilityBodies.Unary(
-                "print int(a)",
-                "($1)/1",
-                "print(math.floor(a))"),
-                "echo \"$1\" | awk '{print int($1)}'")
-            {
-            }
+            public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
+                FunctionCallStatement functionCallStatement) =>
+                BuildUnaryNumericMath(this, p, functionCallStatement, nameof(Round), Parameters,
+                    BashMathUtilityBodies.Unary(
+                        "print int(a + 0.5 * (a < 0 ? -1 : 1))",
+                        "($1+0.5)/1",
+                        "print(int(round(a)))"),
+                    "echo \"$1\" | awk '{printf \"%.0f\\n\", $1}'");
         }
 
-        public class BashCeiling : BashUnaryNumericMathFunction<Ceiling>
+        public class BashTruncate : Truncate
         {
-            public BashCeiling() : base(nameof(Ceiling), BashMathUtilityBodies.Unary(
-                "print (a == int(a) ? a : int(a) + 1)",
-                "($1+0.999999)/1",
-                "print(math.ceil(a))"),
-                "echo \"$1\" | awk '{x=$1; print (x==int(x)?x:int(x)+1)}'")
-            {
-            }
+            public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
+                FunctionCallStatement functionCallStatement) =>
+                BuildUnaryNumericMath(this, p, functionCallStatement, nameof(Truncate), Parameters,
+                    BashMathUtilityBodies.Unary(
+                        "print int(a)",
+                        "($1)/1",
+                        "print(int(a) if a >= 0 else -int(-a))"),
+                    "echo \"$1\" | awk '{print int($1)}'");
         }
 
-        public class BashRound : BashUnaryNumericMathFunction<Round>
+        public class BashSqrt : Sqrt
         {
-            public BashRound() : base(nameof(Round), BashMathUtilityBodies.Unary(
-                "print int(a + 0.5 * (a < 0 ? -1 : 1))",
-                "($1+0.5)/1",
-                "print(int(round(a)))"),
-                "echo \"$1\" | awk '{printf \"%.0f\\n\", $1}'")
-            {
-            }
+            public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
+                FunctionCallStatement functionCallStatement) =>
+                BuildUnaryNumericMath(this, p, functionCallStatement, nameof(Sqrt), Parameters,
+                    BashMathUtilityBodies.Unary(
+                        "print sqrt(a)",
+                        "sqrt($1)",
+                        "print(math.sqrt(a))"),
+                    "echo \"scale=10; sqrt($1)\" | bc -l 2>/dev/null || echo 0");
         }
 
-        public class BashTruncate : BashUnaryNumericMathFunction<Truncate>
+        public class BashPow : Pow
         {
-            public BashTruncate() : base(nameof(Truncate), BashMathUtilityBodies.Unary(
-                "print int(a)",
-                "($1)/1",
-                "print(int(a) if a >= 0 else -int(-a))"),
-                "echo \"$1\" | awk '{print int($1)}'")
-            {
-            }
-        }
-
-        public class BashSqrt : BashUnaryNumericMathFunction<Sqrt>
-        {
-            public BashSqrt() : base(nameof(Sqrt), BashMathUtilityBodies.Unary(
-                "print sqrt(a)",
-                "sqrt($1)",
-                "print(math.sqrt(a))"),
-                "echo \"scale=10; sqrt($1)\" | bc -l 2>/dev/null || echo 0")
-            {
-            }
-        }
-
-        public class BashPow : BashBinaryNumericMathFunction<Pow>
-        {
-            public BashPow() : base(nameof(Pow), BashMathUtilityBodies.Binary(
-                "print a ^ b",
-                "$1 ^ $2",
-                "print(a ** b)"),
-                "echo \"scale=10; $1 ^ $2\" | bc -l 2>/dev/null || echo 0")
-            {
-            }
+            public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
+                FunctionCallStatement functionCallStatement) =>
+                BuildBinaryNumericMath(this, p, functionCallStatement, nameof(Pow), Parameters,
+                    BashMathUtilityBodies.Binary(
+                        "print a ^ b",
+                        "$1 ^ $2",
+                        "print(a ** b)"),
+                    "echo \"scale=10; $1 ^ $2\" | bc -l 2>/dev/null || echo 0");
         }
 
         public class BashSign : Sign
         {
-            private readonly FunctionInfo _functionInfo =
-                new FunctionInfo(TypeDescriptor.Integer, nameof(Sign), null, ClassAccessName, false,
+            private FunctionInfo FunctionInfo => new FunctionInfo(TypeDescriptor.Integer, nameof(Sign), null, ClassAccessName, false,
                     new FunctionParameterDefinitionStatement[] {NumberParameter}, null);
 
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
                 AssertParameters(p, functionCallStatement.Parameters);
-                return CreateNativeMethodWithUtilityExpressionSelector(this, p, _functionInfo,
+                return CreateNativeMethodWithUtilityExpressionSelector(this, p, FunctionInfo,
                     BashMathUtilityBodies.Unary(
                         "if (a < 0) print -1; else if (a > 0) print 1; else print 0",
                         "if ($1<0) -1 else if ($1>0) 1 else 0",

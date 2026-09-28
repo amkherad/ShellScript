@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 // @expect-out EXAMPLE_OK:Json
 // @expect-exit 0
 

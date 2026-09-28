@@ -1,0 +1,5 @@
+i=42
+3.5
+b=1
+42
+EXAMPLE_OK:Convert

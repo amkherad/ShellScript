@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
@@ -30,6 +31,25 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
         {
             var loop = (WhileStatement) statement;
             var loopScope = scope.BeginNewScope(ScopeType.Block);
+
+            if (DeadBranchElimination.IsEnabled(context) &&
+                DeadBranchElimination.TryGetConstantBooleanCondition(context, loopScope, loop.Condition,
+                    out var constantCondition))
+            {
+                if (!constantCondition)
+                {
+                    return;
+                }
+
+                writer.WriteLine("while :");
+                writer.WriteLine("do");
+                BashBlockStatementTranspiler.WriteBlockStatement(
+                    context, loopScope, writer, metaWriter, loop.Statement, ScopeType.Block, false);
+                writer.WriteLine("done");
+                scope.IncrementStatements();
+                return;
+            }
+
             var transpiler = context.GetEvaluationTranspilerForStatement(loop.Condition);
             writer.WriteLine("while");
             var condition = transpiler.GetConditionalExpression(

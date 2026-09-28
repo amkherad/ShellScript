@@ -45,6 +45,11 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
             {
                 if (stt is VariableAccessStatement varAccessStt)
                 {
+                    if (ObjectModelHelpers.TryResolveInstanceFieldAccess(scope, varAccessStt, out _, out _))
+                    {
+                        return false;
+                    }
+
                     identifierName = varAccessStt.VariableName;
                     info = varAccessStt.Info;
                     return !scope.IsIdentifierExists(varAccessStt.VariableName);
@@ -97,6 +102,14 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                 throw BashTranspilerHelpers.InvalidStatementStructure(scope, null);
             }
 
+            return ProcessEvaluationCore(context, scope, statement);
+        }
+
+        private static bool AllowsConstantFolding(Context context) => context.Flags.UseConstantFolding;
+
+        private static EvaluationStatement ProcessEvaluationCore(Context context, Scope scope,
+            EvaluationStatement statement)
+        {
             switch (statement)
             {
                 case ConstantValueStatement constantValueStatement:
@@ -137,6 +150,11 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
 
                 case VariableAccessStatement variableAccessStatement:
                 {
+                    if (ObjectModelHelpers.TryResolveInstanceFieldAccess(scope, variableAccessStatement, out _, out _))
+                    {
+                        return variableAccessStatement;
+                    }
+
                     if (scope.TryGetVariableInfo(variableAccessStatement, out _))
                     {
                         return variableAccessStatement;
@@ -170,7 +188,10 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                                     bitwiseEvaluationStatement);
                             }
 
-                            if (bitwiseEvaluationStatement.Right is ConstantValueStatement constantValueStatement)
+                            var bitwiseRight = ProcessEvaluation(context, scope, bitwiseEvaluationStatement.Right);
+
+                            if (AllowsConstantFolding(context) &&
+                                bitwiseRight is ConstantValueStatement constantValueStatement)
                             {
                                 if (constantValueStatement.TypeDescriptor.IsInteger())
                                 {
@@ -183,7 +204,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                                     return new ConstantValueStatement(
                                         constantValueStatement.TypeDescriptor,
                                         (~value).ToString(NumberFormatInfo.InvariantInfo),
-                                        constantValueStatement.Info
+                                        bitwiseEvaluationStatement.Info
                                     )
                                     {
                                         ParentStatement = bitwiseEvaluationStatement.ParentStatement
@@ -194,7 +215,16 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                                     bitwiseEvaluationStatement);
                             }
 
-                            throw BashTranspilerHelpers.InvalidStatementStructure(scope, bitwiseEvaluationStatement);
+                            var bitwiseNotResult = new BitwiseEvaluationStatement(
+                                null,
+                                bitwiseEvaluationStatement.Operator,
+                                bitwiseRight,
+                                bitwiseEvaluationStatement.Info)
+                            {
+                                ParentStatement = bitwiseEvaluationStatement.ParentStatement
+                            };
+                            bitwiseRight.ParentStatement = bitwiseNotResult;
+                            return bitwiseNotResult;
                         }
                         case BitwiseAndOperator _:
                         case BitwiseOrOperator _:
@@ -203,7 +233,8 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                             var left = ProcessEvaluation(context, scope, bitwiseEvaluationStatement.Left);
                             var right = ProcessEvaluation(context, scope, bitwiseEvaluationStatement.Right);
 
-                            if (left is ConstantValueStatement leftConstantValue &&
+                            if (AllowsConstantFolding(context) &&
+                                left is ConstantValueStatement leftConstantValue &&
                                 right is ConstantValueStatement rightConstantValue)
                             {
                                 if (leftConstantValue.IsInteger() &&
@@ -310,7 +341,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
 
                             ValueTuple<ConstantValueStatement, EvaluationStatement> singleConstantPair;
 
-                            if (leftConstantValue != null)
+                            if (AllowsConstantFolding(context) && leftConstantValue != null)
                             {
                                 if (rightConstantValue != null)
                                 {
@@ -354,7 +385,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                                 singleConstantPair.Item2 = left;
                             }
 
-                            if (singleConstantPair.Item1 != null)
+                            if (AllowsConstantFolding(context) && singleConstantPair.Item1 != null)
                             {
                                 if (singleConstantPair.Item1.IsBoolean())
                                 {
@@ -402,7 +433,8 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                             var left = ProcessEvaluation(context, scope, logicalEvaluationStatement.Left);
                             var right = ProcessEvaluation(context, scope, logicalEvaluationStatement.Right);
 
-                            if (left is ConstantValueStatement leftConstant &&
+                            if (AllowsConstantFolding(context) &&
+                                left is ConstantValueStatement leftConstant &&
                                 right is ConstantValueStatement rightConstant)
                             {
                                 if (leftConstant.IsNumber() && rightConstant.IsNumber())
@@ -427,10 +459,13 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                                     if (double.TryParse(leftConstant.Value, out var leftFloat) &&
                                         double.TryParse(rightConstant.Value, out var rightFloat))
                                     {
+                                        var floatsEqual = Math.Abs(leftFloat - rightFloat) < double.Epsilon;
+                                        var boolResult = logicalEvaluationStatement.Operator is EqualOperator
+                                            ? floatsEqual
+                                            : !floatsEqual;
                                         return new ConstantValueStatement(
                                             TypeDescriptor.Boolean,
-                                            (Math.Abs(leftFloat - rightFloat) < double.Epsilon).ToString(CultureInfo
-                                                .InvariantCulture),
+                                            boolResult.ToString(CultureInfo.InvariantCulture),
                                             logicalEvaluationStatement.Info
                                         )
                                         {
@@ -474,7 +509,8 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                             var left = ProcessEvaluation(context, scope, logicalEvaluationStatement.Left);
                             var right = ProcessEvaluation(context, scope, logicalEvaluationStatement.Right);
 
-                            if (left is ConstantValueStatement leftConstantValue &&
+                            if (AllowsConstantFolding(context) &&
+                                left is ConstantValueStatement leftConstantValue &&
                                 right is ConstantValueStatement rightConstantValue)
                             {
                                 if (leftConstantValue.IsNumber() && rightConstantValue.IsNumber())
@@ -605,7 +641,10 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                                     logicalEvaluationStatement);
                             }
 
-                            if (logicalEvaluationStatement.Right is ConstantValueStatement constantValueStatement)
+                            var notRight = ProcessEvaluation(context, scope, logicalEvaluationStatement.Right);
+
+                            if (AllowsConstantFolding(context) &&
+                                notRight is ConstantValueStatement constantValueStatement)
                             {
                                 if (constantValueStatement.TypeDescriptor.IsBoolean() ||
                                     constantValueStatement.IsNumber())
@@ -618,9 +657,9 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                                     }
 
                                     return new ConstantValueStatement(
-                                        constantValueStatement.TypeDescriptor,
+                                        TypeDescriptor.Boolean,
                                         (!value).ToString(NumberFormatInfo.InvariantInfo),
-                                        constantValueStatement.Info
+                                        logicalEvaluationStatement.Info
                                     )
                                     {
                                         ParentStatement = logicalEvaluationStatement.ParentStatement
@@ -631,8 +670,16 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                                     logicalEvaluationStatement);
                             }
 
-                            return logicalEvaluationStatement;
-                            //throw BashTranspilerHelpers.InvalidStatementStructure(scope, logicalEvaluationStatement);
+                            var notResult = new LogicalEvaluationStatement(
+                                null,
+                                logicalEvaluationStatement.Operator,
+                                notRight,
+                                logicalEvaluationStatement.Info)
+                            {
+                                ParentStatement = logicalEvaluationStatement.ParentStatement
+                            };
+                            notRight.ParentStatement = notResult;
+                            return notResult;
                         }
                         default:
                             throw new InvalidOperationException();
@@ -749,7 +796,8 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                             var left = ProcessEvaluation(context, scope, arithmeticEvaluationStatement.Left);
                             var right = ProcessEvaluation(context, scope, arithmeticEvaluationStatement.Right);
 
-                            if (left is ConstantValueStatement leftConstant &&
+                            if (AllowsConstantFolding(context) &&
+                                left is ConstantValueStatement leftConstant &&
                                 right is ConstantValueStatement rightConstant)
                             {
                                 if (leftConstant.IsNumber() && rightConstant.IsNumber())
@@ -919,6 +967,16 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                 case TypeCastStatement typeCastStatement:
                 {
                     var right = ProcessEvaluation(context, scope, typeCastStatement.Target);
+
+                    if (AllowsConstantFolding(context) && right is ConstantValueStatement constantSource)
+                    {
+                        var folded = ConstantFolding.TryFoldCast(typeCastStatement.TypeDescriptor, constantSource,
+                            typeCastStatement.Info, typeCastStatement.ParentStatement);
+                        if (folded != null)
+                        {
+                            return folded;
+                        }
+                    }
 
                     var result = new TypeCastStatement(typeCastStatement.TypeDescriptor, right, typeCastStatement.Info)
                     {

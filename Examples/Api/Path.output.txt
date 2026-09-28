@@ -1,0 +1,4 @@
+temp=/tmp
+name=child
+rooted=1
+EXAMPLE_OK:Path

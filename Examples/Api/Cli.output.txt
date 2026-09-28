@@ -1,0 +1,4 @@
+count=0
+
+verbose=0
+EXAMPLE_OK:Cli

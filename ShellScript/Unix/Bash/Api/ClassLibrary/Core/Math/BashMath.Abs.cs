@@ -98,7 +98,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                     {
                         return Inline(
                             new ConstantValueStatement(TypeDescriptor.Integer,
-                                System.Math.Abs(integerResult).ToString(NumberFormatInfo.InvariantInfo),
+                                global::System.Math.Abs(integerResult).ToString(NumberFormatInfo.InvariantInfo),
                                 statement.Info)
                         );
                     }
@@ -107,7 +107,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Math
                     {
                         return Inline(
                             new ConstantValueStatement(TypeDescriptor.Float,
-                                System.Math.Abs(floatResult).ToString(NumberFormatInfo.InvariantInfo),
+                                global::System.Math.Abs(floatResult).ToString(NumberFormatInfo.InvariantInfo),
                                 statement.Info)
                         );
                     }

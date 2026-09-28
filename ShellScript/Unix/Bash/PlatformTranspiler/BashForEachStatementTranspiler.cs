@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling;

@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 // @expect-out EXAMPLE_OK:Cli
 // @expect-exit 0
 // @args run --verbose value

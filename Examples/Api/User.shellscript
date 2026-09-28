@@ -1,0 +1,10 @@
+#!/usr/bin/env shellscript
+// @expect-out EXAMPLE_OK:User
+// @expect-exit 0
+
+string name = User.GetUserName();
+bool elevated = User.IsSuperUser();
+
+echo $"nameSet={!String.IsNullOrEmpty(name)}";
+echo $"elevated={elevated}";
+echo "EXAMPLE_OK:User";

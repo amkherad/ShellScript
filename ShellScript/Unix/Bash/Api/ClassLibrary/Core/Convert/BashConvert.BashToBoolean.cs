@@ -1,3 +1,4 @@
+using ShellScript.Core.Language.Library;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 

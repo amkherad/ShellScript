@@ -9,14 +9,14 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.IO.Path
     {
         public class BashGetFileName : GetFileName
         {
-            private readonly FunctionInfo _functionInfo = new FunctionInfo(TypeDescriptor.String,
+            private FunctionInfo FunctionInfo => new FunctionInfo(TypeDescriptor.String,
                 "GetFileName", null, ClassAccessName, false, Parameters, null);
 
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p,
                 FunctionCallStatement functionCallStatement)
             {
                 AssertParameters(p, functionCallStatement.Parameters);
-                return WriteNativeMethod(this, p, "path=${1%/}\nprintf '%s' \"${path##*/}\"", _functionInfo,
+                return WriteNativeMethod(this, p, "path=${1%/}\nprintf '%s' \"${path##*/}\"", FunctionInfo,
                     functionCallStatement.Parameters, functionCallStatement.Info);
             }
         }

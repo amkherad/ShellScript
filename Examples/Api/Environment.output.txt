@@ -1,0 +1,4 @@
+marker=
+cwdEmpty=0
+homeSet=1
+EXAMPLE_OK:Environment

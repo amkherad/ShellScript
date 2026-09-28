@@ -1,0 +1,4 @@
+#!/usr/bin/env shellscript
+
+echo "snapshot-ok";
+echo $"line two";

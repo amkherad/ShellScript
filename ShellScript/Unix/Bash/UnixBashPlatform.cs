@@ -34,6 +34,7 @@ namespace ShellScript.Unix.Bash
             new BashFunctionCallStatementTranspiler(),
             new BashEchoStatementTranspiler(),
             new BashReturnStatementTranspiler(),
+            new BashThrowStatementTranspiler(),
             new BashIfElseStatementTranspiler(),
             new BashSwitchCaseStatementTranspiler(),
             new BashWhileStatementTranspiler(),

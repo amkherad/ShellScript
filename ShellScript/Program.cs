@@ -24,6 +24,8 @@ namespace ShellScript
         public static ICollection<ICommand> AvailableCommands { get; } = new List<ICommand>
         {
             new CompileCommand(),
+            new RunCommand(),
+            new TestCommand(),
             new PlatformsCommand(),
             new ExecuteCommand(),
             new VersionInfoCommand(),
@@ -69,8 +71,19 @@ namespace ShellScript
                             return (int) ResultCodes.Successful;
                         }
                         
-                        return (int) command.Execute(outputWriter, errorWriter, warningWriter, logWriter,
+                        var result = command.Execute(outputWriter, errorWriter, warningWriter, logWriter,
                             commandContext);
+                        if (command is RunCommand runCommand)
+                        {
+                            return runCommand.ProcessExitCode;
+                        }
+
+                        if (command is TestCommand testCommand)
+                        {
+                            return testCommand.ProcessExitCode;
+                        }
+
+                        return (int) result;
                     }
                 }
             }

@@ -63,6 +63,11 @@ namespace ShellScript.Core.Language.Compiler
             string outputFilePath, IPlatform platform, CompilerFlags flags, TextWriter errorWriter,
             TextWriter warningWriter, TextWriter logWriter)
         {
+            if (!string.IsNullOrEmpty(outputObjPath) && !Directory.Exists(outputObjPath))
+            {
+                Directory.CreateDirectory(outputObjPath);
+            }
+
             var tempSrcPath = Path.Combine(outputObjPath,
                 Path.GetFileNameWithoutExtension(outputFilePath) + ".src" + Path.GetExtension(outputFilePath) + ".bin");
             var tempMetaPath = Path.Combine(outputObjPath,

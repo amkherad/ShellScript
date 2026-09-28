@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 // Function definitions, parameters, default values, and return.
 
 void greet(string name) {

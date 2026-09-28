@@ -1,9 +1,16 @@
+#!/usr/bin/env shellscript
 // @expect-out EXAMPLE_OK:Math
 // @expect-exit 0
 
 number abs = Math.Abs(-7);
 number min = Math.Min(2, 9);
+number max = Math.Max(2, 9);
+number floor = Math.Floor(3.7);
+number round = Math.Round(3.5);
 
 echo abs;
 echo min;
+echo max;
+echo floor;
+echo round;
 echo "EXAMPLE_OK:Math";

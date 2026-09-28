@@ -1,0 +1,2 @@
+snapshot-ok
+line two

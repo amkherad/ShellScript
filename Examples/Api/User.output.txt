@@ -1,0 +1,3 @@
+nameSet=1
+elevated=0
+EXAMPLE_OK:User

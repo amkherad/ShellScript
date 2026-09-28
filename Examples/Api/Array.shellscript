@@ -1,10 +1,17 @@
+#!/usr/bin/env shellscript
 // @expect-out EXAMPLE_OK:Array
 // @expect-exit 0
 
 int[] values = new int[] { 10, 20, 30 };
 int length = Array.GetLength(values);
 int index = Array.IndexOf(values, 20);
+bool hasTwenty = Array.Contains(values, 20);
+
+int[] copy = new int[] { 0, 0, 0 };
+Array.Copy(copy, values);
 
 echo $"length={length}";
 echo $"index={index}";
+echo $"hasTwenty={hasTwenty}";
+echo $"copyLen={Array.GetLength(copy)}";
 echo "EXAMPLE_OK:Array";

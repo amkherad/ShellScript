@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 // @expect-out EXAMPLE_OK:Unicode
 // @expect-exit 0
 

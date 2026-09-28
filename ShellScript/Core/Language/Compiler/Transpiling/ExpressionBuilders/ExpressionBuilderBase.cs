@@ -273,6 +273,11 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                                     continue;
                             }
 
+                            if (PinElimination.CanElidePinForAssignmentResult(p, right))
+                            {
+                                continue;
+                            }
+
                             var varName = PinExpressionToVariable(p, null, left);
 
                             var template = new VariableAccessStatement(varName.Name, left.Template.Info);
@@ -999,6 +1004,15 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                             }
                             case ApiMethodBuilderInlineResult inlineResult:
                             {
+                                if (inlineResult.Statement is FunctionCallStatement &&
+                                    p.Scope.TryGetNativeFunctionInfo(functionCallStatement.ClassName,
+                                        functionCallStatement.FunctionName, out var nativeFunctionInfo))
+                                {
+                                    funcInfo = nativeFunctionInfo;
+                                    sourceObjectInfo = nativeFunctionInfo;
+                                    break;
+                                }
+
                                 return CreateExpression(p, inlineResult.Statement);
                             }
 
@@ -1007,25 +1021,29 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                         }
                     }
 
-                    if (funcInfo.InlinedStatement != null && p.Context.Flags.UseInlining)
+                    if (funcInfo.InlinedStatement != null && p.Context.Flags.UseInlining &&
+                        string.IsNullOrEmpty(funcInfo.ClassName) &&
+                        p.InlineDepth < p.Context.Flags.MaxInlineDepth)
                     {
-                        var inlined = UnWrapInlinedStatement(p, funcInfo, functionCallStatement);
+                        var inlineParams = new ExpressionBuilderParams(p) {InlineDepth = p.InlineDepth + 1};
+                        var inlined = UnWrapInlinedStatement(inlineParams, funcInfo, functionCallStatement);
 
                         if (inlined is EvaluationStatement evaluationStatement)
                         {
-                            return CreateExpressionRecursive(p, evaluationStatement);
+                            return CreateExpressionRecursive(inlineParams, evaluationStatement);
                         }
 
                         if (inlined is ReturnStatement returnStatement)
                         {
-                            return CreateExpressionRecursive(p, returnStatement.Result);
+                            return CreateExpressionRecursive(inlineParams, returnStatement.Result);
                         }
 
                         //function calls only allowed in blocks, not in evaluation expressions.
                         if (p.UsageContext is BlockStatement)
                         {
                             var transpiler = p.Context.GetTranspilerForStatement(inlined);
-                            transpiler.WriteBlock(p.Context, p.Scope, p.NonInlinePartWriter, p.MetaWriter, inlined);
+                            transpiler.WriteBlock(inlineParams.Context, inlineParams.Scope,
+                                inlineParams.NonInlinePartWriter, inlineParams.MetaWriter, inlined);
 
                             return ExpressionResult.EmptyResult;
                         }
@@ -1073,17 +1091,18 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders
                     }
 
                     var paramTemplates = new List<EvaluationStatement>();
-                    if (!(functionCallStatement.Parameters is null))
+                    var schemeParameters = funcInfo.Parameters;
+                    var argumentCount = schemeParameters?.Length ?? functionCallStatement.Parameters?.Length ?? 0;
+                    for (var argumentIndex = 0; argumentIndex < argumentCount; argumentIndex++)
                     {
-                        foreach (var param in functionCallStatement.Parameters)
-                        {
-                            var result = CreateExpressionRecursive(p, param);
+                        var argument = FunctionStatementTranspilerBase.GetSchemeParameterValueByIndex(p.Context,
+                            p.Scope, funcInfo, functionCallStatement, argumentIndex);
+                        var result = CreateExpressionRecursive(p, argument);
 
-                            call.Append(' ');
-                            call.Append(FormatFunctionCallParameterSubExpression(p, result));
+                        call.Append(' ');
+                        call.Append(FormatFunctionCallParameterSubExpression(p, result));
 
-                            paramTemplates.Add(result.Template);
-                        }
+                        paramTemplates.Add(result.Template);
                     }
 
                     if (!p.VoidFunctionCall)

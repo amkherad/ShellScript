@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Compiler.Statements.Operators;
 using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 
@@ -53,6 +54,11 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             if (loop.AfterLoopEvaluations != null)
                 foreach (var evaluation in loop.AfterLoopEvaluations)
                 {
+                    if (TryWriteForLoopUpdate(context, loopScope, writer, metaWriter, evaluation))
+                    {
+                        continue;
+                    }
+
                     var expression = evaluation as EvaluationStatement;
                     if (expression != null)
                     {
@@ -65,6 +71,34 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 }
             writer.WriteLine("done");
             scope.IncrementStatements();
+        }
+
+        private static bool TryWriteForLoopUpdate(Context context, Scope scope, TextWriter writer,
+            TextWriter metaWriter, IStatement evaluation)
+        {
+            if (!(evaluation is ArithmeticEvaluationStatement arithmetic) ||
+                !(arithmetic.Operator is IncrementOperator || arithmetic.Operator is DecrementOperator))
+            {
+                return false;
+            }
+
+            var operand = (arithmetic.Left ?? arithmetic.Right) as VariableAccessStatement;
+            if (operand == null)
+            {
+                return false;
+            }
+
+            var name = operand.VariableName;
+            if (arithmetic.Operator is IncrementOperator)
+            {
+                writer.WriteLine(arithmetic.Left == null ? $"((++{name}))" : $"(({name}++))");
+            }
+            else
+            {
+                writer.WriteLine(arithmetic.Left == null ? $"((--{name}))" : $"(({name}--))");
+            }
+
+            return true;
         }
     }
 }

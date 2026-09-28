@@ -1,0 +1,6 @@
+#!/usr/bin/env shellscript
+// @expect-out EXAMPLE_OK:Locale
+// @expect-exit 0
+
+Locale.GetCurrentLocale();
+echo "EXAMPLE_OK:Locale";

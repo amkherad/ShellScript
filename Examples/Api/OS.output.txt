@@ -1,0 +1,4 @@
+host=3e086475bfc0
+kernel=Linux
+arch=x86_64
+EXAMPLE_OK:OS

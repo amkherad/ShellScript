@@ -41,7 +41,6 @@ namespace ShellScript.Core.Language.Compiler.Parsing
             "class",
             "delegate",
             "const",
-            "array",
             "int[]",
             "long[]",
             "double[]",
@@ -215,6 +214,8 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                         return ReadDoWhile(token, enumerator, context);
                     case TokenType.Loop:
                         return ReadLoop(token, enumerator, context);
+                    case TokenType.Switch:
+                        return ReadSwitchCase(token, enumerator, context);
 
                     case TokenType.Class:
                         return ReadClass(token, enumerator, context);
@@ -222,6 +223,8 @@ namespace ShellScript.Core.Language.Compiler.Parsing
                     //    return ReadFunction(token, enumerator, info);
                     case TokenType.Return:
                         return ReadReturn(token, enumerator, context);
+                    case TokenType.Throw:
+                        return ReadThrow(token, enumerator, context);
 
                     case TokenType.OpenBrace:
                         return ReadBlockStatement(token, enumerator, context);

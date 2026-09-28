@@ -1,0 +1,4 @@
+plain string
+'single quotes work too'
+name: ShellScript
+name: ShellScript, version 1

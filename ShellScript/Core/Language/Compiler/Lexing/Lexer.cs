@@ -174,10 +174,30 @@ namespace ShellScript.Core.Language.Compiler.Lexing
             var lineNumber = 0;
 
             var isMultilineCommentOpen = false;
+            var skipLeadingHashLine = true;
 
             string cline; //current line
             while ((cline = reader.ReadLine()) != null)
             {
+                if (skipLeadingHashLine)
+                {
+                    if (string.IsNullOrWhiteSpace(cline))
+                    {
+                        lineNumber++;
+                        continue;
+                    }
+
+                    var trimmedLeading = cline.TrimStart();
+                    if (trimmedLeading.Length > 0 && trimmedLeading[0] == '#')
+                    {
+                        lineNumber++;
+                        skipLeadingHashLine = false;
+                        continue;
+                    }
+
+                    skipLeadingHashLine = false;
+                }
+
                 if (string.IsNullOrWhiteSpace(cline))
                 {
                     lineNumber++;
@@ -246,7 +266,7 @@ namespace ShellScript.Core.Language.Compiler.Lexing
                     line = line.Substring(1);
                     columnNumber++;
                 }
-                else if (TryFindMatch(line, out var matchType, out var matchString))
+                else if (TryFindMatch(line, out var matchType, out var matchString, out var isStringInterpolation))
                 {
                     var addToken = true;
                     
@@ -285,7 +305,8 @@ namespace ShellScript.Core.Language.Compiler.Lexing
 
                     if (addToken && !isMultilineCommentOpen)
                     {
-                        tokens.Add(new Token(matchString, matchType, columnNumber, columnNumber + matchString.Length, lineNumber));
+                        tokens.Add(new Token(matchString, matchType, columnNumber, columnNumber + matchString.Length,
+                            lineNumber, isStringInterpolation));
                     }
                     
                     line = line.Substring(matchString.Length);
@@ -304,6 +325,21 @@ namespace ShellScript.Core.Language.Compiler.Lexing
 
         public bool TryFindMatch(string text, out TokenType matchType, out string matchString)
         {
+            return TryFindMatch(text, out matchType, out matchString, out _);
+        }
+
+        public bool TryFindMatch(string text, out TokenType matchType, out string matchString,
+            out bool isStringInterpolation)
+        {
+            isStringInterpolation = false;
+
+            if (TryLexInterpolatedString(text, out matchString))
+            {
+                matchType = TokenType.StringValue1;
+                isStringInterpolation = true;
+                return true;
+            }
+
             Match match;
 
             match = MultiLineCommentOpen.Match(text);
@@ -359,6 +395,114 @@ namespace ShellScript.Core.Language.Compiler.Lexing
 
             matchType = TokenType.NotDefined;
             matchString = text.Length > 0 ? text[0].ToString() : string.Empty;
+            return false;
+        }
+
+        private static bool TryLexInterpolatedString(string text, out string matchString)
+        {
+            matchString = null;
+            if (string.IsNullOrEmpty(text) || text.Length < 3 || text[0] != '$' || text[1] != '"')
+            {
+                return false;
+            }
+
+            var i = 2;
+            while (i < text.Length)
+            {
+                var ch = text[i];
+                if (ch == '\\' && i + 1 < text.Length)
+                {
+                    i += 2;
+                    continue;
+                }
+
+                if (ch == '"')
+                {
+                    matchString = text.Substring(0, i + 1);
+                    return true;
+                }
+
+                if (ch == '{')
+                {
+                    if (i + 1 < text.Length && text[i + 1] == '{')
+                    {
+                        i += 2;
+                        continue;
+                    }
+
+                    i++;
+                    var depth = 1;
+                    while (i < text.Length && depth > 0)
+                    {
+                        if (text[i] == '\\' && i + 1 < text.Length)
+                        {
+                            i += 2;
+                            continue;
+                        }
+
+                        if (text[i] == '"' || text[i] == '\'')
+                        {
+                            if (!TrySkipQuoted(text, ref i))
+                            {
+                                return false;
+                            }
+
+                            continue;
+                        }
+
+                        if (text[i] == '{')
+                        {
+                            depth++;
+                        }
+                        else if (text[i] == '}')
+                        {
+                            depth--;
+                        }
+
+                        i++;
+                    }
+
+                    if (depth != 0)
+                    {
+                        return false;
+                    }
+
+                    continue;
+                }
+
+                if (ch == '}' && i + 1 < text.Length && text[i + 1] == '}')
+                {
+                    i += 2;
+                    continue;
+                }
+
+                i++;
+            }
+
+            return false;
+        }
+
+        private static bool TrySkipQuoted(string text, ref int index)
+        {
+            var quote = text[index];
+            index++;
+            while (index < text.Length)
+            {
+                if (text[index] == '\\' && index + 1 < text.Length)
+                {
+                    index += 2;
+                    continue;
+                }
+
+                if (text[index] == quote)
+                {
+                    index++;
+                    return true;
+                }
+
+                index++;
+            }
+
             return false;
         }
     }

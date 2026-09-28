@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 // Operators, casts, and the conditional (ternary) operator.
 
 int a = 17;
@@ -21,7 +22,12 @@ echo !false;
 double fromInt = a;
 int truncated = (int)fromInt;
 
-string label = (a > 10) ? "large" : "small";
+string label;
+if (a > 10) {
+    label = "large";
+} else {
+    label = "small";
+}
 echo $"a is {label}";
 
 echo 80 * "-";

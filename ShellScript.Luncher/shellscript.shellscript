@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 //#option("reparse-args", "os") //this is default
 //#option("rename-args", "Arguments") //renaming the args[] to Arguments to clearness.
 

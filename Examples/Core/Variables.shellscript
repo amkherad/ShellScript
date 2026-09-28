@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 // Variable definitions and assignments (strong typing, no var keyword).
 
 int count = 10;

@@ -11,14 +11,18 @@ namespace ShellScript.Core.Language.Compiler.Lexing
         
         public int ColumnStart { get; }
         public int ColumnEnd { get; }
+
+        public bool IsStringInterpolation { get; }
         
-        public Token(string value, TokenType type, int columnStart, int columnEnd, int lineNumber)
+        public Token(string value, TokenType type, int columnStart, int columnEnd, int lineNumber,
+            bool isStringInterpolation = false)
             : base(null, lineNumber, columnStart)
         {
             Value = value;
             Type = type;
             ColumnStart = columnStart;
             ColumnEnd = columnEnd;
+            IsStringInterpolation = isStringInterpolation;
         }
     }
 }

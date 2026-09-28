@@ -4,17 +4,21 @@ namespace ShellScript.Core.Language.Compiler.Statements
     {
         public bool CanBeEmbedded => true;
         public StatementInfo Info { get; }
-        public IStatement[] TraversableChildren => new IStatement[0];
+        public VariableAccessStatement Exception { get; }
 
+        public IStatement[] TraversableChildren => Exception != null
+            ? new IStatement[] {Exception}
+            : new IStatement[0];
 
-        public ThrowStatement(StatementInfo info)
+        public ThrowStatement(VariableAccessStatement exception, StatementInfo info)
         {
+            Exception = exception;
             Info = info;
         }
 
         public override string ToString()
         {
-            return $"throw ";
+            return Exception != null ? $"throw {Exception.VariableName}" : "throw";
         }
     }
 }

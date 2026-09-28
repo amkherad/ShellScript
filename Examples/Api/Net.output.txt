@@ -1,0 +1,3 @@
+loopback=::1
+alive=0
+EXAMPLE_OK:Net

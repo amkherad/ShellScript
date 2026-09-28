@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# So patterns like ./**/*.shellscript expand recursively (otherwise bash only matches ~2 paths).
+shopt -s globstar 2>/dev/null || true
+
+# Local dev shim: forwards to the ShellScript CLI via `dotnet run`.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT="${ROOT}/ShellScript/ShellScript.csproj"
+CONFIGURATION="${SHELLSCRIPT_CONFIGURATION:-Release}"
+
+if [[ ! -f "${PROJECT}" ]]; then
+  echo "shellscript: project not found at ${PROJECT}" >&2
+  exit 1
+fi
+
+exec dotnet run --configuration "${CONFIGURATION}" --project "${PROJECT}" -- "$@"

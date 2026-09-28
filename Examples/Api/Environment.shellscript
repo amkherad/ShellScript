@@ -1,0 +1,14 @@
+#!/usr/bin/env shellscript
+// @expect-out EXAMPLE_OK:Environment
+// @expect-exit 0
+
+string cwd = Environment.GetCurrentDirectory();
+string home = Environment.GetHomeDirectory();
+Environment.SetVariable("SS_EXAMPLE_MARKER", "set");
+string marker = Environment.GetVariable("SS_EXAMPLE_MARKER");
+bool cwdEmpty = String.IsNullOrEmpty(cwd);
+
+echo $"marker={marker}";
+echo $"cwdEmpty={cwdEmpty}";
+echo $"homeSet={!String.IsNullOrEmpty(home)}";
+echo "EXAMPLE_OK:Environment";

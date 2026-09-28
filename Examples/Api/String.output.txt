@@ -1,0 +1,8 @@
+ShellScript API
+abc
+Script
+a
+same=1
+one_two
+at=1
+EXAMPLE_OK:String

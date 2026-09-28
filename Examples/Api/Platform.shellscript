@@ -1,0 +1,11 @@
+#!/usr/bin/env shellscript
+// @expect-out EXAMPLE_OK:Platform
+// @expect-exit 0
+
+Platform.Call("true");
+string text = Platform.CallString("echo platform-string");
+int value = Platform.CallInteger("printf '%s' 9");
+
+echo text;
+echo $"value={value}";
+echo "EXAMPLE_OK:Platform";

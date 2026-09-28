@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 // echo is a special void statement (not a normal expression).
 
 echo "plain string";

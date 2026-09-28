@@ -1,35 +1,106 @@
 using System;
 using System.IO;
+using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Compiler.Statements.Operators;
 using ShellScript.Core.Language.Compiler.Transpiling;
+using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
+using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
+using ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
 {
     public class BashSwitchCaseStatementTranspiler : IPlatformStatementTranspiler
     {
         public Type StatementType => typeof(SwitchCaseStatement);
-        
-        public bool CanInline(Context context, Scope scope, IStatement statement)
-        {
-            return false;
-        }
+
+        public bool CanInline(Context context, Scope scope, IStatement statement) => false;
 
         public bool Validate(Context context, Scope scope, IStatement statement, out string message)
         {
-            throw new NotImplementedException();
+            message = null;
+            return statement is SwitchCaseStatement;
         }
 
-        public void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter, TextWriter nonInlinePartWriter,
+        public void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
+            TextWriter nonInlinePartWriter, IStatement statement) =>
+            throw new NotSupportedException();
+
+        public void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
             IStatement statement)
         {
-            throw new NotSupportedException();
+            if (!(statement is SwitchCaseStatement switchStatement))
+            {
+                throw new InvalidOperationException();
+            }
+
+            var blockScope = scope.BeginNewScope(ScopeType.Block);
+            var target = EvaluationStatementTranspilerBase.ProcessEvaluation(context, blockScope,
+                switchStatement.SwitchTarget);
+            var targetExpression = BashEvaluationStatementTranspiler.CreateBashExpression(
+                new ExpressionBuilderParams(context, blockScope, metaWriter, writer, switchStatement), target);
+
+            writer.Write("case ");
+            writer.Write(targetExpression.Expression);
+            writer.WriteLine(" in");
+
+            if (switchStatement.Cases != null)
+            {
+                foreach (var caseBlock in switchStatement.Cases)
+                {
+                    var caseCondition = EvaluationStatementTranspilerBase.ProcessEvaluation(context, blockScope,
+                        caseBlock.Condition);
+                    if (DeadBranchElimination.IsEnabled(context) &&
+                        DeadBranchElimination.IsSwitchCaseDead(context, blockScope, caseCondition))
+                    {
+                        continue;
+                    }
+
+                    if (!TryGetCasePattern(caseCondition, out var pattern))
+                    {
+                        throw new InvalidOperationException("Invalid switch case condition.");
+                    }
+
+                    writer.WriteLine($"{pattern})");
+                    BashBlockStatementTranspiler.WriteBlockStatement(context, blockScope, writer, metaWriter,
+                        caseBlock.Statement, ScopeType.Block, true);
+                    writer.WriteLine(";;");
+                }
+            }
+
+            if (switchStatement.DefaultCase != null)
+            {
+                writer.WriteLine("*)");
+                BashBlockStatementTranspiler.WriteBlockStatement(context, blockScope, writer, metaWriter,
+                    switchStatement.DefaultCase, ScopeType.Block, true);
+                writer.WriteLine(";;");
+            }
+
+            writer.WriteLine("esac");
+            scope.IncrementStatements();
         }
 
-        public void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter, IStatement statement)
+        private static bool TryGetCasePattern(EvaluationStatement condition, out string pattern)
         {
-            throw new NotImplementedException();
-            
-            scope.IncrementStatements();
+            pattern = null;
+            if (!(condition is LogicalEvaluationStatement logical) || !(logical.Operator is EqualOperator))
+            {
+                return false;
+            }
+
+            if (logical.Right is ConstantValueStatement constant)
+            {
+                if (constant.IsString())
+                {
+                    pattern = constant.Value.Trim('"');
+                    return true;
+                }
+
+                pattern = constant.Value;
+                return true;
+            }
+
+            return false;
         }
     }
 }

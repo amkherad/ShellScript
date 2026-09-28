@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 bool ApiConvert_ParseBoolean(string input) {
 
     if (String.IsNullOrWhitespace(input))

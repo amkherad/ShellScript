@@ -1,6 +1,8 @@
+#!/usr/bin/env shellscript
 // @expect-out EXAMPLE_OK:DateTime
 // @expect-exit 0
 
 int unix = DateTime.ToUnixTime();
-echo unix;
+bool unixPositive = unix > 0;
+echo $"unixPositive={unixPositive}";
 echo "EXAMPLE_OK:DateTime";

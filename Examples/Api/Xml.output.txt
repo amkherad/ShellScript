@@ -1,0 +1,3 @@
+valid=
+shell
+EXAMPLE_OK:Xml

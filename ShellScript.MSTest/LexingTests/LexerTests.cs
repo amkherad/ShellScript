@@ -55,5 +55,27 @@ namespace ShellScript.MSTest.LexingTests
 
             Assert.IsNotNull(statements);
         }
+
+        [TestMethod]
+        public void LexesInterpolatedStringAsSingleToken()
+        {
+            var tokens = new Lexer().Tokenize(new StringReader("echo $\"a {x} b\";")).ToList();
+
+            var interpolated = tokens.FirstOrDefault(t => t.IsStringInterpolation);
+            Assert.IsNotNull(interpolated);
+            Assert.AreEqual("$\"a {x} b\"", interpolated.Value);
+        }
+
+        [TestMethod]
+        public void IgnoresShebangOnFirstNonEmptyLine()
+        {
+            var code = "#!/usr/bin/env shellscript\n" +
+                       "int x = 1;";
+
+            var tokens = new Lexer().Tokenize(new StringReader(code)).ToList();
+
+            Assert.IsTrue(tokens.Any(t => t.Type == TokenType.Number && t.Value == "1"));
+            Assert.IsFalse(tokens.Any(t => t.Value != null && t.Value.Contains("/usr/bin")));
+        }
     }
 }

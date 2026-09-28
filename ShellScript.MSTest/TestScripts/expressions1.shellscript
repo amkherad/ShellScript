@@ -1,3 +1,4 @@
+#!/usr/bin/env shellscript
 
 double coffeePrice = 3.50;
 int coffeeCount = 4;//14

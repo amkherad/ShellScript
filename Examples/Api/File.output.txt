@@ -1,0 +1,4 @@
+hello
+len=5
+exists=1
+EXAMPLE_OK:File

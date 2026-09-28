@@ -1,0 +1,2 @@
+exists=1
+EXAMPLE_OK:Directory
