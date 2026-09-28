@@ -6,18 +6,20 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using ShellScript.Core.Language;
 using ShellScript.Core.Language.Compiler;
+using ShellScript.Testing;
 
 namespace ShellScript.CommandLine
 {
     public class RunCommand : ICommand
     {
-        public const string DefaultPlatformName = "Unix-Bash";
-
         public string Name => "Run";
 
         public Dictionary<string, string> SwitchesHelp { get; } = new Dictionary<string, string>
         {
-            {"platform", "Target platform name (default: Unix-Bash). Example: --platform=Unix-Bash"}
+            {
+                "platform",
+                "Target platform (default: Windows-Batch on Windows, Unix-Bash elsewhere). Example: --platform=Unix-Bash"
+            }
         };
 
         public int ProcessExitCode { get; private set; }
@@ -43,7 +45,7 @@ namespace ShellScript.CommandLine
                 return ResultCodes.Failure;
             }
 
-            var platformName = context.GetSwitch("platform")?.Value ?? DefaultPlatformName;
+            var platformName = context.GetSwitch("platform")?.Value ?? PlatformDefaults.DefaultRunPlatformName;
             var platform = Platforms.GetPlatformByName(platformName);
             if (platform == null)
             {
@@ -55,7 +57,7 @@ namespace ShellScript.CommandLine
             Directory.CreateDirectory(tempRoot);
 
             var scriptBaseName = Path.GetFileNameWithoutExtension(inputFile);
-            var outputFile = Path.Combine(tempRoot, scriptBaseName + ".bash");
+            var outputFile = Path.Combine(tempRoot, scriptBaseName + platform.ScriptExtension);
             var objDir = Path.Combine(tempRoot, "obj");
 
             try
@@ -84,7 +86,7 @@ namespace ShellScript.CommandLine
                 }
 
                 var scriptArgs = GetScriptArguments(context).ToArray();
-                ProcessExitCode = RunBash(outputFile, Path.GetDirectoryName(inputFile), scriptArgs);
+                ProcessExitCode = RunScript(outputFile, platform, Path.GetDirectoryName(inputFile), scriptArgs);
                 return ProcessExitCode == 0 ? ResultCodes.Successful : ResultCodes.Failure;
             }
             finally
@@ -103,33 +105,10 @@ namespace ShellScript.CommandLine
             }
         }
 
-        private static int RunBash(string scriptPath, string workingDirectory, string[] scriptArgs)
+        private static int RunScript(string scriptPath, IPlatform platform, string workingDirectory, string[] scriptArgs)
         {
-            var argumentList = new List<string> {scriptPath};
-            if (scriptArgs != null && scriptArgs.Length > 0)
-            {
-                argumentList.AddRange(scriptArgs);
-            }
-
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "bash",
-                Arguments = string.Join(" ",
-                    argumentList.Select(QuoteProcessArgument)),
-                UseShellExecute = false,
-                WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory,
-            };
-
-            using (var process = Process.Start(startInfo))
-            {
-                if (process == null)
-                {
-                    throw new InvalidOperationException("Failed to start bash.");
-                }
-
-                process.WaitForExit();
-                return process.ExitCode;
-            }
+            var result = PlatformScriptExecutor.Execute(scriptPath, platform, workingDirectory, scriptArgs);
+            return result.ExitCode;
         }
 
         private static string QuoteProcessArgument(string arg)

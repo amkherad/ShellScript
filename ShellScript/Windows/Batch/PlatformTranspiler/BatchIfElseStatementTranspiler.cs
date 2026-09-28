@@ -1,0 +1,150 @@
+using System;
+using System.IO;
+using ShellScript.Core.Language.Compiler;
+using ShellScript.Core.Language.Compiler.CompilerErrors;
+using ShellScript.Core.Language.Compiler.Transpiling;
+using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
+using ShellScript.Core.Language.Library;
+using ShellScript.Windows.Batch.PlatformTranspiler.ExpressionBuilders;
+
+namespace ShellScript.Windows.Batch.PlatformTranspiler
+{
+    public class BatchIfElseStatementTranspiler : IfElseStatementTranspilerBase
+    {
+        public override void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
+            TextWriter nonInlinePartWriter, IStatement statement)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void WriteBlock(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
+            IStatement statement)
+        {
+            if (!(statement is IfElseStatement ifElseStatement)) throw new InvalidOperationException();
+
+            using (var ifWriter = new StringWriter())
+            {
+                WriteIf(context, scope, ifWriter, writer, metaWriter, ifElseStatement);
+
+                writer.Write(ifWriter);
+            }
+        }
+
+        public static void WriteIf(Context context, Scope scope, TextWriter writer, TextWriter nonInlinePartWriter,
+            TextWriter metaWriter, IfElseStatement ifElseStatement)
+        {
+            var ifEscaped = false;
+            var skipElse = false;
+
+            var condition =
+                EvaluationStatementTranspilerBase.ProcessEvaluation(context, scope, ifElseStatement.MainIf.Condition);
+
+            if (DeadBranchElimination.IsEnabled(context) &&
+                StatementHelpers.IsAbsoluteBooleanValue(condition, out var isTrue))
+            {
+                if (isTrue)
+                {
+                    BatchBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                        ifElseStatement.MainIf.Statement, ScopeType.Block, true);
+
+                    return;
+                }
+
+                ifEscaped = true;
+            }
+            else
+            {
+                writer.Write("if ");
+                WriteCondition(context, scope, writer, metaWriter, nonInlinePartWriter, ifElseStatement, condition);
+                writer.WriteLine();
+                writer.WriteLine("then");
+                BatchBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                    ifElseStatement.MainIf.Statement, ScopeType.IfMainBlock, true);
+            }
+
+            if (ifElseStatement.ElseIfs != null)
+            {
+                foreach (var elseIf in ifElseStatement.ElseIfs)
+                {
+                    condition = EvaluationStatementTranspilerBase.ProcessEvaluation(context, scope, elseIf.Condition);
+
+                    if (DeadBranchElimination.IsEnabled(context) &&
+                        StatementHelpers.IsAbsoluteBooleanValue(condition, out isTrue))
+                    {
+                        if (isTrue)
+                        {
+                            if (!ifEscaped)
+                            {
+                                writer.WriteLine("else");
+                            }
+
+                            BatchBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                                elseIf.Statement, ScopeType.IfElseBlock, true);
+
+                            skipElse = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (ifEscaped)
+                        {
+                            writer.Write("if ");
+                            ifEscaped = false;
+                        }
+                        else
+                        {
+                            writer.Write("elif ");
+                        }
+
+                        WriteCondition(context, scope, writer, metaWriter, nonInlinePartWriter, ifElseStatement,
+                            condition);
+                        writer.WriteLine();
+                        writer.WriteLine("then");
+                        BatchBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                            elseIf.Statement, ScopeType.IfIfElseBlock, true);
+                    }
+                }
+            }
+
+            if (!skipElse && ifElseStatement.Else != null)
+            {
+                if (ifEscaped)
+                {
+                    BatchBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                        ifElseStatement.Else, ScopeType.IfMainBlock, true);
+                }
+                else
+                {
+                    writer.WriteLine("else");
+                    BatchBlockStatementTranspiler.WriteBlockStatement(context, scope, writer, metaWriter,
+                        ifElseStatement.Else, ScopeType.IfElseBlock, true);
+                }
+            }
+
+            if (!ifEscaped)
+            {
+                writer.WriteLine("fi");
+                
+                scope.IncrementStatements();
+            }
+        }
+
+        public static void WriteCondition(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
+            TextWriter nonInlinePartWriter, IfElseStatement ifElseStatement, EvaluationStatement statement)
+        {
+            var expressionBuilder = context.GetEvaluationTranspilerForStatement(statement);
+
+            var result = expressionBuilder.GetConditionalExpression(context, scope, metaWriter, nonInlinePartWriter,
+                ifElseStatement, statement);
+
+            if (!result.TypeDescriptor.IsBoolean())
+            {
+                throw new InvalidStatementStructureCompilerException(statement, statement.Info);
+            }
+
+            writer.Write(result.Expression);
+        }
+    }
+}

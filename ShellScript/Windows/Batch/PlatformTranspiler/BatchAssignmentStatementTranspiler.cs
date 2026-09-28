@@ -1,0 +1,115 @@
+using System;
+using System.IO;
+using ShellScript.Core.Language.Compiler;
+using ShellScript.Core.Language.Compiler.CompilerErrors;
+using ShellScript.Core.Language.Compiler.Statements;
+using ShellScript.Core.Language.Compiler.Transpiling;
+using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
+using ShellScript.Core.Language.Library.Core.Array;
+
+namespace ShellScript.Windows.Batch.PlatformTranspiler
+{
+    public class BatchAssignmentStatementTranspiler : BatchEvaluationStatementTranspiler
+    {
+        public override Type StatementType => typeof(AssignmentStatement);
+
+        public override bool CanInline(Context context, Scope scope, IStatement statement)
+        {
+            return true;
+        }
+
+        public override void WriteInline(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
+            TextWriter nonInlinePartWriter,
+            IStatement statement)
+        {
+            if (!(statement is AssignmentStatement assignmentStatement)) throw new InvalidOperationException();
+
+            WriteAssignment(context, scope, writer, metaWriter, nonInlinePartWriter, assignmentStatement);
+        }
+
+        public override void WriteBlock(Context context, Scope scope, TextWriter nonInlinePartWriter,
+            TextWriter metaWriter, IStatement statement)
+        {
+            if (!(statement is AssignmentStatement assignmentStatement)) throw new InvalidOperationException();
+
+            using (var writer = new StringWriter())
+            {
+                WriteAssignment(context, scope, writer, metaWriter, nonInlinePartWriter, assignmentStatement);
+
+                nonInlinePartWriter.Write(writer);
+            }
+
+            scope.IncrementStatements();
+        }
+
+        private static void WriteAssignment(Context context, Scope scope, TextWriter writer, TextWriter metaWriter,
+            TextWriter nonInlinePartWriter, AssignmentStatement assignmentStatement)
+        {
+            var target = assignmentStatement.LeftSide as VariableAccessStatement;
+            if (target == null)
+            {
+                if (assignmentStatement.LeftSide == null)
+                {
+                    throw new InvalidStatementStructureCompilerException(assignmentStatement, assignmentStatement.Info);
+                }
+
+                throw new InvalidStatementStructureCompilerException(
+                    "Only variables can be presented in the left side of an assignment",
+                    assignmentStatement.LeftSide.Info);
+            }
+
+            var evaluation = assignmentStatement.RightSide;
+            if (evaluation == null)
+            {
+                throw new InvalidStatementStructureCompilerException(
+                    "Unknown right side of an assignment found.", assignmentStatement.RightSide.Info);
+            }
+
+            if (ObjectModelHelpers.TryResolveInstanceFieldAccess(scope, target, out var instanceInfo, out _))
+            {
+                var instanceParams = new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter,
+                    assignmentStatement);
+                var instanceTranspiler = context.GetEvaluationTranspilerForStatement(evaluation);
+                var result =
+                    instanceTranspiler.GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
+                var usesNameref = scope.GetConfig(s => s.InstanceUsesNameref, null) == "true" &&
+                                  target.ClassName == ObjectModelHelpers.ThisKeyword;
+                var writeTarget = BatchObjectModel.GetInstanceFieldWriteTarget(instanceInfo, target.VariableName,
+                    usesNameref);
+                writer.Write($"{writeTarget}=");
+                writer.WriteLine(result.Expression);
+                return;
+            }
+
+            if (!scope.TryGetVariableInfo(target, out var varInfo))
+            {
+                throw new IdentifierNotFoundCompilerException(target);
+            }
+
+            var p =
+                new ExpressionBuilderParams(context, scope, metaWriter, nonInlinePartWriter, assignmentStatement);
+
+            var transpiler = context.GetEvaluationTranspilerForStatement(evaluation);
+
+            if (varInfo.TypeDescriptor.IsArray())
+            {
+                var call = transpiler.CallApiFunction<ApiArray.Copy>(p, new[] {target, evaluation}, assignmentStatement,
+                    assignmentStatement.Info);
+
+                if (!call.IsEmptyResult)
+                {
+                    writer.Write($"{varInfo.AccessName}=");
+                    writer.WriteLine(call.Expression);
+                }
+            }
+            else
+            {
+                var result =
+                    transpiler.GetExpression(context, scope, metaWriter, nonInlinePartWriter, null, evaluation);
+
+                writer.Write($"{varInfo.AccessName}=");
+                writer.WriteLine(result.Expression);
+            }
+        }
+    }
+}

@@ -36,7 +36,7 @@ namespace ShellScript.Testing
             Directory.CreateDirectory(tempRoot);
 
             var scriptBaseName = Path.GetFileNameWithoutExtension(scriptPath);
-            var outputFile = Path.Combine(tempRoot, scriptBaseName + ".bash");
+            var outputFile = Path.Combine(tempRoot, scriptBaseName + platform.ScriptExtension);
             var objDir = Path.Combine(tempRoot, "obj");
 
             try
@@ -64,7 +64,8 @@ namespace ShellScript.Testing
                     throw new InvalidOperationException("Compilation failed.");
                 }
 
-                return ExecuteBash(outputFile, Path.GetDirectoryName(scriptPath), scriptArguments);
+                return PlatformScriptExecutor.Execute(outputFile, platform, Path.GetDirectoryName(scriptPath),
+                    scriptArguments);
             }
             finally
             {

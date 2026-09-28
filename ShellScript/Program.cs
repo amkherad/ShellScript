@@ -5,6 +5,8 @@ using ShellScript.CommandLine;
 using ShellScript.Core;
 using ShellScript.Core.Language;
 using ShellScript.Unix.Bash;
+using ShellScript.Windows.Batch;
+using ShellScript.Windows.PowerShell;
 
 namespace ShellScript
 {
@@ -59,6 +61,8 @@ namespace ShellScript
                 }
                 
                 Platforms.AddPlatform(new UnixBashPlatform());
+                Platforms.AddPlatform(new WindowsPowerShellPlatform());
+                Platforms.AddPlatform(new WindowsBatchPlatform());
 
                 foreach (var command in AvailableCommands)
                 {

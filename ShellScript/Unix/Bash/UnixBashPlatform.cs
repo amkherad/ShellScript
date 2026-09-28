@@ -17,6 +17,8 @@ namespace ShellScript.Unix.Bash
         
         public string Name => "Unix-Bash";
 
+        public string ScriptExtension => ".bash";
+
         public ValueTuple<TypeDescriptor, string, string>[] CompilerConstants { get; } =
         {
             (TypeDescriptor.Boolean, "Unix", "true"),

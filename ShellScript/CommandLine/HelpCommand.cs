@@ -33,7 +33,7 @@ namespace ShellScript.CommandLine
             WriteEntry(writer, "--platforms", "Shows the installed platforms.");
             WriteEntry(writer, "-v, --version", "Shows the version string.");
             WriteSeperator(writer);
-            WriteEntry(writer, "compile", "Compiles the given source/project file.");
+            WriteEntry(writer, "compile", "Compiles the given source/project file (platform: Unix-Bash, Windows-PowerShell, Windows-Batch).");
             WriteEntry(writer, "run", "Compiles the source file to bash in a temp folder, runs it, then cleans up.");
             WriteEntry(writer, "test",
                 "Runs snapshot tests (--snapshot; optional globs; with no paths, scans **/*.shellscript under cwd).");

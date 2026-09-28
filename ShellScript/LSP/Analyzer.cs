@@ -4,6 +4,8 @@ using ShellScript.CommandLine;
 using ShellScript.Core.Language;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Unix.Bash;
+using ShellScript.Windows.Batch;
+using ShellScript.Windows.PowerShell;
 
 namespace ShellScript.LSP
 {
@@ -23,11 +25,26 @@ namespace ShellScript.LSP
             if (osKind == PlatformID.Win32NT || osKind == PlatformID.Win32S || osKind == PlatformID.Win32Windows ||
                 osKind == PlatformID.WinCE)
             {
-                platform = null;
+                platform = new WindowsPowerShellPlatform();
             }
             else
             {
                 platform = new UnixBashPlatform();
+            }
+
+            if (Platforms.GetPlatformByName("Unix-Bash") == null)
+            {
+                Platforms.AddPlatform(new UnixBashPlatform());
+            }
+
+            if (Platforms.GetPlatformByName("Windows-PowerShell") == null)
+            {
+                Platforms.AddPlatform(new WindowsPowerShellPlatform());
+            }
+
+            if (Platforms.GetPlatformByName("Windows-Batch") == null)
+            {
+                Platforms.AddPlatform(new WindowsBatchPlatform());
             }
 
             var compiler = new Compiler();

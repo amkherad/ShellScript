@@ -12,6 +12,9 @@ namespace ShellScript.Core.Language
         IApi Api { get; }
         
         string Name { get; }
+
+        /// <summary>Default script file extension for this target (e.g. .bash, .ps1, .cmd).</summary>
+        string ScriptExtension { get; }
         
         ValueTuple<TypeDescriptor, string, string>[] CompilerConstants { get; }
 
