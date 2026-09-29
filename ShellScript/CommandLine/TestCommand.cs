@@ -12,8 +12,8 @@ namespace ShellScript.CommandLine
 
         public Dictionary<string, string> SwitchesHelp { get; } = new Dictionary<string, string>
         {
-            {"snapshot", "Run .shellscript files and compare stdout to sibling .output.txt snapshots."},
-            {"update-snapshots", "Write captured stdout to .output.txt (also honored when UPDATE_SNAPSHOTS=1)."},
+            {"snapshot", "Run .shellscript files and compare stdout to sibling .output.<platform>.txt snapshots (e.g. .output.bash.txt)."},
+            {"update-snapshots", "Write captured stdout to the platform snapshot file (also when UPDATE_SNAPSHOTS=1)."},
             {"platform", "Target platform name (default: Unix-Bash). Example: --platform=Unix-Bash"}
         };
 

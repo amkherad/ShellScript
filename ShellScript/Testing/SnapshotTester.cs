@@ -43,7 +43,7 @@ namespace ShellScript.Testing
 
             foreach (var script in scripts)
             {
-                var snapshotPath = SnapshotPaths.GetOutputSnapshotPath(script);
+                var snapshotPath = SnapshotPaths.GetOutputSnapshotPath(script, options.PlatformName);
                 if (!File.Exists(snapshotPath) && !updateSnapshots)
                 {
                     if (explicitSingleFile && string.Equals(Path.GetFullPath(patterns[0]), script, StringComparison.Ordinal))

@@ -17,7 +17,7 @@ namespace ShellScript.MSTest.Testing
             Path.Combine("ShellScript.Luncher", "shellscript.shellscript"),
             Path.Combine("ShellScript", "Shared", "Api", "ShellScriptResources", "ApiConvert_ToBoolean.shellscript"),
             Path.Combine("ShellScript", "Shared", "Api", "ShellScriptResources", "ApiMath_Truncate.shellscript"),
-            Path.Combine("Examples", "Events", "FileSystemWatch.shellscript"),
+            Path.Combine("Examples", "Events", "FileSystemWatch", "FileSystemWatch.shellscript"),
         };
 
         [TestMethod]

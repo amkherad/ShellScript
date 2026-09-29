@@ -19,7 +19,7 @@ namespace ShellScript.MSTest.CompilingTests
         public void AllApiExamplesCompileRunAndMatchExpectations()
         {
             var examplesRoot = FindExamplesApiRoot();
-            var scripts = Directory.GetFiles(examplesRoot, "*.shellscript", SearchOption.TopDirectoryOnly)
+            var scripts = Directory.GetFiles(examplesRoot, "*.shellscript", SearchOption.AllDirectories)
                 .OrderBy(path => path, StringComparer.Ordinal)
                 .ToArray();
 
