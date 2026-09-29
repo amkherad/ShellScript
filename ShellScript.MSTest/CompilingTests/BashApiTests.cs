@@ -15,7 +15,7 @@ namespace ShellScript.MSTest.CompilingTests
             var platform = new UnixBashPlatform();
             var expectedClassNames = new[]
             {
-                "Convert", "Environment", "Math", "String", "Array", "Platform", "User",
+                "Convert", "Environment", "Math", "String", "StringBuilder", "Array", "Platform", "User",
                 "File", "Directory", "Path", "Locale", "Net",
                 "OS", "Process", "Thread",
                 "Ini", "DotEnv", "Json", "Yaml", "Xml",

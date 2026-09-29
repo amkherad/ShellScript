@@ -1,0 +1,31 @@
+title: ShellScript
+description: Cross-platform shell scripting language — language reference and class library API.
+url: ""
+baseurl: ""
+
+theme: just-the-docs
+
+plugins:
+  - jekyll-seo-tag
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - ClassLibrary.md
+  - README-docs.md
+
+aux_links:
+  GitHub: https://github.com/amkherad/ShellScript
+
+just_the_docs:
+  color_scheme: navy
+  search_enabled: true
+  heading_anchors: true
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

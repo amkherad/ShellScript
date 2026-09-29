@@ -1,5 +1,7 @@
 # ShellScript Language Specification
 
+> Published in the docs site as [language/specification.md](language/specification.md). Edit that file for Jekyll; keep this copy in sync when changing the spec.
+
 ## 1. Status and Conformance
 
 This document describes the language implemented by the current repository. It distinguishes:

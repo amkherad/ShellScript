@@ -53,9 +53,15 @@ namespace ShellScript.Windows.Batch.PlatformTranspiler
                 return;
             }
 
-            if (result.TypeDescriptor.IsVoid() && !(result.Template is FunctionCallStatement))
+            if (result.TypeDescriptor.IsVoid())
             {
-                writer.WriteLine(result.Expression);
+                var expression = result.Expression;
+                if (expression.Length >= 2 && expression[0] == '`' && expression[expression.Length - 1] == '`')
+                {
+                    expression = expression.Substring(1, expression.Length - 2);
+                }
+
+                writer.WriteLine(expression);
             }
             else if (result.TypeDescriptor.IsArray())
             {

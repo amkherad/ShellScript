@@ -11,6 +11,10 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Network.Net
             new BashDownload(),
             new BashHttpGet(),
             new BashResolveHost(),
+            new BashGetOpenSockets(),
+            new BashGetSocketProcessId(),
+            new BashGetNetworkInterfaces(),
+            new BashGetOpenSocketsOnInterface(),
         };
     }
 }

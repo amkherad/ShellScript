@@ -8,7 +8,7 @@ namespace ShellScript.Core.Language.Compiler.Statements
         public string[] Parameters { get; }
         public IStatement Statement { get; }
 
-        public IStatement[] TraversableChildren { get; protected set; }
+        public new IStatement[] TraversableChildren { get; protected set; }
 
 
         public LambdaExpressionStatement(StatementInfo info, string[] parameters, IStatement statement)

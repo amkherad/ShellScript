@@ -79,18 +79,21 @@ namespace ShellScript.Core.Language.Library.Core.String
         public abstract class Substring : ApiBaseFunction
         {
             public override string Name => nameof(Substring);
-            public override string Summary => "Returns a substring starting at an index.";
+            public override string Summary =>
+                "Returns a substring starting at an index; optional Length limits the result (-1 means to end).";
             public override string ClassName => ClassAccessName;
             public override bool IsStatic => true;
             public override TypeDescriptor TypeDescriptor => TypeDescriptor.String;
             public override FunctionParameterDefinitionStatement[] Parameters { get; } =
             {
                 StringParameter,
-                new FunctionParameterDefinitionStatement(TypeDescriptor.Integer, "StartIndex", null, null)
+                new FunctionParameterDefinitionStatement(TypeDescriptor.Integer, "StartIndex", null, null),
+                new FunctionParameterDefinitionStatement(TypeDescriptor.Integer, "Length",
+                    new ConstantValueStatement(TypeDescriptor.Integer, "-1", null), null)
             };
         }
 
-        public abstract class Equals : ApiBaseFunction
+        public new abstract class Equals : ApiBaseFunction
         {
             public override string Name => nameof(Equals);
             public override string Summary => "Compares two strings for equality.";

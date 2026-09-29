@@ -1,0 +1,21 @@
+#!/usr/bin/env shellscript
+// @expect-out EXAMPLE_OK:StringBuilder
+// @expect-exit 0
+
+string sb = StringBuilder.Create();
+StringBuilder.Append(sb, "hello");
+StringBuilder.Append(sb, " ");
+StringBuilder.AppendLine(sb, "world");
+StringBuilder.AppendLine(sb);
+StringBuilder.Append(sb, "done");
+
+string text = StringBuilder.ToString(sb);
+int len = StringBuilder.GetLength(sb);
+echo text;
+echo $"len={len}";
+
+StringBuilder.Clear(sb);
+StringBuilder.Append(sb, "cleared");
+echo StringBuilder.ToString(sb);
+
+echo "EXAMPLE_OK:StringBuilder";

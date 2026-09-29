@@ -17,4 +17,4 @@ getApplicationsDir=getSharedApplicationsDir
 else
 getApplicationsDir=getCurrentUserApplicationsDir
 fi
-echo `$PathProvider`
+echo "`$PathProvider`"

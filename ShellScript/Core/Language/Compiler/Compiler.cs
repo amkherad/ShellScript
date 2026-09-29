@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Runtime.ExceptionServices;
+using System.Text;
+using ShellScript.Core.Language.Compiler.PostProcessing;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Parsing;
 using ShellScript.Core.Language.Compiler.Statements;
@@ -109,27 +111,56 @@ namespace ShellScript.Core.Language.Compiler
                 codeOutputFile.Position = 0;
                 metaOutputFile.Position = 0;
 
-                var codeReader = new StreamReader(codeOutputFile);
-                var metaReader = new StreamReader(metaOutputFile);
+                var merged = MergeGeneratedOutput(context, codeOutputFile, metaOutputFile);
+                var finalText = GeneratedCodePostProcessorPipeline.Apply(
+                    merged,
+                    platform,
+                    context.Flags,
+                    outputFilePath,
+                    warningWriter,
+                    logWriter);
 
                 outputFile.SetLength(0);
+                outputWriter.Write(finalText);
+            }
+        }
 
+        private static string MergeGeneratedOutput(Context context, FileStream codeOutputFile, FileStream metaOutputFile)
+        {
+            var merged = new StringBuilder();
+            using (var metaReader = new StreamReader(metaOutputFile, leaveOpen: true))
+            using (var codeReader = new StreamReader(codeOutputFile, leaveOpen: true))
+            {
                 string line;
                 while ((line = metaReader.ReadLine()) != null)
                 {
-                    outputWriter.WriteLine(line);
+                    merged.AppendLine(line);
                 }
 
                 if (context.Flags.UseSegments)
                 {
-                    context.GetMetaInfoTranspiler().WriteSeparator(context, outputWriter);
+                    using (var separatorWriter = new StringWriter())
+                    {
+                        context.GetMetaInfoTranspiler().WriteSeparator(context, separatorWriter);
+                        var separator = separatorWriter.ToString();
+                        if (!string.IsNullOrEmpty(separator))
+                        {
+                            merged.Append(separator);
+                            if (!separator.EndsWith("\n", StringComparison.Ordinal))
+                            {
+                                merged.AppendLine();
+                            }
+                        }
+                    }
                 }
 
                 while ((line = codeReader.ReadLine()) != null)
                 {
-                    outputWriter.WriteLine(line);
+                    merged.AppendLine(line);
                 }
             }
+
+            return merged.ToString();
         }
 
         public Context CompileFromSource(

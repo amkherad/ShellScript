@@ -13,6 +13,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.Platform
             new BashCallNumeric(),
             new BashCallString(),
             new BashCallArray(),
+            new BashGetScriptDirectory(),
         };
     }
 }

@@ -75,6 +75,17 @@ namespace ShellScript.Core.Language.Compiler
 
         public bool UseSegments { get; set; }
 
+        /// <summary>
+        /// When false, merged output is written as-is (no post-processors run).
+        /// </summary>
+        public bool PostProcessGeneratedCode { get; set; }
+
+        /// <summary>When true, run the platform formatter on generated code (Unix-Bash: built-in indent formatter).</summary>
+        public bool FormatGeneratedCode { get; set; }
+
+        /// <summary>Indent width in spaces when <see cref="FormatGeneratedCode"/> is true.</summary>
+        public int GeneratedCodeIndentColumns { get; set; }
+
         public bool PreferRandomHelperVariableNames { get; set; }
 
         public int ArrayManipulationColumnCount { get; set; }
@@ -120,6 +131,10 @@ namespace ShellScript.Core.Language.Compiler
                 CommentParameterInfos = true,
 
                 UseSegments = true,
+
+                PostProcessGeneratedCode = true,
+                FormatGeneratedCode = false,
+                GeneratedCodeIndentColumns = 2,
 
                 WriteShellScriptVersion = true,
                 

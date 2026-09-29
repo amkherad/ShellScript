@@ -23,6 +23,17 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
             new BashSubstring(),
             new BashEquals(),
             new BashReplace(),
+            new BashJoin(),
+            new BashSplit(),
+            new BashRepeat(),
+            new BashTrimStart(),
+            new BashTrimEnd(),
+            new BashPadLeft(),
+            new BashPadRight(),
+            new BashLastIndexOf(),
+            new BashCompare(),
+            new BashCompareIgnoreCase(),
+            new BashContainsIgnoreCase(),
         };
     }
 }

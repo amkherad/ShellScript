@@ -498,7 +498,7 @@ ShellScript compile /home/github/projects/test.shellscript /home/github/projects
 
 ## Contributing
 
-Please read [Contributing.md](https://github.com/amkherad/ShellScript/blob/master/docs/Contributing.md) for details on our code of conduct, and the process for submitting pull requests to us.
+Please read [Contributing](docs/contributing.md) and the [documentation site](docs/) (language + API reference). API pages are generated with `python3 scripts/generate-api-docs.py`.
 
 ## Authors
 

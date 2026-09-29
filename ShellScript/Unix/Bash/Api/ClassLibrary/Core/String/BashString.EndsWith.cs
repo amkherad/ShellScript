@@ -14,14 +14,15 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
             {
                 return BashTestCommand.CreateTestExpression(this, p, functionCallStatement, (parameters, call) =>
                 {
+                    var usage = parameters.UsageContext ?? call;
                     var leftTranspiler = parameters.Context.GetEvaluationTranspilerForStatement(call.Parameters[0]);
                     var rightTranspiler = parameters.Context.GetEvaluationTranspilerForStatement(call.Parameters[1]);
                     var left = leftTranspiler.GetExpression(parameters.Context, parameters.Scope,
-                        parameters.MetaWriter, parameters.NonInlinePartWriter, call, call.Parameters[0]);
+                        parameters.MetaWriter, parameters.NonInlinePartWriter, usage, call.Parameters[0]);
                     var right = rightTranspiler.GetExpression(parameters.Context, parameters.Scope,
-                        parameters.MetaWriter, parameters.NonInlinePartWriter, call, call.Parameters[1]);
+                        parameters.MetaWriter, parameters.NonInlinePartWriter, usage, call.Parameters[1]);
                     return new ExpressionResult(TypeDescriptor,
-                        $"[[ {0} == *{1} ]]".Replace("{0}", left.Expression).Replace("{1}", right.Expression), call);
+                        $"[[ {left.Expression} == *{right.Expression} ]]", call);
                 });
             }
         }

@@ -3,4 +3,9 @@
 // @expect-exit 0
 
 Console.WriteLine("console-line");
+Console.EnableErrorLog("error.log", false);
+Console.WriteError("mirror-me");
+Console.DisableErrorLog();
+string logged = File.ReadAllText("error.log");
+Console.WriteLine(logged);
 echo "EXAMPLE_OK:Console";

@@ -16,6 +16,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.System.Process
             new BashKill(),
             new BashRun(),
             new BashRunAndCapture(),
+            new BashGetName(),
         };
 
         public class BashGetCurrentId : GetCurrentId
@@ -53,6 +54,13 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.System.Process
         {
             public override IApiMethodBuilderResult Build(ExpressionBuilderParams p, FunctionCallStatement call) =>
                 BashApiNative.Native(this, p, call, ClassAccessName, "eval \"$1\"");
+        }
+
+        public class BashGetName : GetName
+        {
+            public override IApiMethodBuilderResult Build(ExpressionBuilderParams p, FunctionCallStatement call) =>
+                BashApiNative.Native(this, p, call, ClassAccessName,
+                    "ps -p \"$1\" -o comm= 2>/dev/null | tr -d ' '");
         }
     }
 }

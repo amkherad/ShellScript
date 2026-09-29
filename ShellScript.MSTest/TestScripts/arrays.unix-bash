@@ -4,5 +4,5 @@
 array=(2 3 4)
 for item in "${array[@]}"
 do
-echo $item
+echo "$item"
 done

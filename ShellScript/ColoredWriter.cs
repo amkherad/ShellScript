@@ -68,11 +68,6 @@ namespace ShellScript
             get => Writer.NewLine;
             set => Writer.NewLine = value;
         }
-        public override object InitializeLifetimeService()
-        {
-            return Writer.InitializeLifetimeService();
-        }
-
         public override bool Equals(object obj)
         {
             return Writer.Equals(obj);

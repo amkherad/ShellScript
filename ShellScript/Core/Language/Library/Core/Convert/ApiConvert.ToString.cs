@@ -4,7 +4,7 @@ namespace ShellScript.Core.Language.Library.Core.Convert
 {
     public partial class ApiConvert
     {
-        public abstract class ToString : ApiBaseFunction
+        public new abstract class ToString : ApiBaseFunction
         {
             public override string Name => nameof(ToString);
             public override string Summary { get; }

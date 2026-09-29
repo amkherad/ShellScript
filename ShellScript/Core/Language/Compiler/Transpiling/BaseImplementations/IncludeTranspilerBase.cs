@@ -56,7 +56,7 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
                 {
                     var directories = new List<string>
                     {
-                        Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase),
+                        Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                     };
                     directories.AddRange(context.Includes);
 

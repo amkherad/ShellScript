@@ -3,6 +3,7 @@ using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Base;
+using ShellScript.Unix.Bash.PlatformTranspiler;
 
 namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
 {
@@ -107,7 +108,8 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
                 FunctionCallStatement functionCallStatement)
             {
                 AssertParameters(p, functionCallStatement.Parameters);
-                return WriteNativeMethod(this, p, "printf '%s' \"${1:$2}\"",
+                return WriteNativeMethod(this, p,
+                    "if [ -z \"$3\" ] || [ \"$3\" -lt 0 ]; then printf '%s' \"${1:$2}\"; else printf '%s' \"${1:$2:$3}\"; fi",
                     FunctionInfo, functionCallStatement.Parameters, functionCallStatement.Info);
             }
         }
@@ -125,8 +127,20 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Core.String
                         parameters.MetaWriter, parameters.NonInlinePartWriter, call, call.Parameters[0]);
                     var right = rightTranspiler.GetExpression(parameters.Context, parameters.Scope,
                         parameters.MetaWriter, parameters.NonInlinePartWriter, call, call.Parameters[1]);
-                    return new ExpressionResult(TypeDescriptor, $"[[ {left.Expression} == {right.Expression} ]]", call);
+                    var leftExpr = FormatEqualsOperand(call.Parameters[0], left.Expression);
+                    var rightExpr = FormatEqualsOperand(call.Parameters[1], right.Expression);
+                    return new ExpressionResult(TypeDescriptor, $"[[ {leftExpr} == {rightExpr} ]]", call);
                 });
+            }
+
+            private static string FormatEqualsOperand(EvaluationStatement parameter, string expression)
+            {
+                if (parameter is ConstantValueStatement constant && constant.IsString())
+                {
+                    return BashTranspilerHelpers.ToBashStringLiteral(constant.Value, true);
+                }
+
+                return expression;
             }
         }
 

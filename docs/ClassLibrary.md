@@ -1,3 +1,7 @@
+# ShellScript API Documentation (legacy)
+
+> **Superseded by the Jekyll site:** run `python3 scripts/generate-api-docs.py` and open `docs/api/` in the documentation site. See `docs/README-docs.md`.
+
 # ShellScript API Documentation
 
 ## Core

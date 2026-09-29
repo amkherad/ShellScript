@@ -238,3 +238,9 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+# Jekyll (docs site)
+docs/_site/
+docs/.jekyll-cache/
+docs/vendor/
+docs/Gemfile.lock

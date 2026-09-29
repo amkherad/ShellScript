@@ -1,1 +1,3 @@
+console-line
+mirror-me
 EXAMPLE_OK:Console

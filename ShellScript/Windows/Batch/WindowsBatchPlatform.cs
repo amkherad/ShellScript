@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using ShellScript.Core.Language;
+using ShellScript.Core.Language.Compiler.PostProcessing;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
@@ -60,6 +62,9 @@ namespace ShellScript.Windows.Batch
             flags.UsePinElimination = true;
             return flags;
         }
+
+        public IReadOnlyList<IGeneratedCodePostProcessor> GeneratedCodePostProcessors { get; } =
+            Array.Empty<IGeneratedCodePostProcessor>();
 
         public string GetDefaultValue(DataTypes dataType)
         {

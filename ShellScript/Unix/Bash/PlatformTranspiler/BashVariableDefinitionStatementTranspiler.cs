@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ShellScript.Core;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using ShellScript.Core.Language.Compiler;
@@ -9,7 +10,6 @@ using ShellScript.Core.Language.Library;
 using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
-using ShellScript.Core.Language.Library;
 using ShellScript.Core.Language.Library.Core.Array;
 
 namespace ShellScript.Unix.Bash.PlatformTranspiler
@@ -137,8 +137,14 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                     else
                     {
                         var result = transpiler.GetExpression(context, scope, metaWriter, writer, null, def);
+                        var expression = result.Expression;
+                        if (def is ConstantValueStatement stringConstant && stringConstant.IsString() &&
+                            StringHelpers.DeQuote(stringConstant.Value).IndexOf('\\', StringComparison.Ordinal) >= 0)
+                        {
+                            expression = BashTranspilerHelpers.ToBashStringLiteral(stringConstant.Value);
+                        }
 
-                        WriteVariableDefinition(context, scope, writer, varDefStt.Name, result.Expression);
+                        WriteVariableDefinition(context, scope, writer, varDefStt.Name, expression);
                     }
                 }
                 else

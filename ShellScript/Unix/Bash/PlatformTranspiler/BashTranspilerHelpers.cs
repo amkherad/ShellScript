@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Text;
 using ShellScript.Core;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
 using ShellScript.Core.Language.Compiler.Statements;
@@ -33,6 +35,57 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             value = StringHelpers.DeQuote(value);
 
             return value;//.Replace(@"\r\n", @"\n");
+        }
+
+        /// <summary>
+        /// Bash literal for a string value. Uses $'...' when the value contains backslash escapes (e.g. ANSI \033).
+        /// </summary>
+        public static string ToBashStringLiteral(string value, bool dequote = true)
+        {
+            var unquoted = StandardizeString(value, dequote);
+            if (NeedsDollarQuotedLiteral(unquoted))
+            {
+                return ToBashDollarQuotedLiteral(unquoted);
+            }
+
+            return ToBashString(value, dequote, true);
+        }
+
+        private static bool NeedsDollarQuotedLiteral(string value)
+        {
+            if (value.IndexOf('\\', StringComparison.Ordinal) >= 0)
+            {
+                return true;
+            }
+
+            foreach (var c in value)
+            {
+                if (c < 32 || c == 127)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static string ToBashDollarQuotedLiteral(string value)
+        {
+            var sb = new StringBuilder("$'");
+            foreach (var c in value)
+            {
+                if (c == '\'')
+                {
+                    sb.Append("'\\''");
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+
+            sb.Append('\'');
+            return sb.ToString();
         }
 
         public static string ToBashString(string value, bool dequote, bool enquote)

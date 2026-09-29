@@ -42,6 +42,7 @@ namespace ShellScript.Unix.Bash.Api
             new BashEnvironment(),
             new BashMath(),
             new BashString(),
+            new BashStringBuilder(),
             new BashArray(),
             new BashPlatform(),
             new BashUser(),

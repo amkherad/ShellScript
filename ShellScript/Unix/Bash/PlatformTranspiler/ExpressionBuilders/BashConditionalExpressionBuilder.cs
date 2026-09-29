@@ -17,10 +17,23 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         {
             if (result.TypeDescriptor.IsBoolean() || result.Template is LogicalEvaluationStatement)
             {
-                if (result.Expression[0] != '[' && result.Expression[result.Expression.Length - 1] != ']')
+                var exp = result.Expression;
+                if (exp.Contains("&&", StringComparison.Ordinal) || exp.Contains("||", StringComparison.Ordinal))
                 {
-                    return $"[ {result.Expression} ]";
+                    return exp;
                 }
+
+                if (_isBracketTest(exp))
+                {
+                    return exp;
+                }
+
+                if (result.Template is FunctionCallStatement)
+                {
+                    return $"[ {exp} -ne 0 ]";
+                }
+
+                return $"[ {exp} ]";
             }
 
             return base.FormatExpression(p, result);
@@ -91,6 +104,12 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
                 var exp = inner.Expression.Trim();
                 const string notEqualZeroSuffix = "-ne 0";
+                if (exp.StartsWith("[[", StringComparison.Ordinal) && exp.EndsWith("]]", StringComparison.Ordinal))
+                {
+                    var core = exp.Substring(2, exp.Length - 4).Trim();
+                    return new ExpressionResult(TypeDescriptor.Boolean, $"[[ ! {core} ]]", logical);
+                }
+
                 if (exp.StartsWith("[") && exp.EndsWith("]"))
                 {
                     var core = exp.Substring(1, exp.Length - 2).Trim();
@@ -99,6 +118,20 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                         var varPart = core.Substring(0, core.Length - notEqualZeroSuffix.Length).TrimEnd();
                         return new ExpressionResult(TypeDescriptor.Boolean, $"[ {varPart} -eq 0 ]", logical);
                     }
+
+                    if (core.StartsWith("-z ", StringComparison.Ordinal))
+                    {
+                        return new ExpressionResult(TypeDescriptor.Boolean,
+                            $"[ -n {core.Substring(3).Trim()} ]", logical);
+                    }
+
+                    if (core.StartsWith("-n ", StringComparison.Ordinal))
+                    {
+                        return new ExpressionResult(TypeDescriptor.Boolean,
+                            $"[ -z {core.Substring(3).Trim()} ]", logical);
+                    }
+
+                    return new ExpressionResult(TypeDescriptor.Boolean, $"[ ! {core} ]", logical);
                 }
 
                 if (logical.Right is VariableAccessStatement)
@@ -111,6 +144,8 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
                     return new ExpressionResult(TypeDescriptor.Boolean, $"[ {varPart} -eq 0 ]", logical);
                 }
+
+                return new ExpressionResult(TypeDescriptor.Boolean, $"[ ! {exp} ]", logical);
             }
 
             return base.CreateExpressionRecursive(p, statement);
@@ -127,6 +162,13 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
         {
             if (!(template is LogicalEvaluationStatement logicalEvaluationStatement))
                 throw new InvalidOperationException();
+
+            if (op is LogicalAndOperator || op is LogicalOrOperator)
+            {
+                left = _asBashCondition(leftTypeDescriptor, left, logicalEvaluationStatement.Left);
+                right = _asBashCondition(rightTypeDescriptor, right, logicalEvaluationStatement.Right);
+                return $"{left} {op} {right}";
+            }
 
             string opStr;
 
@@ -193,6 +235,51 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
             return $"[ {exp} -ne 0 ]";
         }
 
+        private static bool _isBracketTest(string exp)
+        {
+            if (string.IsNullOrEmpty(exp))
+            {
+                return false;
+            }
+
+            if (exp.StartsWith("[[", StringComparison.Ordinal) && exp.EndsWith("]]", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return exp[0] == '[' && exp[exp.Length - 1] == ']';
+        }
+
+        private string _asBashCondition(TypeDescriptor typeDescriptor, string exp, IStatement template)
+        {
+            if (_isBracketTest(exp))
+            {
+                return exp;
+            }
+
+            if (template is ConstantValueStatement)
+            {
+                return exp;
+            }
+
+            if (template is VariableAccessStatement && typeDescriptor.IsBoolean())
+            {
+                return _formatBoolVariable(exp);
+            }
+
+            if (typeDescriptor.IsBoolean())
+            {
+                if (template is LogicalEvaluationStatement || template is FunctionCallStatement)
+                {
+                    return $"[ {exp} ]";
+                }
+
+                return $"[ {exp} -ne 0 ]";
+            }
+
+            return exp;
+        }
+
         private string _createBoolExpression(TypeDescriptor typeDescriptor, string exp, IStatement template,
             bool operatorNeedsToEvaluate)
         {
@@ -220,12 +307,17 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
             if (typeDescriptor.IsBoolean())
             {
-                if (exp[0] != '[' && exp[exp.Length - 1] != ']')
+                if (_isBracketTest(exp))
+                {
+                    return exp;
+                }
+
+                if (template is LogicalEvaluationStatement || template is FunctionCallStatement)
                 {
                     return $"[ {exp} ]";
                 }
 
-                return exp;
+                return $"[ {exp} -ne 0 ]";
             }
 
             if (exp[0] == '(' && exp[exp.Length - 1] == ')')

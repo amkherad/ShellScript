@@ -1,4 +1,4 @@
-marker=
+marker=set
 cwdEmpty=0
 homeSet=1
 EXAMPLE_OK:Environment

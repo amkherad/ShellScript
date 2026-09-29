@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using ShellScript.Core;
 using ShellScript.Core.Language.Compiler.Statements;
 using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
@@ -29,6 +30,7 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             if (!(statement is EchoStatement echoStatement)) throw new InvalidOperationException();
 
             var paramExp = new StringBuilder();
+            paramExp.Append("echo");
             foreach (var stt in echoStatement.Parameters)
             {
                 paramExp.Append(' ');
@@ -36,10 +38,9 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
                 var transpiler = context.GetEvaluationTranspilerForStatement(stt);
 
                 var result = transpiler.GetExpression(context, scope, metaWriter, writer, null, stt);
-                paramExp.Append(result.Expression);
+                paramExp.Append(QuoteEchoArgument(result.Expression));
             }
 
-            writer.Write("echo");
             writer.Write(paramExp.ToString());
 
             var device = scope.GetConfig(c => c.ExplicitEchoStream, context.Flags.ExplicitEchoStream);
@@ -51,6 +52,20 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler
             writer.WriteLine();
             
             scope.IncrementStatements();
+        }
+
+        /// <summary>
+        /// Unquoted ANSI reset sequences (${CReset} → ESC[0m) make bash treat [0m as a redirect target
+        /// and create a junk file in the working directory.
+        /// </summary>
+        private static string QuoteEchoArgument(string expression)
+        {
+            if (string.IsNullOrEmpty(expression))
+            {
+                return "''";
+            }
+
+            return StringHelpers.EnQuote(expression);
         }
     }
 }

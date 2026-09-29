@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ShellScript.Core.Language;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
@@ -7,15 +8,23 @@ using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 using ShellScript.Core.Language.Library;
 using ShellScript.Unix.Bash.Api;
+using ShellScript.Core.Language.Compiler.PostProcessing;
 using ShellScript.Unix.Bash.PlatformTranspiler;
+using ShellScript.Unix.Bash.PostProcessing;
 
 namespace ShellScript.Unix.Bash
 {
     public class UnixBashPlatform : IPlatform
     {
         public const string LastStatusCodeStoreVariableName = "?";
-        
-        public string Name => "Unix-Bash";
+        public const string PlatformName = "Unix-Bash";
+
+        private static readonly IGeneratedCodePostProcessor[] PostProcessors =
+        {
+            new FormatBashGeneratedCodePostProcessor(),
+        };
+
+        public string Name => PlatformName;
 
         public string ScriptExtension => ".bash";
 
@@ -56,6 +65,8 @@ namespace ShellScript.Unix.Bash
         {
             return flags;
         }
+
+        public IReadOnlyList<IGeneratedCodePostProcessor> GeneratedCodePostProcessors => PostProcessors;
 
         public string GetDefaultValue(DataTypes dataType)
         {

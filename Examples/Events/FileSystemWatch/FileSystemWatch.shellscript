@@ -1,6 +1,12 @@
 #!/usr/bin/env shellscript
-file=/tmp/list.txt
-while [ ! -f "$file" ]
-do
-    inotifywait -qqt 2 -e create -e moved_to "$(dirname $file)"
-done
+// Wait until a path exists (uses inotifywait on Linux; not run in snapshot CI).
+// Compile-only example for Events + Platform.Call.
+
+string file = "/tmp/list.txt";
+string dir = Path.GetDirectoryName(file);
+
+while (!File.Exists(file)) {
+    Platform.Call("inotifywait -qqt 2 -e create -e moved_to \"" + dir + "\"");
+}
+
+echo "file appeared";

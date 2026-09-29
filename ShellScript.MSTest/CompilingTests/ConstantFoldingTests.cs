@@ -23,8 +23,8 @@ namespace ShellScript.MSTest.CompilingTests
 
             var bash = CompileToString(script);
 
-            StringAssert.Contains(bash, "echo 7");
-            StringAssert.Contains(bash, "echo 0");
+            StringAssert.Contains(bash, "echo \"7\"");
+            StringAssert.Contains(bash, "echo \"0\"");
         }
 
         [TestMethod]

@@ -9,7 +9,6 @@ using ShellScript.Core.Language.Library;
 using ShellScript.Core.Language.Compiler.Transpiling;
 using ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations;
 using ShellScript.Core.Language.Compiler.Transpiling.ExpressionBuilders;
-using ShellScript.Core.Language.Library;
 using ShellScript.Core.Language.Library.Core.Array;
 
 namespace ShellScript.Windows.Batch.PlatformTranspiler

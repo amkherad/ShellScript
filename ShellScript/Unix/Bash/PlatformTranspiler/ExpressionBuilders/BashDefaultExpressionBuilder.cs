@@ -1,6 +1,8 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using ShellScript.Core;
 using ShellScript.Core.Language.Compiler;
 using ShellScript.Core.Language.Compiler.CompilerErrors;
@@ -209,10 +211,74 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
 
             if (result.TypeDescriptor.IsString())
             {
+                if (ShouldAssignStringHelper(result))
+                {
+                    return AssignStringHelperParameter(p, result.Expression);
+                }
+
                 return $"\"{result.Expression}\"";
             }
 
             return $"$(({result.Expression}))";
+        }
+
+        private static bool ShouldAssignStringHelper(ExpressionResult result)
+        {
+            if (result.Template is ArithmeticEvaluationStatement)
+            {
+                return true;
+            }
+
+            var expression = result.Expression;
+            if (string.IsNullOrEmpty(expression))
+            {
+                return false;
+            }
+
+            return expression.IndexOf('"') >= 0 || expression.IndexOf('|') >= 0;
+        }
+
+        private static string AssignStringHelperParameter(ExpressionBuilderParams p, string expression)
+        {
+            var helper = p.Scope.NewHelperVariable(TypeDescriptor.String, "str_arg");
+            var normalized = NormalizeStringConcatForAssignment(expression);
+            p.NonInlinePartWriter.Write(helper);
+            p.NonInlinePartWriter.Write("=\"");
+            p.NonInlinePartWriter.Write(normalized);
+            p.NonInlinePartWriter.WriteLine('"');
+            return $"\"${helper}\"";
+        }
+
+        /// <summary>
+        /// Strips stray quotes from string-concat expressions so bash assignment keeps | and expansions inside one quoted word.
+        /// </summary>
+        public static string NormalizeStringConcatForAssignment(string expression)
+        {
+            if (string.IsNullOrEmpty(expression))
+            {
+                return expression;
+            }
+
+            var normalized = expression;
+            while (normalized.Length >= 2 && normalized[0] == '"' && normalized[normalized.Length - 1] == '"')
+            {
+                normalized = normalized.Substring(1, normalized.Length - 2);
+            }
+
+            if (normalized.StartsWith("\"", StringComparison.Ordinal))
+            {
+                normalized = normalized.Substring(1);
+            }
+
+            if (normalized.EndsWith("\"", StringComparison.Ordinal))
+            {
+                normalized = normalized.Substring(0, normalized.Length - 1);
+            }
+
+            normalized = Regex.Replace(normalized, "\"\\$\\{", "${");
+            normalized = Regex.Replace(normalized, "\\}\"", "}");
+
+            return normalized;
         }
 
         public override string FormatExpression(ExpressionBuilderParams p, ExpressionResult result)
@@ -569,10 +635,20 @@ namespace ShellScript.Unix.Bash.PlatformTranspiler.ExpressionBuilders
                                     {
                                         leftExp = FormatStringConcatenationVariableAccess(leftExp);
                                     }
+                                    else if (leftResult.Template is ConstantValueStatement leftConstant &&
+                                             leftConstant.IsString())
+                                    {
+                                        leftExp = BashTranspilerHelpers.StandardizeString(leftConstant.Value, true);
+                                    }
 
                                     if (rightResult.Template is VariableAccessStatement)
                                     {
                                         rightExp = FormatStringConcatenationVariableAccess(rightExp);
+                                    }
+                                    else if (rightResult.Template is ConstantValueStatement rightConstant &&
+                                             rightConstant.IsString())
+                                    {
+                                        rightExp = BashTranspilerHelpers.StandardizeString(rightConstant.Value, true);
                                     }
 
 

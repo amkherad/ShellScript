@@ -5,4 +5,8 @@ a
 same=1
 one_two
 at=1
+a-b-c
+y
+***
+last=3
 EXAMPLE_OK:String
