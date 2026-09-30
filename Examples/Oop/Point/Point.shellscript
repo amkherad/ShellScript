@@ -1,14 +1,17 @@
 #!/usr/bin/env shellscript
 // Minimal class example: constructor initializes instance state (see class methods in language docs).
 class Point {
-    int x;
-    int y;
+  int x;
+  int y;
 
-    void Point(int ax, int ay) {
-        this.x = ax;
-        this.y = ay;
-    }
+  void Point(int ax, int ay) {
+    this.x = ax;
+    this.y = ay;
+  }
 }
 
 Point p = new Point(3, 4);
-echo 7;
+echo p.x + p.y;
+
+Assert.Equals(3, p.x);
+Assert.Equals(4, p.y);

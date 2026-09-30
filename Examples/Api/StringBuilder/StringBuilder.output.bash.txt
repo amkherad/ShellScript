@@ -1,0 +1,6 @@
+hello world
+
+done
+len=17
+cleared
+EXAMPLE_OK:StringBuilder

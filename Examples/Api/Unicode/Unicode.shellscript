@@ -4,4 +4,5 @@
 
 int len = Unicode.GetLength("hi");
 echo $"len={len}";
+Assert.Equals(2, len);
 echo "EXAMPLE_OK:Unicode";

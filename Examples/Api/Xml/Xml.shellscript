@@ -8,4 +8,5 @@ string item = Xml.GetPath(xml, "item");
 
 echo $"valid={valid}";
 echo item;
+Assert.Equals("shell", item);
 echo "EXAMPLE_OK:Xml";

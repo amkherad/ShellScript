@@ -290,7 +290,13 @@ return-statement = "return", [ expression ], ";" ;
 include-statement = "include", expression, ";" ;
 ```
 
-The expression identifies another source. Include handling is delegated to the include transpiler and compilation context.
+The expression must be a **string literal** path to another `.shellscript` file. Includes are only valid at the **root scope** of a file (not inside functions or blocks).
+
+Resolution searches, in order: directories of files currently being compiled (innermost first), then directories registered on the compilation context (typically the entry file’s folder), then the process working directory.
+
+Each included file is merged **at most once** per compilation (repeat `include` of the same resolved path is a no-op). **Circular includes** are rejected.
+
+Helper fragments often live under a `parts/` subfolder next to the entry script; those files are not meant to be compiled alone.
 
 ### 8.5 If/Else
 

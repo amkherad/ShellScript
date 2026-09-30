@@ -1,0 +1,6 @@
+#!/usr/bin/env shellscript
+
+Assert.Equals(1, 1);
+Assert.True(2 > 1);
+Assert.NotEquals("x", "y");
+echo "ASSERT_OK";

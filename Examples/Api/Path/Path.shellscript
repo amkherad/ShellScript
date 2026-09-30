@@ -10,4 +10,6 @@ bool rooted = Path.IsPathRooted(temp);
 echo $"temp={temp}";
 echo $"name={name}";
 echo $"rooted={rooted}";
+Assert.Equals("child", name);
+Assert.True(rooted);
 echo "EXAMPLE_OK:Path";

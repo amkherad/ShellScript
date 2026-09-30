@@ -9,3 +9,6 @@ int version = 1;
 
 echo "name: " + name;
 echo $"name: {name}, version {version}";
+
+Assert.Equals("ShellScript", name);
+Assert.Equals(1, version);

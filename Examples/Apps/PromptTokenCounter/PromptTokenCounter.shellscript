@@ -1,0 +1,138 @@
+#!/usr/bin/env shellscript
+// Count tokens for an AI prompt across major provider tokenizers (via count_tokens.py).
+// Usage: PromptTokenCounter.bash [--platform=openai] [--file=path] [--text="..."] [--json] [--list-platforms]
+
+string scriptDir = Platform.GetScriptDirectory();
+string counterPy = Path.Combine(scriptDir, "count_tokens.py");
+string defaultPrompt = Path.Combine(scriptDir, "sample_prompt.txt");
+
+string platform = "openai";
+string promptFile = "";
+string inlineText = "";
+bool jsonOut = false;
+bool listPlatforms = false;
+bool showHelp = false;
+bool helpFlag = Cli.HasFlag("--help");
+bool helpShort = Cli.HasFlag("-h");
+bool listFlag = Cli.HasFlag("--list-platforms");
+bool jsonFlag = Cli.HasFlag("--json");
+bool compareFlag = Cli.HasFlag("--compare");
+
+if (helpFlag || helpShort) {
+  showHelp = true;
+}
+if (listFlag) {
+  listPlatforms = true;
+}
+if (jsonFlag) {
+  jsonOut = true;
+}
+
+string platformFlag = Cli.GetFlagValue("--platform");
+if (!String.IsNullOrEmpty(platformFlag)) {
+  platform = platformFlag;
+}
+
+string fileFlag = Cli.GetFlagValue("--file");
+if (!String.IsNullOrEmpty(fileFlag)) {
+  promptFile = fileFlag;
+}
+
+string textFlag = Cli.GetFlagValue("--text");
+if (!String.IsNullOrEmpty(textFlag)) {
+  inlineText = textFlag;
+}
+
+if (showHelp) {
+  echo "PromptTokenCounter — estimate prompt tokens per AI platform.";
+  echo "";
+  echo "  --platform=NAME   openai (default), openai-o200k, anthropic, google,";
+  echo "                    meta, mistral, xai, cohere, amazon";
+  echo "  --file=PATH       UTF-8 prompt file (default: sample_prompt.txt beside script)";
+  echo "  --text=TEXT       Prompt inline (written to a temp file for the counter)";
+  echo "  --json            JSON output { platform, tokens, method, characters }";
+  echo "  --list-platforms  Print supported platform ids";
+  echo "  --compare         Count the same prompt on every supported platform";
+  echo "  --help            This message";
+  echo "";
+  echo "Install optional 'tiktoken' (pip) for accurate OpenAI/xAI counts.";
+}
+
+if (listPlatforms) {
+  echo "openai";
+  echo "openai-o200k";
+  echo "anthropic";
+  echo "google";
+  echo "meta";
+  echo "mistral";
+  echo "xai";
+  echo "cohere";
+  echo "amazon";
+}
+
+if (!showHelp && !listPlatforms && compareFlag) {
+  string inputPath = defaultPrompt;
+  string fileFlagCmp = Cli.GetFlagValue("--file");
+  string textFlagCmp = Cli.GetFlagValue("--text");
+  if (!String.IsNullOrEmpty(textFlagCmp)) {
+    inputPath = Path.Combine(scriptDir, ".prompt_token_counter_input.txt");
+    File.WriteAllText(inputPath, textFlagCmp);
+  } else {
+    if (!String.IsNullOrEmpty(fileFlagCmp)) {
+      inputPath = fileFlagCmp;
+      if (!Path.IsPathRooted(inputPath)) {
+        inputPath = Path.Combine(scriptDir, fileFlagCmp);
+      }
+    }
+  }
+  if (!File.Exists(inputPath)) {
+    Console.WriteError("Prompt file not found: " + inputPath);
+  } else {
+    echo "compare prompt=" + inputPath;
+    string[] platforms = Text.Split("openai openai-o200k anthropic google meta mistral xai cohere amazon", " ");
+    int pCount = Array.GetLength(platforms);
+    int pi = 0;
+    while (pi < pCount) {
+      string p = platforms[pi];
+      string cmd = "python3 \"" + counterPy + "\" --platform " + p + " --file \"" + inputPath + "\"";
+      string block = Process.RunAndCapture(cmd);
+      echo "--- " + p;
+      echo block;
+      pi = pi + 1;
+    }
+  }
+}
+
+if (!showHelp && !listPlatforms && !compareFlag) {
+  string inputPath = "";
+  if (!String.IsNullOrEmpty(inlineText)) {
+    inputPath = Path.Combine(scriptDir, ".prompt_token_counter_input.txt");
+    File.WriteAllText(inputPath, inlineText);
+  } else {
+    if (!String.IsNullOrEmpty(promptFile)) {
+      inputPath = promptFile;
+      if (!Path.IsPathRooted(inputPath)) {
+        inputPath = Path.Combine(scriptDir, promptFile);
+      }
+    } else {
+      inputPath = defaultPrompt;
+    }
+  }
+
+  if (!File.Exists(inputPath)) {
+    Console.WriteError("Prompt file not found: " + inputPath);
+  } else {
+    string pyArgs = "python3 \"" + counterPy + "\" --platform " + platform + " --file \"" + inputPath + "\"";
+    if (jsonOut) {
+      pyArgs = pyArgs + " --json";
+    }
+
+    string raw = Process.RunAndCapture(pyArgs);
+    if (jsonOut) {
+      echo raw;
+    } else {
+      echo "platform=" + platform;
+      echo raw;
+    }
+  }
+}

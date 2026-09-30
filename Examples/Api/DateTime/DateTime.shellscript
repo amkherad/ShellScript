@@ -5,4 +5,5 @@
 int unix = DateTime.ToUnixTime();
 bool unixPositive = unix > 0;
 echo $"unixPositive={unixPositive}";
+Assert.True(unixPositive);
 echo "EXAMPLE_OK:DateTime";

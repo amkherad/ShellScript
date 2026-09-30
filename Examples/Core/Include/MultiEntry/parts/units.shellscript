@@ -1,0 +1,3 @@
+int FeetToMeters(int feet) {
+  return feet * 3;
+}

@@ -10,4 +10,9 @@ bool verbose = Cli.HasFlag("--verbose");
 echo $"count={count}";
 echo first;
 echo $"verbose={verbose}";
+Assert.True(count >= 0);
+if (count > 0) {
+  Assert.Equals("run", first);
+  Assert.True(verbose);
+}
 echo "EXAMPLE_OK:Cli";

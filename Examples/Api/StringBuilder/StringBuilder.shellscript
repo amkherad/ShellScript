@@ -18,4 +18,6 @@ StringBuilder.Clear(sb);
 StringBuilder.Append(sb, "cleared");
 echo StringBuilder.ToString(sb);
 
+Assert.Equals(17, len);
+Assert.Equals("cleared", StringBuilder.ToString(sb));
 echo "EXAMPLE_OK:StringBuilder";

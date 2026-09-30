@@ -6,4 +6,5 @@ string encoded = Binary.ToBase64("hi");
 string decoded = Binary.FromBase64(encoded);
 
 echo decoded;
+Assert.Equals("hi", decoded);
 echo "EXAMPLE_OK:Binary";

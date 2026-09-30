@@ -27,6 +27,7 @@ using ShellScript.Unix.Bash.Api.ClassLibrary.Text;
 using ShellScript.Unix.Bash.Api.ClassLibrary.DateTime;
 using ShellScript.Unix.Bash.Api.ClassLibrary.IO.Binary;
 using ShellScript.Unix.Bash.Api.ClassLibrary.Diagnostics;
+using ShellScript.Unix.Bash.Api.ClassLibrary.Testing;
 using ShellScript.Unix.Utilities;
 
 namespace ShellScript.Unix.Bash.Api
@@ -67,6 +68,7 @@ namespace ShellScript.Unix.Bash.Api
             new BashLog(),
             new BashConsole(),
             new BashCli(),
+            new BashAssert(),
         };
 
         private IThirdPartyUtility[] _utilities =

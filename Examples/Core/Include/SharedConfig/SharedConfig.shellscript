@@ -1,0 +1,11 @@
+#!/usr/bin/env shellscript
+// Shared constants and helpers split across files (bundle-style layout).
+
+include "parts/config.shellscript";
+include "parts/report.shellscript";
+
+echo $"app={AppName} v{Version}";
+echo ReportStatus();
+
+Assert.Equals("IncludeDemo", AppName);
+Assert.Equals(1, Version);

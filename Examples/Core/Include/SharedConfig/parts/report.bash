@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#ShellScript v0.1.2.2018 - [https://github.com/amkherad/ShellScript]
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+AppName="IncludeDemo"
+Version=1
+#! String ReportStatus
+function ReportStatus() {
+  echo "${AppName} ready"
+}

@@ -16,3 +16,6 @@ greeting = $"count is {count}";
 
 echo greeting;
 echo ready;
+
+Assert.Equals(11, count);
+Assert.True(ready);

@@ -9,4 +9,7 @@ string replaced = Regex.Replace("a-b-c", "-", "_");
 echo normalized;
 echo $"match={match}";
 echo replaced;
+Assert.Equals("a b", normalized);
+Assert.True(match);
+Assert.Equals("a_b_c", replaced);
 echo "EXAMPLE_OK:Text";

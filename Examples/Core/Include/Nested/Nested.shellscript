@@ -1,0 +1,10 @@
+#!/usr/bin/env shellscript
+// Includes can chain: outer pulls inner relative to its own directory.
+
+include "parts/lib/outer.shellscript";
+
+echo Greeting();
+echo $"sum: {Add(4, 5)}";
+
+Assert.Equals("Hello from nested include", Greeting());
+Assert.Equals(9, Add(4, 5));

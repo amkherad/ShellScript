@@ -24,10 +24,14 @@ int truncated = (int)fromInt;
 
 string label;
 if (a > 10) {
-    label = "large";
+  label = "large";
 } else {
-    label = "small";
+  label = "small";
 }
 echo $"a is {label}";
 
 echo 80 * "-";
+
+Assert.Equals(22, a + b);
+Assert.Equals(12, a - b);
+Assert.Equals("large", label);

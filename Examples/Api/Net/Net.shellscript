@@ -7,4 +7,6 @@ bool alive = Net.Ping("127.0.0.1");
 
 echo $"loopback={loopback}";
 echo $"alive={alive}";
+bool loopbackSet = !String.IsNullOrEmpty(loopback);
+Assert.True(loopbackSet);
 echo "EXAMPLE_OK:Net";

@@ -1,0 +1,7 @@
+string Prefix() {
+  return "Hello";
+}
+
+int Add(int a, int b) {
+  return a + b;
+}

@@ -20,7 +20,7 @@ namespace ShellScript.MSTest.CompilingTests
                 "OS", "Process", "Thread",
                 "Ini", "DotEnv", "Json", "Yaml", "Xml",
                 "Text", "Unicode", "DateTime", "Binary", "Regex",
-                "Log", "Console", "Cli",
+                "Log", "Console", "Cli", "Assert",
             };
 
             CollectionAssert.AreEquivalent(expectedClassNames,
@@ -42,6 +42,7 @@ namespace ShellScript.MSTest.CompilingTests
                 {"Cli", new[] {"GetArgumentCount", "GetArgument", "HasFlag", "GetFlagValue"}},
                 {"Process", new[] {"GetCurrentId", "RunAndCapture"}},
                 {"Log", new[] {"Info", "Error"}},
+                {"Assert", new[] {"Equals", "True", "Fail"}},
             };
 
             foreach (var spotCheck in spotChecks)

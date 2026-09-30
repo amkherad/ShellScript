@@ -4,9 +4,11 @@
 
 string file = "/tmp/list.txt";
 string dir = Path.GetDirectoryName(file);
+bool dirSet = !String.IsNullOrEmpty(dir);
+Assert.True(dirSet);
 
 while (!File.Exists(file)) {
-    Platform.Call("inotifywait -qqt 2 -e create -e moved_to \"" + dir + "\"");
+  Platform.Call("inotifywait -qqt 2 -e create -e moved_to \"" + dir + "\"");
 }
 
 echo "file appeared";

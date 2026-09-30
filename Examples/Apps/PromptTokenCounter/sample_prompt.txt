@@ -1,0 +1,5 @@
+You are a helpful assistant. Summarize the following article in three bullet points.
+
+The ShellScript language transpiles to Bash, PowerShell, and Batch while sharing one class library.
+Include directives merge other .shellscript files into a single compiled script.
+This sample prompt is used by the PromptTokenCounter demo app.

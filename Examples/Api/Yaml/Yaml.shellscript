@@ -8,4 +8,5 @@ string name = Yaml.GetPath(yaml, "name");
 
 echo $"valid={valid}";
 echo name;
+Assert.Equals("shell", name);
 echo "EXAMPLE_OK:Yaml";

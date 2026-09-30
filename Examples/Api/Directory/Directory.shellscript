@@ -9,4 +9,5 @@ Directory.Create(sub);
 bool exists = Directory.Exists(sub);
 
 echo $"exists={exists}";
+Assert.True(exists);
 echo "EXAMPLE_OK:Directory";

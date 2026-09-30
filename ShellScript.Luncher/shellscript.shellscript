@@ -5,27 +5,27 @@
 
 command getRuntimeCommand() {
 
-    if (ClrHelpers.IsDotNetCoreAvailable()) {
-        return ClrHelpers.GetRuntime("dotnet").Command();
-    } else if (ClrHelpers.IsDotNetFxAvailable()) {
-        return ClrHelpers.GetRuntime("net").Command();
-    } else if (ClrHelpers.IsMonoAvailable()) {
-        return ClrHelpers.GetRuntime("mono").Command();
+  if (ClrHelpers.IsDotNetCoreAvailable()) {
+    return ClrHelpers.GetRuntime("dotnet").Command();
+  } else if (ClrHelpers.IsDotNetFxAvailable()) {
+    return ClrHelpers.GetRuntime("net").Command();
+  } else if (ClrHelpers.IsMonoAvailable()) {
+    return ClrHelpers.GetRuntime("mono").Command();
+  }
+  //#if Unix
+  else {
+    var lookup = CommandLocator.Lookup("wine");
+    if (lookup != null) { //trying to run on wine.
+      return lookup.Command();
+    } else {
+      throw "Cannot find the required runtime.";
     }
-//#if Unix
-    else {
-        var lookup = CommandLocator.Lookup("wine");
-        if (lookup != null) { //trying to run on wine.
-            return lookup.Command();
-        } else {
-            throw "Cannot find the required runtime.";
-        }
-    }
-//#elseif
-    else {
-        throw "No CLR runtime found.";
-    }
-//#endif
+  }
+  //#elseif
+  else {
+    throw "No CLR runtime found.";
+  }
+  //#endif
 
 }
 

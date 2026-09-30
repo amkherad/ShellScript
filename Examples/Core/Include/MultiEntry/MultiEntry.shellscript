@@ -1,0 +1,11 @@
+#!/usr/bin/env shellscript
+// Multiple includes contribute functions used by the entry file.
+
+include "parts/units.shellscript";
+include "parts/convert.shellscript";
+
+int m = FeetToMeters(10);
+echo FormatMeters(m);
+
+Assert.Equals(30, m);
+Assert.Equals("length=30m", FormatMeters(m));

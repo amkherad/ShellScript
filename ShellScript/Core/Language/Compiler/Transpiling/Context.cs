@@ -31,6 +31,16 @@ namespace ShellScript.Core.Language.Compiler.Transpiling
         public TextWriter LogWriter { get; }
         public HashSet<string> Includes { get; set; }
 
+        /// <summary>Directories of sources currently being compiled (top = innermost). Used to resolve relative includes.</summary>
+        public Stack<string> IncludeDirectoryStack { get; } = new Stack<string>();
+
+        /// <summary>Source files on the include stack (detect circular includes).</summary>
+        public Stack<string> ActiveIncludeSources { get; } = new Stack<string>();
+
+        /// <summary>Sources whose top-level statements were already merged (include-once per compilation).</summary>
+        public HashSet<string> CompletedIncludeSources { get; } =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         private readonly List<UtilityFunctionInitBinding> _utilityFunctionInitBindings =
             new List<UtilityFunctionInitBinding>();
 

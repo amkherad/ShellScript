@@ -18,6 +18,24 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
         public bool Validate(Context context, Scope scope, IStatement statement, out string message)
         {
             message = null;
+            if (!(statement is IncludeStatement includeStatement))
+            {
+                message = "Invalid include statement.";
+                return false;
+            }
+
+            if (!scope.IsRootScope)
+            {
+                message = "Include is only allowed at the root scope of a source file.";
+                return false;
+            }
+
+            if (!(includeStatement.Target is ConstantValueStatement constant) || !constant.IsString())
+            {
+                message = "Include path must be a string literal.";
+                return false;
+            }
+
             return true;
         }
 
@@ -49,34 +67,86 @@ namespace ShellScript.Core.Language.Compiler.Transpiling.BaseImplementations
             }
 
             var fileName = constantValueStatement.Value;
+            var resolvedPath = ResolveIncludePath(context, fileName, includeStatement.Info);
 
-            if (!Path.IsPathRooted(fileName))
+            if (context.CompletedIncludeSources.Contains(resolvedPath))
             {
-                if (!File.Exists(fileName))
+                return;
+            }
+
+            Compiler.CompileFromSource(context, metaWriter, writer, false, resolvedPath);
+        }
+
+        internal static string ResolveIncludePath(Context context, string fileName, StatementInfo errorInfo)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                throw new CompilerException("Include path cannot be empty.", errorInfo);
+            }
+
+            if (Path.IsPathRooted(fileName) && File.Exists(fileName))
+            {
+                return Path.GetFullPath(fileName);
+            }
+
+            var searched = new List<string>();
+
+            foreach (var dir in context.IncludeDirectoryStack)
+            {
+                if (string.IsNullOrEmpty(dir))
                 {
-                    var directories = new List<string>
-                    {
-                        Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
-                    };
-                    directories.AddRange(context.Includes);
+                    continue;
+                }
 
-                    foreach (var dir in directories)
-                    {
-                        if (File.Exists(Path.Combine(dir, fileName)))
-                        {
-                            fileName = Path.Combine(dir, fileName);
-                            break;
-                        }
-                    }
-
-                    if (!File.Exists(fileName))
-                    {
-                        throw new FileNotFoundException();
-                    }
+                var candidate = Path.Combine(dir, fileName);
+                searched.Add(candidate);
+                if (File.Exists(candidate))
+                {
+                    return Path.GetFullPath(candidate);
                 }
             }
 
-            Compiler.CompileFromSource(context, metaWriter, writer, false, fileName);
+            foreach (var dir in context.Includes)
+            {
+                if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir))
+                {
+                    continue;
+                }
+
+                var candidate = Path.Combine(dir, fileName);
+                if (searched.Contains(candidate))
+                {
+                    continue;
+                }
+
+                searched.Add(candidate);
+                if (File.Exists(candidate))
+                {
+                    return Path.GetFullPath(candidate);
+                }
+            }
+
+            if (File.Exists(fileName))
+            {
+                return Path.GetFullPath(fileName);
+            }
+
+            searched.Add(fileName);
+
+            var assemblyDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            if (!string.IsNullOrEmpty(assemblyDir))
+            {
+                var candidate = Path.Combine(assemblyDir, fileName);
+                searched.Add(candidate);
+                if (File.Exists(candidate))
+                {
+                    return Path.GetFullPath(candidate);
+                }
+            }
+
+            throw new CompilerException(
+                "Include file not found: '" + fileName + "'. Searched: " + string.Join(", ", searched),
+                errorInfo);
         }
     }
 }

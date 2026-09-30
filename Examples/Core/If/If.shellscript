@@ -5,17 +5,20 @@ int score = 85;
 string grade;
 
 if (score >= 90) {
-    grade = "A";
+  grade = "A";
 } else if (score >= 80) {
-    grade = "B";
+  grade = "B";
 } else if (score >= 70) {
-    grade = "C";
+  grade = "C";
 } else {
-    grade = "F";
+  grade = "F";
 }
 
 echo $"Score {score} => grade {grade}";
 
 if (score > 0 && score <= 100) {
-    echo "Score is in valid range.";
+  echo "Score is in valid range.";
 }
+
+Assert.Equals("B", grade);
+Assert.True(score > 0 && score <= 100);

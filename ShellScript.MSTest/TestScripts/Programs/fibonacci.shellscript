@@ -3,25 +3,25 @@
 const string NegativeMaxIsNotAllowed = "Maximum should be positive non-zero value.";
 
 void printEntry(int entry) {
-    echo entry;
+  echo entry;
 }
 
 void printFibonacci(int max) {
-    if (max < 0) throw NegativeMaxIsNotAllowed;
-    
-    int x = 1;
-    int y = 1;
-    int sum = 2;
-    
-    printEntry(1);
-    printEntry(1);
-    
-    while (sum <= max) {
-        printEntry(2);
-        
-        x = y;
-        y = sum;
-        
-        sum = x + y;
-    }
+  if (max < 0) throw NegativeMaxIsNotAllowed;
+
+  int x = 1;
+  int y = 1;
+  int sum = 2;
+
+  printEntry(1);
+  printEntry(1);
+
+  while (sum <= max) {
+    printEntry(2);
+
+    x = y;
+    y = sum;
+
+    sum = x + y;
+  }
 }

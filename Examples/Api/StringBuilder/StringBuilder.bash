@@ -2,16 +2,29 @@
 #ShellScript v0.1.2.2018 - [https://github.com/amkherad/ShellScript]
 #-------------------------------------------------------------------------------
 function StringBuilder_Create() {
-printf '%s' "$1"
+  printf '%s' "$1"
 }
 function StringBuilder_ToString() {
-printf '%s' "$1"
+  printf '%s' "$1"
 }
 function StringBuilder_GetLength() {
-echo ${#1}
+  echo ${#1}
 }
 function StringBuilder_ToString() {
-printf '%s' "$1"
+  printf '%s' "$1"
+}
+function Assert_Equals() {
+  if [[ "$1" == "$2" ]]; then return 0; fi
+  if [ -n "$3" ]; then printf '%s\n' "$3" >&2; else printf 'Assert.Equals failed: expected "%s" but was "%s"\n' "$1" "$2" >&2; fi
+  return 1 2>/dev/null || exit 1
+}
+function Assert_Equals() {
+  if [[ "$1" == "$2" ]]; then return 0; fi
+  if [ -n "$3" ]; then printf '%s\n' "$3" >&2; else printf 'Assert.Equals failed: expected "%s" but was "%s"\n' "$1" "$2" >&2; fi
+  return 1 2>/dev/null || exit 1
+}
+function StringBuilder_ToString() {
+  printf '%s' "$1"
 }
 #-------------------------------------------------------------------------------
 sb=`StringBuilder_Create`
@@ -27,4 +40,6 @@ echo "len=${len}"
 sb=""
 printf -v sb '%s%s' "$sb" "cleared"
 echo "`StringBuilder_ToString "$sb"`"
+Assert_Equals 17 $len
+Assert_Equals "cleared" `StringBuilder_ToString "$sb"`
 echo "EXAMPLE_OK:StringBuilder"

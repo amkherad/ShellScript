@@ -64,3 +64,7 @@ Example scripts live in the repository under `Examples/Api/`.
 - [Console](reference/console.html) — 24 method(s)
 - [Log](reference/log.html) — 4 method(s)
 
+## Other
+
+- [Assert](reference/assert.html) — 4 method(s)
+

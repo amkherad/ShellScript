@@ -1,0 +1,10 @@
+#!/usr/bin/env shellscript
+// Pull in a small math helper from another file in the same folder.
+
+include "parts/math.shellscript";
+
+echo $"double 3 = {Double(3)}";
+echo $"triple 2 = {Triple(2)}";
+
+Assert.Equals(6, Double(3));
+Assert.Equals(6, Triple(2));

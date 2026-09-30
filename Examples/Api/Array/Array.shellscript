@@ -9,9 +9,12 @@ bool hasTwenty = Array.Contains(values, 20);
 
 int[] copy = new int[] { 0, 0, 0 };
 Array.Copy(copy, values);
+int copyLen = Array.GetLength(copy);
 
 echo $"length={length}";
 echo $"index={index}";
 echo $"hasTwenty={hasTwenty}";
-echo $"copyLen={Array.GetLength(copy)}";
+echo $"copyLen={copyLen}";
+Assert.Equals(3, length);
+Assert.Equals(3, copyLen);
 echo "EXAMPLE_OK:Array";

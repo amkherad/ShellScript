@@ -11,4 +11,8 @@ echo $"i={i}";
 echo n;
 echo $"b={b}";
 echo s;
+Assert.Equals(42, i);
+Assert.Equals(3.5, n);
+Assert.True(b);
+Assert.Equals("42", s);
 echo "EXAMPLE_OK:Convert";

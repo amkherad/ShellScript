@@ -9,4 +9,5 @@ Ini.SetValue(ini, "app", "key", "value");
 string value = Ini.GetValue(ini, "app", "key");
 
 echo value;
+Assert.Equals("value", value);
 echo "EXAMPLE_OK:Ini";

@@ -8,4 +8,5 @@ Console.WriteError("mirror-me");
 Console.DisableErrorLog();
 string logged = File.ReadAllText("error.log");
 Console.WriteLine(logged);
+Assert.Equals("mirror-me", logged);
 echo "EXAMPLE_OK:Console";

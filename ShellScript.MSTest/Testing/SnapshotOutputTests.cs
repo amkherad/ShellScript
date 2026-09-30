@@ -75,6 +75,11 @@ namespace ShellScript.MSTest.Testing
                 }
             }
 
+            if (normalized.Contains("/parts/", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
             return false;
         }
 

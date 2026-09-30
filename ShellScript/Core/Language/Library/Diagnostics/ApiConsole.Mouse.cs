@@ -44,7 +44,7 @@ namespace ShellScript.Core.Language.Library.Diagnostics
             public override string Name => nameof(ReadTerminalInputTimeout);
             public override string Summary =>
                 "Reads a key or mouse event before the timeout. Returns an empty string when idle. " +
-                "Arrow keys return UP, DOWN, LEFT, or RIGHT; Page Up/Down return PAGE_UP and PAGE_DOWN; bare Escape returns ESC. " +
+                "Arrow keys return UP, DOWN, LEFT, or RIGHT; Page Up/Down return PAGE_UP and PAGE_DOWN; Home/End return HOME and END; bare Escape returns ESC. " +
                 "Mouse events use MOUSE:row:column:button (SGR wheel buttons 64/65).";
             public override string ClassName => ClassAccessName;
             public override bool IsStatic => true;

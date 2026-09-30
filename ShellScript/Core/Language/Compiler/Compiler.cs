@@ -189,38 +189,74 @@ namespace ShellScript.Core.Language.Compiler
             string sourceCodePath
         )
         {
-            var scope = context.GeneralScope;
-
-            if (isFirstRun)
+            if (!File.Exists(sourceCodePath))
             {
-                context.Platform.Api.InitializeContext(context);
-
-                var metaInfo = context.GetMetaInfoTranspiler();
-                metaInfo.WritePrologue(context, metaWriter);
+                throw new FileNotFoundException("Source code file not found.", sourceCodePath);
             }
-            
-            var info = new ParserContext(
-                context.WarningWriter,
-                context.LogWriter,
-                context.Flags.SemicolonRequired,
-                sourceCodePath,
-                Path.GetFileName(sourceCodePath),
-                sourceCodePath);
 
-            var parser = new Parser(context);
-
-            using (var inputFile = new FileStream(sourceCodePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = new StreamReader(inputFile))
+            var fullSourcePath = Path.GetFullPath(sourceCodePath);
+            foreach (var active in context.ActiveIncludeSources)
             {
-                foreach (var statement in parser.Parse(reader, info))
+                if (string.Equals(active, fullSourcePath, StringComparison.OrdinalIgnoreCase))
                 {
-                    Transpile(context, scope, statement, codeWriter, metaWriter);
+                    throw new CompilerException(
+                        "Circular include detected: " + fullSourcePath,
+                        new StatementInfo(fullSourcePath, 0, 0));
                 }
             }
 
-            context.WriteUtilityFunctionInitSection(metaWriter);
+            var sourceDirectory = Path.GetDirectoryName(fullSourcePath);
+            context.ActiveIncludeSources.Push(fullSourcePath);
+            if (!string.IsNullOrEmpty(sourceDirectory))
+            {
+                context.IncludeDirectoryStack.Push(sourceDirectory);
+            }
 
-            return context;
+            try
+            {
+                var scope = context.GeneralScope;
+
+                if (isFirstRun)
+                {
+                    context.Platform.Api.InitializeContext(context);
+
+                    var metaInfo = context.GetMetaInfoTranspiler();
+                    metaInfo.WritePrologue(context, metaWriter);
+                }
+
+                var info = new ParserContext(
+                    context.WarningWriter,
+                    context.LogWriter,
+                    context.Flags.SemicolonRequired,
+                    fullSourcePath,
+                    Path.GetFileName(fullSourcePath),
+                    fullSourcePath);
+
+                var parser = new Parser(context);
+
+                using (var inputFile = new FileStream(fullSourcePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var reader = new StreamReader(inputFile))
+                {
+                    foreach (var statement in parser.Parse(reader, info))
+                    {
+                        Transpile(context, scope, statement, codeWriter, metaWriter);
+                    }
+                }
+
+                context.WriteUtilityFunctionInitSection(metaWriter);
+
+                context.CompletedIncludeSources.Add(fullSourcePath);
+
+                return context;
+            }
+            finally
+            {
+                context.ActiveIncludeSources.Pop();
+                if (!string.IsNullOrEmpty(sourceDirectory))
+                {
+                    context.IncludeDirectoryStack.Pop();
+                }
+            }
         }
 
         public static void Transpile(

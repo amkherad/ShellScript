@@ -2,21 +2,25 @@
 // Function definitions, parameters, default values, and return.
 
 void greet(string name) {
-    echo $"Hello, {name}!";
+  echo $"Hello, {name}!";
 }
 
 int add(int a, int b = 0) {
-    return a + b;
+  return a + b;
 }
 
 int maxOf(int a, int b) {
-    if (a >= b) {
-        return a;
-    }
-    return b;
+  if (a >= b) {
+    return a;
+  }
+  return b;
 }
 
 greet("ShellScript");
 echo add(2, 3);
 echo add(10);
 echo maxOf(4, 9);
+
+Assert.Equals(5, add(2, 3));
+Assert.Equals(10, add(10));
+Assert.Equals(9, maxOf(4, 9));

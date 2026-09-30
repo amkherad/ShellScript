@@ -2318,10 +2318,6 @@ namespace ShellScript.Core.Language.Compiler.Parsing
         public IncludeStatement ReadIncludeStatement(Token token, IPeekingEnumerator<Token> enumerator,
             ParserContext context)
         {
-            int x = 0;
-            int y = 0;
-            x = x + + + - - y;
-            
             if (token.Type != TokenType.Include)
                 throw UnexpectedSyntax(token, context);
 

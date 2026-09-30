@@ -1,0 +1,7 @@
+int Double(int n) {
+  return n + n;
+}
+
+int Triple(int n) {
+  return n + n + n;
+}

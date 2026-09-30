@@ -1,11 +1,11 @@
 #!/usr/bin/env shellscript
 
 int[] array = new int[] {
-    2,
-    3,
-    4,
+  2,
+  3,
+  4,
 };
 
 foreach (int item in array) {
-    echo item;
+  echo item;
 }

@@ -5,8 +5,14 @@
 string host = OS.GetHostName();
 string kernel = OS.GetKernelName();
 string arch = OS.GetArchitecture();
+bool hostSet = !String.IsNullOrEmpty(host);
+bool kernelSet = !String.IsNullOrEmpty(kernel);
+bool archSet = !String.IsNullOrEmpty(arch);
 
 echo "host=" + host;
 echo "kernel=" + kernel;
 echo "arch=" + arch;
+Assert.True(hostSet);
+Assert.True(kernelSet);
+Assert.True(archSet);
 echo "EXAMPLE_OK:OS";

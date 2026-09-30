@@ -7,4 +7,6 @@ string cleaned = Regex.Replace("a1b2c3", "[0-9]", "");
 
 echo $"digits={digits}";
 echo cleaned;
+Assert.True(digits);
+Assert.Equals("abc", cleaned);
 echo "EXAMPLE_OK:Regex";

@@ -1,1 +1,8 @@
 #!/usr/bin/env shellscript
+
+int count = 10;
+string label = "ShellScript";
+
+Assert.Equals(10, count);
+Assert.Equals("ShellScript", label);
+echo label;

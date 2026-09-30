@@ -38,6 +38,8 @@ namespace ShellScript.CommandLine
             WriteEntry(writer, "run", "Compiles the source file to bash in a temp folder, runs it, then cleans up.");
             WriteEntry(writer, "test",
                 "Runs snapshot tests (--snapshot; optional globs; with no paths, scans **/*.shellscript under cwd).");
+            WriteEntry(writer, "format",
+                "Formats .shellscript source files (optional globs; default indent 2 spaces).");
             WriteEntry(writer, "exec", "Executes the given source/project file without compilation.");
             WriteEntry(writer, "daemon", "Starts the runtime daemon.");
             WriteEntry(writer, $"--{Program.DuplexErrorOutputSwitchName}", "Writes the error output to both the StdOut and the StdErr.");

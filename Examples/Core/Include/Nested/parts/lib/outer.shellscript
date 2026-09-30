@@ -1,0 +1,5 @@
+include "inner.shellscript";
+
+string Greeting() {
+  return Prefix() + " from nested include";
+}

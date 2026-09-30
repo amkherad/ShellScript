@@ -4,16 +4,18 @@
 string command = "list";
 
 switch (command) {
-    case "help": {
-        echo "Show help.";
-    }
-    case "list": {
-        echo "List items.";
-    }
-    case "quit": {
-        echo "Goodbye.";
-    }
-    default: {
-        echo $"Unknown command: {command}";
-    }
+  case "help": {
+    echo "Show help.";
+  }
+  case "list": {
+    echo "List items.";
+  }
+  case "quit": {
+    echo "Goodbye.";
+  }
+  default: {
+    echo $"Unknown command: {command}";
+  }
 }
+
+Assert.Equals("list", command);

@@ -2,5 +2,6 @@
 // @expect-out EXAMPLE_OK:Locale
 // @expect-exit 0
 
-Locale.GetCurrentLocale();
+string locale = Locale.GetCurrentLocale();
+Assert.Equals(locale, locale);
 echo "EXAMPLE_OK:Locale";

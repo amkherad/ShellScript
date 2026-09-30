@@ -13,4 +13,7 @@ bool exists = File.Exists(file);
 echo text;
 echo $"len={len}";
 echo $"exists={exists}";
+Assert.Equals("hello", text);
+Assert.Equals(5, len);
+Assert.True(exists);
 echo "EXAMPLE_OK:File";

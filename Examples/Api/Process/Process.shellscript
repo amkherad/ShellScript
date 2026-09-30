@@ -8,4 +8,5 @@ string captured = Process.RunAndCapture("printf capture-ok");
 
 echo $"running={running}";
 echo captured;
+Assert.Equals("capture-ok", captured);
 echo "EXAMPLE_OK:Process";

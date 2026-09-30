@@ -1,0 +1,9 @@
+#!/usr/bin/env shellscript
+// @expect-out EXAMPLE_OK:Assert
+// @expect-exit 0
+
+Assert.Equals("a", "a");
+Assert.NotEquals("a", "b");
+Assert.True(1 == 1);
+Assert.False(1 == 2);
+echo "EXAMPLE_OK:Assert";

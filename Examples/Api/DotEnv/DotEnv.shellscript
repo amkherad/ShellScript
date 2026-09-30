@@ -9,4 +9,5 @@ File.WriteAllText(envFile, "API_TOKEN=abc123");
 string token = DotEnv.Get(envFile, "API_TOKEN");
 
 echo token;
+Assert.Equals("abc123", token);
 echo "EXAMPLE_OK:DotEnv";

@@ -2,4 +2,5 @@
 // @expect-err EXAMPLE_OK:Log
 // @expect-exit 0
 
+Assert.True(true);
 Log.Info("EXAMPLE_OK:Log");

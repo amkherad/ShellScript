@@ -88,6 +88,8 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Diagnostics
                     "esac\n" +
                     "if [[ \"$seq\" =~ ^\\[5.*~$ ]]; then printf 'PAGE_UP'; return 0; fi\n" +
                     "if [[ \"$seq\" =~ ^\\[6.*~$ ]]; then printf 'PAGE_DOWN'; return 0; fi\n" +
+                    "if [[ \"$seq\" =~ ^\\[(1|7).*~$ ]] || [[ \"$seq\" == \"OH\" ]] || [[ \"$seq\" == \"[H\" ]]; then printf 'HOME'; return 0; fi\n" +
+                    "if [[ \"$seq\" =~ ^\\[(4|8).*~$ ]] || [[ \"$seq\" == \"OF\" ]] || [[ \"$seq\" == \"[F\" ]]; then printf 'END'; return 0; fi\n" +
                     "if [ -n \"$seq\" ]; then printf 'ESC'; return 0; fi\n" +
                     "printf 'ESC'",
                     info, call.Parameters, call.Info);

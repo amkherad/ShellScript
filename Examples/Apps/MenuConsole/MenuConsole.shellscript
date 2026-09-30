@@ -13,38 +13,38 @@ string CCyan = "\033[36m";
 int choice = 0;
 
 while (choice != 3) {
-    echo "----------------------------------------";
-    echo CBold + CCyan + "ShellScript Menu" + CReset;
-    echo "----------------------------------------";
-    echo "";
+  echo "----------------------------------------";
+  echo CBold + CCyan + "ShellScript Menu" + CReset;
+  echo "----------------------------------------";
+  echo "";
 
-    echo "  " + CBlue + "1" + CReset + " - Greet";
-    echo "  " + CBlue + "2" + CReset + " - Show environment";
-    echo "  " + CBlue + "3" + CReset + " - Exit";
-    echo "";
+  echo "  " + CBlue + "1" + CReset + " - Greet";
+  echo "  " + CBlue + "2" + CReset + " - Show environment";
+  echo "  " + CBlue + "3" + CReset + " - Exit";
+  echo "";
 
-    string choicePrompt = CYellow + ">" + CReset + " Choice: ";
-    string line = Console.ReadText(choicePrompt);
-    choice = Convert.ToInteger(line);
+  string choicePrompt = CYellow + ">" + CReset + " Choice: ";
+  string line = Console.ReadText(choicePrompt);
+  choice = Convert.ToInteger(line);
 
-    if (choice == 1) {
-        echo CGreen + "[OK] Hello from ShellScript!" + CReset;
-        echo "  Tip: use echo for ANSI colors in transpiled bash.";
-    }
-    if (choice == 2) {
-        echo CYellow + "[!!] Paths come from the transpiled shell." + CReset;
-        echo "  See Examples/Api/Environment for HOME and env vars.";
-        echo "  shell: bash";
-    }
-    if (choice == 3) {
-        echo CBold + "Goodbye." + CReset;
-    }
-    if (choice != 1 && choice != 2 && choice != 3) {
-        Console.WriteError(CRed + "[ERR] Invalid choice. Enter 1, 2, or 3." + CReset);
-        choice = 0;
-    }
+  if (choice == 1) {
+    echo CGreen + "[OK] Hello from ShellScript!" + CReset;
+    echo "  Tip: use echo for ANSI colors in transpiled bash.";
+  }
+  if (choice == 2) {
+    echo CYellow + "[!!] Paths come from the transpiled shell." + CReset;
+    echo "  See Examples/Api/Environment for HOME and env vars.";
+    echo "  shell: bash";
+  }
+  if (choice == 3) {
+    echo CBold + "Goodbye." + CReset;
+  }
+  if (choice != 1 && choice != 2 && choice != 3) {
+    Console.WriteError(CRed + "[ERR] Invalid choice. Enter 1, 2, or 3." + CReset);
+    choice = 0;
+  }
 
-    echo "";
+  echo "";
 }
 
 echo CGreen + "[OK] Session ended." + CReset;

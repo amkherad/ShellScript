@@ -7,8 +7,12 @@ string home = Environment.GetHomeDirectory();
 Environment.SetVariable("SS_EXAMPLE_MARKER", "set");
 string marker = Environment.GetVariable("SS_EXAMPLE_MARKER");
 bool cwdEmpty = String.IsNullOrEmpty(cwd);
+bool homeSet = !String.IsNullOrEmpty(home);
 
 echo $"marker={marker}";
 echo $"cwdEmpty={cwdEmpty}";
-echo $"homeSet={!String.IsNullOrEmpty(home)}";
+echo $"homeSet={homeSet}";
+Assert.Equals("set", marker);
+Assert.False(cwdEmpty);
+Assert.True(homeSet);
 echo "EXAMPLE_OK:Environment";

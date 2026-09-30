@@ -8,4 +8,5 @@ string name = Json.GetPath(json, ".name");
 
 echo $"valid={valid}";
 echo name;
+Assert.Equals("shell", name);
 echo "EXAMPLE_OK:Json";

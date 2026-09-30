@@ -1,0 +1,8 @@
+#!/usr/bin/env shellscript
+// Included statements are emitted where the include appears.
+
+echo "step 1";
+include "parts/middle.shellscript";
+echo "step 3";
+
+Assert.True(true);

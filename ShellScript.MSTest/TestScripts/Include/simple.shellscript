@@ -1,0 +1,2 @@
+include "parts/simple_lib.shellscript";
+echo $"ok: {Ping()}";

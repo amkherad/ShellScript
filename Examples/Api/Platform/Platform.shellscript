@@ -8,4 +8,6 @@ int value = Platform.CallInteger("printf '%s' 9");
 
 echo text;
 echo $"value={value}";
+Assert.Equals("platform-string", text);
+Assert.Equals(9, value);
 echo "EXAMPLE_OK:Platform";

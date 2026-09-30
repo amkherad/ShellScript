@@ -50,1036 +50,1049 @@ string errorLogPath = Path.Combine(scriptDir, "PortMonitor.log");
 Console.EnableErrorLog(errorLogPath, false);
 
 if (!Console.IsTerminal()) {
-    string ttyError = CRed + "PortMonitor requires an interactive terminal (stdout is not a TTY)." + CReset;
-    Console.WriteError(ttyError);
-    running = false;
+  string ttyError = CRed + "PortMonitor requires an interactive terminal (stdout is not a TTY)." + CReset;
+  Console.WriteError(ttyError);
+  running = false;
 }
 
 if (running) {
-    Console.WriteLine(CAltScreenOn + CHideCursor);
-    Console.Clear();
-    if (Console.IsStdinTerminal()) {
-        Console.EnterInteractiveInputMode();
-        stdinTui = true;
-    }
+  Console.WriteLine(CAltScreenOn + CHideCursor);
+  Console.Clear();
+  if (Console.IsStdinTerminal()) {
+    Console.EnterInteractiveInputMode();
+    stdinTui = true;
+  }
 }
 
 while (running) {
-    if (Console.ConsumeInterruptRequest()) {
-        running = false;
-    }
-    bool repaint = false;
-    if (firstPaint) {
-        repaint = true;
-        firstPaint = false;
-    }
+  if (Console.ConsumeInterruptRequest()) {
+    running = false;
+  }
+  bool repaint = false;
+  if (firstPaint) {
+    repaint = true;
+    firstPaint = false;
+  }
 
-    string key = "";
-    if (stdinTui || filterDialogOpen || actionMenuOpen || mouseEnabled) {
-        key = Console.ReadTerminalInputTimeout(250);
-    } else {
-        key = Console.ReadKeyTimeout(250);
-    }
+  string key = "";
+  if (stdinTui || filterDialogOpen || actionMenuOpen || mouseEnabled) {
+    key = Console.ReadTerminalInputTimeout(250);
+  } else {
+    key = Console.ReadKeyTimeout(250);
+  }
 
-    if (!String.IsNullOrEmpty(key)) {
-        idlePolls = 0;
-        repaint = true;
+  if (!String.IsNullOrEmpty(key)) {
+    idlePolls = 0;
+    repaint = true;
 
-        if (mouseEnabled && String.StartsWith(key, "MOUSE:")) {
-            string[] mouseParts = String.Split(key, ":");
-            if (Array.GetLength(mouseParts) >= 4) {
-                int mouseRow = Convert.ToInteger(mouseParts[1]);
-                string mouseBtn = mouseParts[3];
-                if (!filterDialogOpen && !actionMenuOpen) {
-                    if (String.Equals(mouseBtn, "64")) {
-                        selected = selected - 1;
-                        anchorLine = "";
-                    } else {
-                        if (String.Equals(mouseBtn, "65")) {
-                            selected = selected + 1;
-                            anchorLine = "";
-                        } else {
-                            if (String.Equals(mouseBtn, "0")) {
-                                string[] sockMouse = Net.GetOpenSocketsOnInterface(ifaceFilter);
-                                int hitIndex = -1;
-                                int screenRow = listFirstSocketRow;
-                                int rowIndex = 0;
-                                int prevPid = -1;
-                                foreach (string row in sockMouse) {
-                                    bool textOkMouse = false;
-                                    if (String.IsNullOrEmpty(filter)) {
-                                        textOkMouse = true;
-                                    } else {
-                                        if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
-                                            textOkMouse = true;
-                                        }
-                                    }
-                                    if (textOkMouse) {
-                                        int rowPid = Net.GetSocketProcessId(row);
-                                        if (rowIndex >= scroll) {
-                                            if (rowIndex == scroll || rowPid != prevPid) {
-                                                if (mouseRow == screenRow) {
-                                                    hitIndex = rowIndex;
-                                                }
-                                                screenRow = screenRow + 1;
-                                            }
-                                            if (mouseRow == screenRow) {
-                                                hitIndex = rowIndex;
-                                            }
-                                            screenRow = screenRow + 1;
-                                        }
-                                        prevPid = rowPid;
-                                        rowIndex = rowIndex + 1;
-                                    }
-                                }
-                                if (hitIndex >= 0) {
-                                    selected = hitIndex;
-                                    anchorLine = "";
-                                }
-                            }
-                        }
+    if (mouseEnabled && String.StartsWith(key, "MOUSE:")) {
+      string[] mouseParts = String.Split(key, ":");
+      if (Array.GetLength(mouseParts) >= 4) {
+        int mouseRow = Convert.ToInteger(mouseParts[1]);
+        string mouseBtn = mouseParts[3];
+        if (!filterDialogOpen && !actionMenuOpen) {
+          if (String.Equals(mouseBtn, "64")) {
+            selected = selected - 1;
+            anchorLine = "";
+          } else {
+            if (String.Equals(mouseBtn, "65")) {
+              selected = selected + 1;
+              anchorLine = "";
+            } else {
+              if (String.Equals(mouseBtn, "0")) {
+                string[] sockMouse = Net.GetOpenSocketsOnInterface(ifaceFilter);
+                int hitIndex = -1;
+                int screenRow = listFirstSocketRow;
+                int rowIndex = 0;
+                int prevPid = -1;
+                foreach (string row in sockMouse) {
+                  bool textOkMouse = false;
+                  if (String.IsNullOrEmpty(filter)) {
+                    textOkMouse = true;
+                  } else {
+                    if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
+                      textOkMouse = true;
                     }
+                  }
+                  if (textOkMouse) {
+                    int rowPid = Net.GetSocketProcessId(row);
+                    if (rowIndex >= scroll) {
+                      if (rowIndex == scroll || rowPid != prevPid) {
+                        if (mouseRow == screenRow) {
+                          hitIndex = rowIndex;
+                        }
+                        screenRow = screenRow + 1;
+                      }
+                      if (mouseRow == screenRow) {
+                        hitIndex = rowIndex;
+                      }
+                      screenRow = screenRow + 1;
+                    }
+                    prevPid = rowPid;
+                    rowIndex = rowIndex + 1;
+                  }
                 }
+                if (hitIndex >= 0) {
+                  selected = hitIndex;
+                  anchorLine = "";
+                }
+              }
             }
-            key = "";
+          }
         }
+      }
+      key = "";
+    }
 
-        if (actionMenuOpen) {
-            bool runSocketAction = false;
-            if (String.Equals(key, "q")) {
-                actionMenuOpen = false;
-            } else {
-                if (String.Equals(key, "\n")) {
-                    runSocketAction = true;
-                } else {
-                    if (String.Equals(key, "\r")) {
-                        runSocketAction = true;
-                    } else {
-                        if (String.Equals(key, "j")) {
-                            actionPick = actionPick + 1;
-                        }
-                        if (String.Equals(key, "k")) {
-                            actionPick = actionPick - 1;
-                        }
-                        if (String.Equals(key, "DOWN")) {
-                            actionPick = actionPick + 1;
-                        }
-                        if (String.Equals(key, "UP")) {
-                            actionPick = actionPick - 1;
-                        }
-                    }
-                }
-            }
-            if (actionPick < 0) {
-                actionPick = 0;
-            }
-            if (actionPick >= actionMenuCount) {
-                actionPick = actionMenuCount - 1;
-            }
-            if (runSocketAction) {
-                if (actionPick == 0) {
-                    File.AppendAllText(errorLogPath, actionSocketLine + "\n");
-                    statusMessage = "Appended socket line to PortMonitor.log";
-                } else {
-                    if (actionPick == 1) {
-                        string procFilter = Process.GetName(actionSocketPid);
-                        if (String.IsNullOrEmpty(procFilter)) {
-                            statusMessage = "No process name for this socket";
-                        } else {
-                            filter = procFilter;
-                            anchorLine = "";
-                            selected = 0;
-                            scroll = 0;
-                            statusMessage = "Text filter set to: " + procFilter;
-                        }
-                    } else {
-                        if (actionPick == 2) {
-                            if (actionSocketPid > 0) {
-                                string psCmd = "ps -p " + Convert.ToString(actionSocketPid) + " -o pid,ppid,user,cmd --no-headers 2>/dev/null";
-                                string psLine = Process.RunAndCapture(psCmd);
-                                psLine = String.Trim(psLine);
-                                if (String.IsNullOrEmpty(psLine)) {
-                                    statusMessage = "No ps output for PID " + Convert.ToString(actionSocketPid);
-                                } else {
-                                    statusMessage = psLine;
-                                }
-                            } else {
-                                statusMessage = "No PID on this socket line";
-                            }
-                        } else {
-                            if (actionPick == 3) {
-                                int selfPid = Process.GetCurrentId();
-                                if (actionSocketPid <= 0) {
-                                    statusMessage = "No PID to signal";
-                                } else {
-                                    if (actionSocketPid == selfPid) {
-                                        statusMessage = "Refusing to signal PortMonitor itself";
-                                    } else {
-                                        if (!Process.Exists(actionSocketPid)) {
-                                            statusMessage = "Process " + Convert.ToString(actionSocketPid) + " not found";
-                                        } else {
-                                            Process.Kill(actionSocketPid);
-                                            statusMessage = "Sent SIGTERM to PID " + Convert.ToString(actionSocketPid);
-                                            anchorLine = "";
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                actionMenuOpen = false;
-            }
+    if (actionMenuOpen) {
+      bool runSocketAction = false;
+      if (String.Equals(key, "q")) {
+        actionMenuOpen = false;
+      } else {
+        if (String.Equals(key, "\n")) {
+          runSocketAction = true;
         } else {
-        if (filterDialogOpen) {
-            string[] ifcList = Net.GetNetworkInterfaces();
-            int maxPick = Array.GetLength(ifcList);
-            if (ifacePick < 0) {
-                ifacePick = 0;
-            }
-            if (ifacePick > maxPick) {
-                ifacePick = maxPick;
-            }
-            if (ifacePick == 0) {
-                draftIface = "";
-            } else {
-                draftIface = ifcList[ifacePick - 1];
-            }
-
-            bool applyFilterDialog = false;
-            if (String.Equals(key, "q") || String.Equals(key, "ESC")) {
-                filterDialogOpen = false;
-                if (stdinTui) {
-                    Console.EnterInteractiveInputMode();
-                }
-            } else {
-                if (String.Equals(key, "\n")) {
-                    applyFilterDialog = true;
-                } else {
-                    if (String.Equals(key, "\r")) {
-                        applyFilterDialog = true;
-                    } else {
-                        if (String.Equals(key, "LEFT")) {
-                            if (filterTab > 0) {
-                                filterTab = filterTab - 1;
-                            }
-                        } else {
-                            if (String.Equals(key, "RIGHT")) {
-                                if (filterTab < 1) {
-                                    filterTab = filterTab + 1;
-                                }
-                            } else {
-                                if (filterTab == 1) {
-                                    if (String.Equals(key, " ")) {
-                                        applyFilterDialog = true;
-                                    } else {
-                                        if (String.Equals(key, "j")) {
-                                            ifacePick = ifacePick + 1;
-                                        }
-                                        if (String.Equals(key, "k")) {
-                                            ifacePick = ifacePick - 1;
-                                        }
-                                        if (String.Equals(key, "DOWN")) {
-                                            ifacePick = ifacePick + 1;
-                                        }
-                                        if (String.Equals(key, "UP")) {
-                                            ifacePick = ifacePick - 1;
-                                        }
-                                    }
-                                } else {
-                                    if (String.Equals(key, "\t")) {
-                                        filterTab = 1 - filterTab;
-                                    } else {
-                                        if (String.Equals(key, "1")) {
-                                            filterTab = 0;
-                                        } else {
-                                            if (String.Equals(key, "2")) {
-                                                filterTab = 1;
-                                            } else {
-                                                if (String.Equals(key, "h")) {
-                                                    filterTab = 0;
-                                                } else {
-                                                    if (String.Equals(key, "l")) {
-                                                        filterTab = 1;
-                                                    } else {
-                                                        if (String.Equals(key, "\b")) {
-                                                            int dl = String.GetLength(draftText);
-                                                            if (dl > 0) {
-                                                                draftText = String.Substring(draftText, 0, dl - 1);
-                                                            }
-                                                        } else {
-                                                            if (!String.Equals(key, "UP")) {
-                                                                if (!String.Equals(key, "DOWN")) {
-                                                                    if (!String.Equals(key, "ESC")) {
-                                                                        draftText = draftText + key;
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (applyFilterDialog) {
-                filter = draftText;
-                ifaceFilter = draftIface;
-                filterDialogOpen = false;
-                if (stdinTui) {
-                    Console.EnterInteractiveInputMode();
-                }
-                anchorLine = "";
-                selected = 0;
-                scroll = 0;
-            } else {
-                if (filterDialogOpen) {
-                    if (ifacePick < 0) {
-                        ifacePick = 0;
-                    }
-                    if (ifacePick > maxPick) {
-                        ifacePick = maxPick;
-                    }
-                    if (ifacePick == 0) {
-                        draftIface = "";
-                    } else {
-                        draftIface = ifcList[ifacePick - 1];
-                    }
-                }
-            }
-
-            if (filterTab == 1) {
-                int dlgH = Console.GetWindowHeight() - 6;
-                if (dlgH > 28) {
-                    dlgH = 28;
-                }
-                if (dlgH < 14) {
-                    dlgH = 14;
-                }
-                int listSlots = dlgH - 9;
-                if (listSlots < 3) {
-                    listSlots = 3;
-                }
-                int ifcCount = Array.GetLength(ifcList);
-                if (ifacePick > 0) {
-                    int pickInList = ifacePick - 1;
-                    if (pickInList < ifaceListScroll) {
-                        ifaceListScroll = pickInList;
-                    }
-                    if (pickInList >= ifaceListScroll + listSlots) {
-                        ifaceListScroll = pickInList - listSlots + 1;
-                    }
-                }
-                if (ifaceListScroll < 0) {
-                    ifaceListScroll = 0;
-                }
-                if (ifaceListScroll + listSlots > ifcCount && ifcCount > listSlots) {
-                    ifaceListScroll = ifcCount - listSlots;
-                }
-            }
-        } else {
-            if (!String.IsNullOrEmpty(statusMessage)) {
-                if (!String.Equals(key, "a")) {
-                    if (!String.Equals(key, "\n")) {
-                        if (!String.Equals(key, "\r")) {
-                            statusMessage = "";
-                        }
-                    }
-                }
-            }
-            if (String.Equals(key, "q")) {
-                running = false;
-            }
-            if (String.Equals(key, "a")) {
-                string[] socketsForAction = Net.GetOpenSocketsOnInterface(ifaceFilter);
-                int actionSel = 0;
-                string pickedLine = "";
-                foreach (string row in socketsForAction) {
-                    bool textOkAction = false;
-                    if (String.IsNullOrEmpty(filter)) {
-                        textOkAction = true;
-                    } else {
-                        if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
-                            textOkAction = true;
-                        }
-                    }
-                    if (textOkAction) {
-                        if (actionSel == selected) {
-                            pickedLine = row;
-                        }
-                        actionSel = actionSel + 1;
-                    }
-                }
-                if (!String.IsNullOrEmpty(pickedLine)) {
-                    actionSocketLine = pickedLine;
-                    actionSocketPid = Net.GetSocketProcessId(actionSocketLine);
-                    actionPick = 0;
-                    actionMenuOpen = true;
-                }
-            }
-            if (String.Equals(key, "\n")) {
-                string[] socketsEnter = Net.GetOpenSocketsOnInterface(ifaceFilter);
-                int enterSel = 0;
-                string enterLine = "";
-                foreach (string row in socketsEnter) {
-                    bool textOkEnter = false;
-                    if (String.IsNullOrEmpty(filter)) {
-                        textOkEnter = true;
-                    } else {
-                        if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
-                            textOkEnter = true;
-                        }
-                    }
-                    if (textOkEnter) {
-                        if (enterSel == selected) {
-                            enterLine = row;
-                        }
-                        enterSel = enterSel + 1;
-                    }
-                }
-                if (!String.IsNullOrEmpty(enterLine)) {
-                    actionSocketLine = enterLine;
-                    actionSocketPid = Net.GetSocketProcessId(actionSocketLine);
-                    actionPick = 0;
-                    actionMenuOpen = true;
-                }
-            }
-            if (String.Equals(key, "\r")) {
-                string[] socketsEnterCr = Net.GetOpenSocketsOnInterface(ifaceFilter);
-                int enterSelCr = 0;
-                string enterLineCr = "";
-                foreach (string row in socketsEnterCr) {
-                    bool textOkEnterCr = false;
-                    if (String.IsNullOrEmpty(filter)) {
-                        textOkEnterCr = true;
-                    } else {
-                        if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
-                            textOkEnterCr = true;
-                        }
-                    }
-                    if (textOkEnterCr) {
-                        if (enterSelCr == selected) {
-                            enterLineCr = row;
-                        }
-                        enterSelCr = enterSelCr + 1;
-                    }
-                }
-                if (!String.IsNullOrEmpty(enterLineCr)) {
-                    actionSocketLine = enterLineCr;
-                    actionSocketPid = Net.GetSocketProcessId(actionSocketLine);
-                    actionPick = 0;
-                    actionMenuOpen = true;
-                }
-            }
+          if (String.Equals(key, "\r")) {
+            runSocketAction = true;
+          } else {
             if (String.Equals(key, "j")) {
-                selected = selected + 1;
-                anchorLine = "";
+              actionPick = actionPick + 1;
             }
             if (String.Equals(key, "k")) {
-                selected = selected - 1;
-                anchorLine = "";
+              actionPick = actionPick - 1;
             }
             if (String.Equals(key, "DOWN")) {
-                selected = selected + 1;
-                anchorLine = "";
+              actionPick = actionPick + 1;
             }
             if (String.Equals(key, "UP")) {
-                selected = selected - 1;
-                anchorLine = "";
+              actionPick = actionPick - 1;
             }
-            if (String.Equals(key, "PAGE_DOWN")) {
-                selected = selected + listPageStep;
-                anchorLine = "";
-            }
-            if (String.Equals(key, "PAGE_UP")) {
-                selected = selected - listPageStep;
-                anchorLine = "";
-            }
-            if (String.Equals(key, "g")) {
-                selected = 0;
-                scroll = 0;
-                anchorLine = "";
-            }
-            if (String.Equals(key, "G")) {
-                selected = 999999;
-                anchorLine = "";
-            }
-            if (String.Equals(key, "f")) {
-                actionMenuOpen = false;
-                if (stdinTui) {
-                    Console.ExitInteractiveInputMode();
-                }
-                if (mouseEnabled) {
-                    mouseEnabled = false;
-                    Console.DisableMouseReporting();
-                }
-                filterDialogOpen = true;
-                filterTab = 0;
-                draftText = filter;
-                draftIface = ifaceFilter;
-                ifacePick = 0;
-                ifaceListScroll = 0;
-                restoreIfacePick = !String.IsNullOrEmpty(ifaceFilter);
-            }
-            if (String.Equals(key, "/")) {
-                actionMenuOpen = false;
-                if (stdinTui) {
-                    Console.ExitInteractiveInputMode();
-                }
-                if (mouseEnabled) {
-                    mouseEnabled = false;
-                    Console.DisableMouseReporting();
-                }
-                filterDialogOpen = true;
-                filterTab = 0;
-                draftText = filter;
-                draftIface = ifaceFilter;
-                ifacePick = 0;
-                ifaceListScroll = 0;
-                restoreIfacePick = !String.IsNullOrEmpty(ifaceFilter);
-            }
-            if (String.Equals(key, "i")) {
-                actionMenuOpen = false;
-                if (stdinTui) {
-                    Console.ExitInteractiveInputMode();
-                }
-                if (mouseEnabled) {
-                    mouseEnabled = false;
-                    Console.DisableMouseReporting();
-                }
-                filterDialogOpen = true;
-                filterTab = 1;
-                draftText = filter;
-                draftIface = ifaceFilter;
-                ifacePick = 0;
-                ifaceListScroll = 0;
-                restoreIfacePick = true;
-            }
-            if (String.Equals(key, "]")) {
-                string[] ifcCycle = Net.GetNetworkInterfaces();
-                int ifcCount = Array.GetLength(ifcCycle);
-                int currentPick = 0;
-                if (!String.IsNullOrEmpty(ifaceFilter)) {
-                    int scan = 1;
-                    foreach (string name in ifcCycle) {
-                        if (String.Equals(name, ifaceFilter)) {
-                            currentPick = scan;
-                        }
-                        scan = scan + 1;
-                    }
-                }
-                int nextPick = currentPick + 1;
-                if (nextPick > ifcCount) {
-                    nextPick = 0;
-                }
-                if (nextPick == 0) {
-                    ifaceFilter = "";
-                } else {
-                    ifaceFilter = ifcCycle[nextPick - 1];
-                }
-                anchorLine = "";
-                selected = 0;
-                scroll = 0;
-            }
-            if (String.Equals(key, "[")) {
-                string[] ifcCycle = Net.GetNetworkInterfaces();
-                int ifcCount = Array.GetLength(ifcCycle);
-                int currentPick = 0;
-                if (!String.IsNullOrEmpty(ifaceFilter)) {
-                    int scan = 1;
-                    foreach (string name in ifcCycle) {
-                        if (String.Equals(name, ifaceFilter)) {
-                            currentPick = scan;
-                        }
-                        scan = scan + 1;
-                    }
-                }
-                int nextPick = currentPick - 1;
-                if (nextPick < 0) {
-                    nextPick = ifcCount;
-                }
-                if (nextPick == 0) {
-                    ifaceFilter = "";
-                } else {
-                    ifaceFilter = ifcCycle[nextPick - 1];
-                }
-                anchorLine = "";
-                selected = 0;
-                scroll = 0;
-            }
-            if (String.Equals(key, "c")) {
-                filter = "";
-                ifaceFilter = "";
-                anchorLine = "";
-                selected = 0;
-                scroll = 0;
-            }
-            if (String.Equals(key, "r")) {
-                repaint = true;
-            }
-            if (String.Equals(key, "m")) {
-                if (mouseEnabled) {
-                    mouseEnabled = false;
-                    Console.DisableMouseReporting();
-                } else {
-                    mouseEnabled = true;
-                    Console.EnableMouseReporting();
-                }
-            }
+          }
         }
-        }
-    } else {
-        if (!filterDialogOpen && !actionMenuOpen) {
-            idlePolls = idlePolls + 1;
-            if (idlePolls >= dataRefreshPolls) {
-                idlePolls = 0;
-                repaint = true;
-            }
-        }
-    }
-
-    if (repaint) {
-        string[] sockets = Net.GetOpenSocketsOnInterface(ifaceFilter);
-
-        int total = 0;
-        int processGroups = 0;
-        int lastGroupPid = -1;
-        foreach (string row in sockets) {
-            bool textOk = false;
-            if (String.IsNullOrEmpty(filter)) {
-                textOk = true;
-            } else {
-                if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
-                    textOk = true;
-                }
-            }
-            if (textOk) {
-                total = total + 1;
-                int rowPid = Net.GetSocketProcessId(row);
-                if (rowPid != lastGroupPid) {
-                    processGroups = processGroups + 1;
-                    lastGroupPid = rowPid;
-                }
-            }
-        }
-
-        if (total == 0) {
-            selected = 0;
-            scroll = 0;
-            anchorLine = "";
+      }
+      if (actionPick < 0) {
+        actionPick = 0;
+      }
+      if (actionPick >= actionMenuCount) {
+        actionPick = actionMenuCount - 1;
+      }
+      if (runSocketAction) {
+        if (actionPick == 0) {
+          File.AppendAllText(errorLogPath, actionSocketLine + "\n");
+          statusMessage = "Appended socket line to PortMonitor.log";
         } else {
-            if (selected >= total) {
-                selected = total - 1;
-            }
-            if (selected < 0) {
-                selected = 0;
-            }
-
-            if (!String.IsNullOrEmpty(anchorLine)) {
-                int foundIndex = -1;
-                int scan = 0;
-                foreach (string row in sockets) {
-                    bool textOk = false;
-                    if (String.IsNullOrEmpty(filter)) {
-                        textOk = true;
-                    } else {
-                        if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
-                            textOk = true;
-                        }
-                    }
-                    if (textOk) {
-                        if (String.Equals(row, anchorLine)) {
-                            foundIndex = scan;
-                        }
-                        scan = scan + 1;
-                    }
-                }
-                if (foundIndex >= 0) {
-                    selected = foundIndex;
-                }
-            }
-        }
-
-        int height = Console.GetWindowHeight();
-        int width = Console.GetWindowWidth();
-        int listChromeRows = 5;
-        if (!String.IsNullOrEmpty(filter)) {
-            listChromeRows = listChromeRows + 1;
-        }
-        if (!String.IsNullOrEmpty(ifaceFilter)) {
-            listChromeRows = listChromeRows + 1;
-        }
-        int bodyRows = height - listChromeRows;
-        if (bodyRows < 4) {
-            bodyRows = 4;
-        }
-
-        if (total > 0) {
-            int anchorScan = 0;
-            foreach (string row in sockets) {
-                bool textOkAnchor = false;
-                if (String.IsNullOrEmpty(filter)) {
-                    textOkAnchor = true;
-                } else {
-                    if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
-                        textOkAnchor = true;
-                    }
-                }
-                if (textOkAnchor) {
-                    if (anchorScan == selected) {
-                        anchorLine = row;
-                    }
-                    anchorScan = anchorScan + 1;
-                }
-            }
-
-            int adjustGuard = 0;
-            while (adjustGuard < total + 8) {
-                adjustGuard = adjustGuard + 1;
-                int firstVisible = -1;
-                int lastVisible = -1;
-                int simDrawn = 0;
-                int simRow = 0;
-                int simPrevPid = -1;
-                foreach (string row in sockets) {
-                    bool textOkSim = false;
-                    if (String.IsNullOrEmpty(filter)) {
-                        textOkSim = true;
-                    } else {
-                        if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
-                            textOkSim = true;
-                        }
-                    }
-                    if (textOkSim) {
-                        int simPid = Net.GetSocketProcessId(row);
-                        if (simRow >= scroll && simDrawn < bodyRows) {
-                            if (simRow == scroll || simPid != simPrevPid) {
-                                simDrawn = simDrawn + 1;
-                            }
-                            if (simDrawn < bodyRows) {
-                                if (firstVisible < 0) {
-                                    firstVisible = simRow;
-                                }
-                                lastVisible = simRow;
-                                simDrawn = simDrawn + 1;
-                            }
-                        }
-                        simPrevPid = simPid;
-                        simRow = simRow + 1;
-                    }
-                }
-                if (firstVisible < 0) {
-                    scroll = 0;
-                    adjustGuard = total + 8;
-                } else {
-                    if (selected >= firstVisible && selected <= lastVisible) {
-                        listPageStep = lastVisible - firstVisible + 1;
-                        if (listPageStep < 1) {
-                            listPageStep = 1;
-                        }
-                        adjustGuard = total + 8;
-                    } else {
-                        if (selected > lastVisible) {
-                            scroll = scroll + 1;
-                        } else {
-                            if (selected < firstVisible) {
-                                scroll = scroll - 1;
-                            }
-                        }
-                        if (scroll < 0) {
-                            scroll = 0;
-                        }
-                    }
-                }
-            }
-        }
-
-        listFirstSocketRow = 3;
-        if (!String.IsNullOrEmpty(filter)) {
-            listFirstSocketRow = listFirstSocketRow + 1;
-        }
-        if (!String.IsNullOrEmpty(ifaceFilter)) {
-            listFirstSocketRow = listFirstSocketRow + 1;
-        }
-
-        Console.BeginBatchWrite();
-        Console.MoveCursorHome();
-
-        string hostName = OS.GetHostName();
-        Console.WriteLine(CBold + CCyan + " PortMonitor " + CReset + CDim + "| " + hostName + " | " + Convert.ToString(total) + " sockets, " + Convert.ToString(processGroups) + " processes" + CReset);
-        if (!String.IsNullOrEmpty(filter)) {
-            Console.WriteLine(CYellow + " text: " + filter + CReset);
-        }
-        if (!String.IsNullOrEmpty(ifaceFilter)) {
-            Console.WriteLine(CYellow + " iface: " + ifaceFilter + CReset);
-        }
-        Console.WriteLine(CDim + "Proto  State      Local              Peer               Process" + CReset);
-
-        int rowIndex = 0;
-        int drawn = 0;
-        string detail = "";
-        int prevSocketPid = -1;
-
-        foreach (string row in sockets) {
-            bool textOk = false;
-            if (String.IsNullOrEmpty(filter)) {
-                textOk = true;
+          if (actionPick == 1) {
+            string procFilter = Process.GetName(actionSocketPid);
+            if (String.IsNullOrEmpty(procFilter)) {
+              statusMessage = "No process name for this socket";
             } else {
-                if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
-                    textOk = true;
-                }
+              filter = procFilter;
+              anchorLine = "";
+              selected = 0;
+              scroll = 0;
+              statusMessage = "Text filter set to: " + procFilter;
             }
-            if (textOk) {
-                int rowPid = Net.GetSocketProcessId(row);
-                if (rowIndex >= scroll && drawn < bodyRows) {
-                    if (rowIndex == scroll || rowPid != prevSocketPid) {
-                        string procName = Process.GetName(rowPid);
-                        if (String.IsNullOrEmpty(procName)) {
-                            procName = "?";
-                        }
-                        string header = CBold + CYellow + "-- PID " + Convert.ToString(rowPid) + " " + procName + " --" + CReset;
-                        Console.WriteLine(header);
-                        drawn = drawn + 1;
-                    }
-                    if (drawn < bodyRows) {
-                        if (rowIndex == selected) {
-                            Console.WriteLine(CRev + "    " + row + CReset);
-                            detail = row;
-                        } else {
-                            Console.WriteLine(CDim + "    " + row + CReset);
-                        }
-                        drawn = drawn + 1;
-                    }
-                }
-                prevSocketPid = rowPid;
-                rowIndex = rowIndex + 1;
-            }
-        }
-
-        if (String.IsNullOrEmpty(detail) && !String.IsNullOrEmpty(anchorLine)) {
-            detail = anchorLine;
-        }
-
-        Console.WriteLine("");
-        if (!String.IsNullOrEmpty(statusMessage)) {
-            Console.WriteLine(CGreen + statusMessage + CReset);
-        } else {
-            Console.WriteLine(CDim + detail + CReset);
-        }
-        string helpLine = "j/k/PgUp/PgDn  Enter/a actions  f filter  i iface  c clear  q quit  m mouse";
-        if (mouseEnabled) {
-            helpLine = "mouse on (no text select)  " + helpLine;
-        }
-        Console.WriteLine(CDim + helpLine + CReset);
-
-        while (drawn < bodyRows) {
-            Console.WriteLine("");
-            drawn = drawn + 1;
-        }
-
-        if (filterDialogOpen) {
-            string[] ifc = Net.GetNetworkInterfaces();
-            if (restoreIfacePick) {
-                restoreIfacePick = false;
-                if (String.IsNullOrEmpty(ifaceFilter)) {
-                    ifacePick = 0;
-                } else {
-                    int idx = 1;
-                    foreach (string name in ifc) {
-                        if (String.Equals(name, ifaceFilter)) {
-                            ifacePick = idx;
-                        }
-                        idx = idx + 1;
-                    }
-                }
-            }
-
-            int boxW = 56;
-            int boxH = height - 6;
-            if (boxH > 28) {
-                boxH = 28;
-            }
-            if (boxH < 14) {
-                boxH = 14;
-            }
-            int top = (height - boxH) / 2;
-            if (top < 2) {
-                top = 2;
-            }
-            int left = (width - boxW) / 2;
-            if (left < 2) {
-                left = 2;
-            }
-
-            string border = "+" + String.Repeat("-", boxW - 2) + "+";
-            Console.SetCursorPosition(top, left);
-            Console.Write(CRev + border + CReset);
-
-            string titleLine = String.PadRight("| Filter (Enter apply, Esc/q cancel)", boxW - 1, " ") + "|";
-            Console.SetCursorPosition(top + 1, left);
-            Console.Write(CRev + titleLine + CReset);
-
-            string tab0 = " Text ";
-            string tab1 = " Interface ";
-            string tabBar = "";
-            if (filterTab == 0) {
-                tabBar = "| [" + tab0 + "] " + tab1;
-            } else {
-                tabBar = "|  " + tab0 + " [" + tab1 + "]";
-            }
-            tabBar = String.PadRight(tabBar, boxW - 1, " ") + "|";
-            Console.SetCursorPosition(top + 2, left);
-            Console.Write(CRev + tabBar + CReset);
-
-            Console.SetCursorPosition(top + 3, left);
-            Console.Write(CRev + border + CReset);
-
-            if (filterTab == 0) {
-                string row = "| Contains: " + draftText;
-                row = String.PadRight(row, boxW - 1, " ") + "|";
-                Console.SetCursorPosition(top + 5, left);
-                Console.Write(CRev + row + CReset);
-                Console.SetCursorPosition(top + 7, left);
-                Console.Write(CRev + String.PadRight("| Left/Right arrows: switch tabs", boxW - 1, " ") + "|" + CReset);
-            } else {
-                int ifcTotal = Array.GetLength(ifc);
-                int listSlots = boxH - 9;
-                if (listSlots < 3) {
-                    listSlots = 3;
-                }
-                if (ifacePick > 0) {
-                    int pickInList = ifacePick - 1;
-                    if (pickInList < ifaceListScroll) {
-                        ifaceListScroll = pickInList;
-                    }
-                    if (pickInList >= ifaceListScroll + listSlots) {
-                        ifaceListScroll = pickInList - listSlots + 1;
-                    }
-                }
-                if (ifaceListScroll < 0) {
-                    ifaceListScroll = 0;
-                }
-                if (ifcTotal > listSlots && ifaceListScroll + listSlots > ifcTotal) {
-                    ifaceListScroll = ifcTotal - listSlots;
-                }
-                string hint = "| j/k pick  Enter apply  (" + Convert.ToString(ifcTotal) + " interfaces)";
-                Console.SetCursorPosition(top + 4, left);
-                Console.Write(CRev + String.PadRight(hint, boxW - 1, " ") + "|" + CReset);
-                string allLine = "|   (all interfaces)";
-                if (ifacePick == 0) {
-                    allLine = "| > (all interfaces)";
-                }
-                allLine = String.PadRight(allLine, boxW - 1, " ") + "|";
-                Console.SetCursorPosition(top + 5, left);
-                Console.Write(CRev + allLine + CReset);
-                int displaySlot = 0;
-                int ifcIndex = 0;
-                foreach (string name in ifc) {
-                    if (ifcIndex >= ifaceListScroll && displaySlot < listSlots) {
-                        displaySlot = displaySlot + 1;
-                        string mark = "  ";
-                        if (ifacePick == ifcIndex + 1) {
-                            mark = "> ";
-                        }
-                        string line = "| " + mark + name;
-                        line = String.PadRight(line, boxW - 1, " ") + "|";
-                        Console.SetCursorPosition(top + 5 + displaySlot, left);
-                        Console.Write(CRev + line + CReset);
-                    }
-                    ifcIndex = ifcIndex + 1;
-                }
-                if (ifcTotal > listSlots) {
-                    int scrollEnd = ifaceListScroll + listSlots;
-                    if (scrollEnd > ifcTotal) {
-                        scrollEnd = ifcTotal;
-                    }
-                    string scrollHint = "| (" + Convert.ToString(ifaceListScroll + 1) + "-" + Convert.ToString(scrollEnd) + " of " + Convert.ToString(ifcTotal) + ")";
-                    Console.SetCursorPosition(top + boxH - 2, left);
-                    Console.Write(CRev + String.PadRight(scrollHint, boxW - 1, " ") + "|" + CReset);
-                }
-            }
-
-            Console.SetCursorPosition(top + boxH - 1, left);
-            Console.Write(CRev + border + CReset);
-        }
-
-        if (actionMenuOpen) {
-            int actW = 52;
-            int actH = 10;
-            int actTop = (height - actH) / 2;
-            if (actTop < 2) {
-                actTop = 2;
-            }
-            int actLeft = (width - actW) / 2;
-            if (actLeft < 2) {
-                actLeft = 2;
-            }
-            string actBorder = "+" + String.Repeat("-", actW - 2) + "+";
-            Console.SetCursorPosition(actTop, actLeft);
-            Console.Write(CRev + actBorder + CReset);
-            string actTitle = "| Actions for selected socket (j/k, Enter)";
-            actTitle = String.PadRight(actTitle, actW - 1, " ") + "|";
-            Console.SetCursorPosition(actTop + 1, actLeft);
-            Console.Write(CRev + actTitle + CReset);
-            string actSub = "| PID " + Convert.ToString(actionSocketPid);
-            actSub = String.PadRight(actSub, actW - 1, " ") + "|";
-            Console.SetCursorPosition(actTop + 2, actLeft);
-            Console.Write(CRev + actSub + CReset);
-            Console.SetCursorPosition(actTop + 3, actLeft);
-            Console.Write(CRev + actBorder + CReset);
-
-            string act0 = "|  Append line to PortMonitor.log";
-            string act1 = "|  Filter list by process name";
-            string act2 = "|  Show process (ps)";
-            string act3 = "|  Send SIGTERM to PID";
-            if (actionPick == 0) {
-                act0 = "|> Append line to PortMonitor.log";
-            }
-            if (actionPick == 1) {
-                act1 = "|> Filter list by process name";
-            }
+          } else {
             if (actionPick == 2) {
-                act2 = "|> Show process (ps)";
+              if (actionSocketPid > 0) {
+                string psCmd = "ps -p " + Convert.ToString(actionSocketPid) + " -o pid,ppid,user,cmd --no-headers 2>/dev/null";
+                string psLine = Process.RunAndCapture(psCmd);
+                psLine = String.Trim(psLine);
+                if (String.IsNullOrEmpty(psLine)) {
+                  statusMessage = "No ps output for PID " + Convert.ToString(actionSocketPid);
+                } else {
+                  statusMessage = psLine;
+                }
+              } else {
+                statusMessage = "No PID on this socket line";
+              }
+            } else {
+              if (actionPick == 3) {
+                int selfPid = Process.GetCurrentId();
+                if (actionSocketPid <= 0) {
+                  statusMessage = "No PID to signal";
+                } else {
+                  if (actionSocketPid == selfPid) {
+                    statusMessage = "Refusing to signal PortMonitor itself";
+                  } else {
+                    if (!Process.Exists(actionSocketPid)) {
+                      statusMessage = "Process " + Convert.ToString(actionSocketPid) + " not found";
+                    } else {
+                      Process.Kill(actionSocketPid);
+                      statusMessage = "Sent SIGTERM to PID " + Convert.ToString(actionSocketPid);
+                      anchorLine = "";
+                    }
+                  }
+                }
+              }
             }
-            if (actionPick == 3) {
-                act3 = "|> Send SIGTERM to PID";
-            }
-            act0 = String.PadRight(act0, actW - 1, " ") + "|";
-            act1 = String.PadRight(act1, actW - 1, " ") + "|";
-            act2 = String.PadRight(act2, actW - 1, " ") + "|";
-            act3 = String.PadRight(act3, actW - 1, " ") + "|";
-            Console.SetCursorPosition(actTop + 4, actLeft);
-            Console.Write(CRev + act0 + CReset);
-            Console.SetCursorPosition(actTop + 5, actLeft);
-            Console.Write(CRev + act1 + CReset);
-            Console.SetCursorPosition(actTop + 6, actLeft);
-            Console.Write(CRev + act2 + CReset);
-            Console.SetCursorPosition(actTop + 7, actLeft);
-            Console.Write(CRev + act3 + CReset);
-            string actFoot = "| q cancel";
-            actFoot = String.PadRight(actFoot, actW - 1, " ") + "|";
-            Console.SetCursorPosition(actTop + 8, actLeft);
-            Console.Write(CRev + actFoot + CReset);
-            Console.SetCursorPosition(actTop + 9, actLeft);
-            Console.Write(CRev + actBorder + CReset);
+          }
+        }
+        actionMenuOpen = false;
+      }
+    } else {
+      if (filterDialogOpen) {
+        string[] ifcList = Net.GetNetworkInterfaces();
+        int maxPick = Array.GetLength(ifcList);
+        if (ifacePick < 0) {
+          ifacePick = 0;
+        }
+        if (ifacePick > maxPick) {
+          ifacePick = maxPick;
+        }
+        if (ifacePick == 0) {
+          draftIface = "";
+        } else {
+          draftIface = ifcList[ifacePick - 1];
         }
 
-        Console.WriteLine(CEraseBelow);
-        Console.EndBatchWrite();
+        bool applyFilterDialog = false;
+        if (String.Equals(key, "q") || String.Equals(key, "ESC")) {
+          filterDialogOpen = false;
+          if (stdinTui) {
+            Console.EnterInteractiveInputMode();
+          }
+        } else {
+          if (String.Equals(key, "\n")) {
+            applyFilterDialog = true;
+          } else {
+            if (String.Equals(key, "\r")) {
+              applyFilterDialog = true;
+            } else {
+              if (String.Equals(key, "LEFT")) {
+                if (filterTab > 0) {
+                  filterTab = filterTab - 1;
+                }
+              } else {
+                if (String.Equals(key, "RIGHT")) {
+                  if (filterTab < 1) {
+                    filterTab = filterTab + 1;
+                  }
+                } else {
+                  if (filterTab == 1) {
+                    if (String.Equals(key, " ")) {
+                      applyFilterDialog = true;
+                    } else {
+                      if (String.Equals(key, "j")) {
+                        ifacePick = ifacePick + 1;
+                      }
+                      if (String.Equals(key, "k")) {
+                        ifacePick = ifacePick - 1;
+                      }
+                      if (String.Equals(key, "DOWN")) {
+                        ifacePick = ifacePick + 1;
+                      }
+                      if (String.Equals(key, "UP")) {
+                        ifacePick = ifacePick - 1;
+                      }
+                    }
+                  } else {
+                    if (String.Equals(key, "\t")) {
+                      filterTab = 1 - filterTab;
+                    } else {
+                      if (String.Equals(key, "1")) {
+                        filterTab = 0;
+                      } else {
+                        if (String.Equals(key, "2")) {
+                          filterTab = 1;
+                        } else {
+                          if (String.Equals(key, "h")) {
+                            filterTab = 0;
+                          } else {
+                            if (String.Equals(key, "l")) {
+                              filterTab = 1;
+                            } else {
+                              if (String.Equals(key, "\b")) {
+                                int dl = String.GetLength(draftText);
+                                if (dl > 0) {
+                                  draftText = String.Substring(draftText, 0, dl - 1);
+                                }
+                              } else {
+                                if (!String.Equals(key, "UP")) {
+                                  if (!String.Equals(key, "DOWN")) {
+                                    if (!String.Equals(key, "ESC")) {
+                                      if (!String.Equals(key, "HOME")) {
+                                        if (!String.Equals(key, "END")) {
+                                          draftText = draftText + key;
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        if (applyFilterDialog) {
+          filter = draftText;
+          ifaceFilter = draftIface;
+          filterDialogOpen = false;
+          if (stdinTui) {
+            Console.EnterInteractiveInputMode();
+          }
+          anchorLine = "";
+          selected = 0;
+          scroll = 0;
+        } else {
+          if (filterDialogOpen) {
+            if (ifacePick < 0) {
+              ifacePick = 0;
+            }
+            if (ifacePick > maxPick) {
+              ifacePick = maxPick;
+            }
+            if (ifacePick == 0) {
+              draftIface = "";
+            } else {
+              draftIface = ifcList[ifacePick - 1];
+            }
+          }
+        }
+
+        if (filterTab == 1) {
+          int dlgH = Console.GetWindowHeight() - 6;
+          if (dlgH > 28) {
+            dlgH = 28;
+          }
+          if (dlgH < 14) {
+            dlgH = 14;
+          }
+          int listSlots = dlgH - 9;
+          if (listSlots < 3) {
+            listSlots = 3;
+          }
+          int ifcCount = Array.GetLength(ifcList);
+          if (ifacePick > 0) {
+            int pickInList = ifacePick - 1;
+            if (pickInList < ifaceListScroll) {
+              ifaceListScroll = pickInList;
+            }
+            if (pickInList >= ifaceListScroll + listSlots) {
+              ifaceListScroll = pickInList - listSlots + 1;
+            }
+          }
+          if (ifaceListScroll < 0) {
+            ifaceListScroll = 0;
+          }
+          if (ifaceListScroll + listSlots > ifcCount && ifcCount > listSlots) {
+            ifaceListScroll = ifcCount - listSlots;
+          }
+        }
+      } else {
+        if (!String.IsNullOrEmpty(statusMessage)) {
+          if (!String.Equals(key, "a")) {
+            if (!String.Equals(key, "\n")) {
+              if (!String.Equals(key, "\r")) {
+                statusMessage = "";
+              }
+            }
+          }
+        }
+        if (String.Equals(key, "q")) {
+          running = false;
+        }
+        if (String.Equals(key, "a")) {
+          string[] socketsForAction = Net.GetOpenSocketsOnInterface(ifaceFilter);
+          int actionSel = 0;
+          string pickedLine = "";
+          foreach (string row in socketsForAction) {
+            bool textOkAction = false;
+            if (String.IsNullOrEmpty(filter)) {
+              textOkAction = true;
+            } else {
+              if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
+                textOkAction = true;
+              }
+            }
+            if (textOkAction) {
+              if (actionSel == selected) {
+                pickedLine = row;
+              }
+              actionSel = actionSel + 1;
+            }
+          }
+          if (!String.IsNullOrEmpty(pickedLine)) {
+            actionSocketLine = pickedLine;
+            actionSocketPid = Net.GetSocketProcessId(actionSocketLine);
+            actionPick = 0;
+            actionMenuOpen = true;
+          }
+        }
+        if (String.Equals(key, "\n")) {
+          string[] socketsEnter = Net.GetOpenSocketsOnInterface(ifaceFilter);
+          int enterSel = 0;
+          string enterLine = "";
+          foreach (string row in socketsEnter) {
+            bool textOkEnter = false;
+            if (String.IsNullOrEmpty(filter)) {
+              textOkEnter = true;
+            } else {
+              if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
+                textOkEnter = true;
+              }
+            }
+            if (textOkEnter) {
+              if (enterSel == selected) {
+                enterLine = row;
+              }
+              enterSel = enterSel + 1;
+            }
+          }
+          if (!String.IsNullOrEmpty(enterLine)) {
+            actionSocketLine = enterLine;
+            actionSocketPid = Net.GetSocketProcessId(actionSocketLine);
+            actionPick = 0;
+            actionMenuOpen = true;
+          }
+        }
+        if (String.Equals(key, "\r")) {
+          string[] socketsEnterCr = Net.GetOpenSocketsOnInterface(ifaceFilter);
+          int enterSelCr = 0;
+          string enterLineCr = "";
+          foreach (string row in socketsEnterCr) {
+            bool textOkEnterCr = false;
+            if (String.IsNullOrEmpty(filter)) {
+              textOkEnterCr = true;
+            } else {
+              if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
+                textOkEnterCr = true;
+              }
+            }
+            if (textOkEnterCr) {
+              if (enterSelCr == selected) {
+                enterLineCr = row;
+              }
+              enterSelCr = enterSelCr + 1;
+            }
+          }
+          if (!String.IsNullOrEmpty(enterLineCr)) {
+            actionSocketLine = enterLineCr;
+            actionSocketPid = Net.GetSocketProcessId(actionSocketLine);
+            actionPick = 0;
+            actionMenuOpen = true;
+          }
+        }
+        if (String.Equals(key, "j")) {
+          selected = selected + 1;
+          anchorLine = "";
+        }
+        if (String.Equals(key, "k")) {
+          selected = selected - 1;
+          anchorLine = "";
+        }
+        if (String.Equals(key, "DOWN")) {
+          selected = selected + 1;
+          anchorLine = "";
+        }
+        if (String.Equals(key, "UP")) {
+          selected = selected - 1;
+          anchorLine = "";
+        }
+        if (String.Equals(key, "PAGE_DOWN")) {
+          selected = selected + listPageStep;
+          anchorLine = "";
+        }
+        if (String.Equals(key, "PAGE_UP")) {
+          selected = selected - listPageStep;
+          anchorLine = "";
+        }
+        if (String.Equals(key, "g")) {
+          selected = 0;
+          scroll = 0;
+          anchorLine = "";
+        }
+        if (String.Equals(key, "G")) {
+          selected = 999999;
+          anchorLine = "";
+        }
+        if (String.Equals(key, "HOME")) {
+          selected = 0;
+          scroll = 0;
+          anchorLine = "";
+        }
+        if (String.Equals(key, "END")) {
+          selected = 999999;
+          anchorLine = "";
+        }
+        if (String.Equals(key, "f")) {
+          actionMenuOpen = false;
+          if (stdinTui) {
+            Console.ExitInteractiveInputMode();
+          }
+          if (mouseEnabled) {
+            mouseEnabled = false;
+            Console.DisableMouseReporting();
+          }
+          filterDialogOpen = true;
+          filterTab = 0;
+          draftText = filter;
+          draftIface = ifaceFilter;
+          ifacePick = 0;
+          ifaceListScroll = 0;
+          restoreIfacePick = !String.IsNullOrEmpty(ifaceFilter);
+        }
+        if (String.Equals(key, "/")) {
+          actionMenuOpen = false;
+          if (stdinTui) {
+            Console.ExitInteractiveInputMode();
+          }
+          if (mouseEnabled) {
+            mouseEnabled = false;
+            Console.DisableMouseReporting();
+          }
+          filterDialogOpen = true;
+          filterTab = 0;
+          draftText = filter;
+          draftIface = ifaceFilter;
+          ifacePick = 0;
+          ifaceListScroll = 0;
+          restoreIfacePick = !String.IsNullOrEmpty(ifaceFilter);
+        }
+        if (String.Equals(key, "i")) {
+          actionMenuOpen = false;
+          if (stdinTui) {
+            Console.ExitInteractiveInputMode();
+          }
+          if (mouseEnabled) {
+            mouseEnabled = false;
+            Console.DisableMouseReporting();
+          }
+          filterDialogOpen = true;
+          filterTab = 1;
+          draftText = filter;
+          draftIface = ifaceFilter;
+          ifacePick = 0;
+          ifaceListScroll = 0;
+          restoreIfacePick = true;
+        }
+        if (String.Equals(key, "]")) {
+          string[] ifcCycle = Net.GetNetworkInterfaces();
+          int ifcCount = Array.GetLength(ifcCycle);
+          int currentPick = 0;
+          if (!String.IsNullOrEmpty(ifaceFilter)) {
+            int scan = 1;
+            foreach (string name in ifcCycle) {
+              if (String.Equals(name, ifaceFilter)) {
+                currentPick = scan;
+              }
+              scan = scan + 1;
+            }
+          }
+          int nextPick = currentPick + 1;
+          if (nextPick > ifcCount) {
+            nextPick = 0;
+          }
+          if (nextPick == 0) {
+            ifaceFilter = "";
+          } else {
+            ifaceFilter = ifcCycle[nextPick - 1];
+          }
+          anchorLine = "";
+          selected = 0;
+          scroll = 0;
+        }
+        if (String.Equals(key, "[")) {
+          string[] ifcCycle = Net.GetNetworkInterfaces();
+          int ifcCount = Array.GetLength(ifcCycle);
+          int currentPick = 0;
+          if (!String.IsNullOrEmpty(ifaceFilter)) {
+            int scan = 1;
+            foreach (string name in ifcCycle) {
+              if (String.Equals(name, ifaceFilter)) {
+                currentPick = scan;
+              }
+              scan = scan + 1;
+            }
+          }
+          int nextPick = currentPick - 1;
+          if (nextPick < 0) {
+            nextPick = ifcCount;
+          }
+          if (nextPick == 0) {
+            ifaceFilter = "";
+          } else {
+            ifaceFilter = ifcCycle[nextPick - 1];
+          }
+          anchorLine = "";
+          selected = 0;
+          scroll = 0;
+        }
+        if (String.Equals(key, "c")) {
+          filter = "";
+          ifaceFilter = "";
+          anchorLine = "";
+          selected = 0;
+          scroll = 0;
+        }
+        if (String.Equals(key, "r")) {
+          repaint = true;
+        }
+        if (String.Equals(key, "m")) {
+          if (mouseEnabled) {
+            mouseEnabled = false;
+            Console.DisableMouseReporting();
+          } else {
+            mouseEnabled = true;
+            Console.EnableMouseReporting();
+          }
+        }
+      }
     }
+  } else {
+    if (!filterDialogOpen && !actionMenuOpen) {
+      idlePolls = idlePolls + 1;
+      if (idlePolls >= dataRefreshPolls) {
+        idlePolls = 0;
+        repaint = true;
+      }
+    }
+  }
+
+  if (repaint) {
+    string[] sockets = Net.GetOpenSocketsOnInterface(ifaceFilter);
+
+    int total = 0;
+    int processGroups = 0;
+    int lastGroupPid = -1;
+    foreach (string row in sockets) {
+      bool textOk = false;
+      if (String.IsNullOrEmpty(filter)) {
+        textOk = true;
+      } else {
+        if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
+          textOk = true;
+        }
+      }
+      if (textOk) {
+        total = total + 1;
+        int rowPid = Net.GetSocketProcessId(row);
+        if (rowPid != lastGroupPid) {
+          processGroups = processGroups + 1;
+          lastGroupPid = rowPid;
+        }
+      }
+    }
+
+    if (total == 0) {
+      selected = 0;
+      scroll = 0;
+      anchorLine = "";
+    } else {
+      if (selected >= total) {
+        selected = total - 1;
+      }
+      if (selected < 0) {
+        selected = 0;
+      }
+
+      if (!String.IsNullOrEmpty(anchorLine)) {
+        int foundIndex = -1;
+        int scan = 0;
+        foreach (string row in sockets) {
+          bool textOk = false;
+          if (String.IsNullOrEmpty(filter)) {
+            textOk = true;
+          } else {
+            if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
+              textOk = true;
+            }
+          }
+          if (textOk) {
+            if (String.Equals(row, anchorLine)) {
+              foundIndex = scan;
+            }
+            scan = scan + 1;
+          }
+        }
+        if (foundIndex >= 0) {
+          selected = foundIndex;
+        }
+      }
+    }
+
+    int height = Console.GetWindowHeight();
+    int width = Console.GetWindowWidth();
+    int listChromeRows = 5;
+    if (!String.IsNullOrEmpty(filter)) {
+      listChromeRows = listChromeRows + 1;
+    }
+    if (!String.IsNullOrEmpty(ifaceFilter)) {
+      listChromeRows = listChromeRows + 1;
+    }
+    int bodyRows = height - listChromeRows;
+    if (bodyRows < 4) {
+      bodyRows = 4;
+    }
+
+    if (total > 0) {
+      int anchorScan = 0;
+      foreach (string row in sockets) {
+        bool textOkAnchor = false;
+        if (String.IsNullOrEmpty(filter)) {
+          textOkAnchor = true;
+        } else {
+          if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
+            textOkAnchor = true;
+          }
+        }
+        if (textOkAnchor) {
+          if (anchorScan == selected) {
+            anchorLine = row;
+          }
+          anchorScan = anchorScan + 1;
+        }
+      }
+
+      int adjustGuard = 0;
+      while (adjustGuard < total + 8) {
+        adjustGuard = adjustGuard + 1;
+        int firstVisible = -1;
+        int lastVisible = -1;
+        int simDrawn = 0;
+        int simRow = 0;
+        int simPrevPid = -1;
+        foreach (string row in sockets) {
+          bool textOkSim = false;
+          if (String.IsNullOrEmpty(filter)) {
+            textOkSim = true;
+          } else {
+            if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
+              textOkSim = true;
+            }
+          }
+          if (textOkSim) {
+            int simPid = Net.GetSocketProcessId(row);
+            if (simRow >= scroll && simDrawn < bodyRows) {
+              if (simRow == scroll || simPid != simPrevPid) {
+                simDrawn = simDrawn + 1;
+              }
+              if (simDrawn < bodyRows) {
+                if (firstVisible < 0) {
+                  firstVisible = simRow;
+                }
+                lastVisible = simRow;
+                simDrawn = simDrawn + 1;
+              }
+            }
+            simPrevPid = simPid;
+            simRow = simRow + 1;
+          }
+        }
+        if (firstVisible < 0) {
+          scroll = 0;
+          adjustGuard = total + 8;
+        } else {
+          if (selected >= firstVisible && selected <= lastVisible) {
+            listPageStep = lastVisible - firstVisible + 1;
+            if (listPageStep < 1) {
+              listPageStep = 1;
+            }
+            adjustGuard = total + 8;
+          } else {
+            if (selected > lastVisible) {
+              scroll = scroll + 1;
+            } else {
+              if (selected < firstVisible) {
+                scroll = scroll - 1;
+              }
+            }
+            if (scroll < 0) {
+              scroll = 0;
+            }
+          }
+        }
+      }
+    }
+
+    listFirstSocketRow = 3;
+    if (!String.IsNullOrEmpty(filter)) {
+      listFirstSocketRow = listFirstSocketRow + 1;
+    }
+    if (!String.IsNullOrEmpty(ifaceFilter)) {
+      listFirstSocketRow = listFirstSocketRow + 1;
+    }
+
+    Console.BeginBatchWrite();
+    Console.MoveCursorHome();
+
+    string hostName = OS.GetHostName();
+    Console.WriteLine(CBold + CCyan + " PortMonitor " + CReset + CDim + "| " + hostName + " | " + Convert.ToString(total) + " sockets, " + Convert.ToString(processGroups) + " processes" + CReset);
+    if (!String.IsNullOrEmpty(filter)) {
+      Console.WriteLine(CYellow + " text: " + filter + CReset);
+    }
+    if (!String.IsNullOrEmpty(ifaceFilter)) {
+      Console.WriteLine(CYellow + " iface: " + ifaceFilter + CReset);
+    }
+    Console.WriteLine(CDim + "Proto  State      Local              Peer               Process" + CReset);
+
+    int rowIndex = 0;
+    int drawn = 0;
+    string detail = "";
+    int prevSocketPid = -1;
+
+    foreach (string row in sockets) {
+      bool textOk = false;
+      if (String.IsNullOrEmpty(filter)) {
+        textOk = true;
+      } else {
+        if (String.Contains(String.ToLower(row), String.ToLower(filter))) {
+          textOk = true;
+        }
+      }
+      if (textOk) {
+        int rowPid = Net.GetSocketProcessId(row);
+        if (rowIndex >= scroll && drawn < bodyRows) {
+          if (rowIndex == scroll || rowPid != prevSocketPid) {
+            string procName = Process.GetName(rowPid);
+            if (String.IsNullOrEmpty(procName)) {
+              procName = "?";
+            }
+            string header = CBold + CYellow + "-- PID " + Convert.ToString(rowPid) + " " + procName + " --" + CReset;
+            Console.WriteLine(header);
+            drawn = drawn + 1;
+          }
+          if (drawn < bodyRows) {
+            if (rowIndex == selected) {
+              Console.WriteLine(CRev + "    " + row + CReset);
+              detail = row;
+            } else {
+              Console.WriteLine(CDim + "    " + row + CReset);
+            }
+            drawn = drawn + 1;
+          }
+        }
+        prevSocketPid = rowPid;
+        rowIndex = rowIndex + 1;
+      }
+    }
+
+    if (String.IsNullOrEmpty(detail) && !String.IsNullOrEmpty(anchorLine)) {
+      detail = anchorLine;
+    }
+
+    Console.WriteLine("");
+    if (!String.IsNullOrEmpty(statusMessage)) {
+      Console.WriteLine(CGreen + statusMessage + CReset);
+    } else {
+      Console.WriteLine(CDim + detail + CReset);
+    }
+    string helpLine = "j/k/Home/End/PgUp/PgDn  Enter/a actions  f filter  i iface  c clear  q quit  m mouse";
+    if (mouseEnabled) {
+      helpLine = "mouse on (no text select)  " + helpLine;
+    }
+    Console.WriteLine(CDim + helpLine + CReset);
+
+    while (drawn < bodyRows) {
+      Console.WriteLine("");
+      drawn = drawn + 1;
+    }
+
+    if (filterDialogOpen) {
+      string[] ifc = Net.GetNetworkInterfaces();
+      if (restoreIfacePick) {
+        restoreIfacePick = false;
+        if (String.IsNullOrEmpty(ifaceFilter)) {
+          ifacePick = 0;
+        } else {
+          int idx = 1;
+          foreach (string name in ifc) {
+            if (String.Equals(name, ifaceFilter)) {
+              ifacePick = idx;
+            }
+            idx = idx + 1;
+          }
+        }
+      }
+
+      int boxW = 56;
+      int boxH = height - 6;
+      if (boxH > 28) {
+        boxH = 28;
+      }
+      if (boxH < 14) {
+        boxH = 14;
+      }
+      int top = (height - boxH) / 2;
+      if (top < 2) {
+        top = 2;
+      }
+      int left = (width - boxW) / 2;
+      if (left < 2) {
+        left = 2;
+      }
+
+      string border = "+" + String.Repeat("-", boxW - 2) + "+";
+      Console.SetCursorPosition(top, left);
+      Console.Write(CRev + border + CReset);
+
+      string titleLine = String.PadRight("| Filter (Enter apply, Esc/q cancel)", boxW - 1, " ") + "|";
+      Console.SetCursorPosition(top + 1, left);
+      Console.Write(CRev + titleLine + CReset);
+
+      string tab0 = " Text ";
+      string tab1 = " Interface ";
+      string tabBar = "";
+      if (filterTab == 0) {
+        tabBar = "| [" + tab0 + "] " + tab1;
+      } else {
+        tabBar = "|  " + tab0 + " [" + tab1 + "]";
+      }
+      tabBar = String.PadRight(tabBar, boxW - 1, " ") + "|";
+      Console.SetCursorPosition(top + 2, left);
+      Console.Write(CRev + tabBar + CReset);
+
+      Console.SetCursorPosition(top + 3, left);
+      Console.Write(CRev + border + CReset);
+
+      if (filterTab == 0) {
+        string row = "| Contains: " + draftText;
+        row = String.PadRight(row, boxW - 1, " ") + "|";
+        Console.SetCursorPosition(top + 5, left);
+        Console.Write(CRev + row + CReset);
+        Console.SetCursorPosition(top + 7, left);
+        Console.Write(CRev + String.PadRight("| Left/Right arrows: switch tabs", boxW - 1, " ") + "|" + CReset);
+      } else {
+        int ifcTotal = Array.GetLength(ifc);
+        int listSlots = boxH - 9;
+        if (listSlots < 3) {
+          listSlots = 3;
+        }
+        if (ifacePick > 0) {
+          int pickInList = ifacePick - 1;
+          if (pickInList < ifaceListScroll) {
+            ifaceListScroll = pickInList;
+          }
+          if (pickInList >= ifaceListScroll + listSlots) {
+            ifaceListScroll = pickInList - listSlots + 1;
+          }
+        }
+        if (ifaceListScroll < 0) {
+          ifaceListScroll = 0;
+        }
+        if (ifcTotal > listSlots && ifaceListScroll + listSlots > ifcTotal) {
+          ifaceListScroll = ifcTotal - listSlots;
+        }
+        string hint = "| j/k pick  Enter apply  (" + Convert.ToString(ifcTotal) + " interfaces)";
+        Console.SetCursorPosition(top + 4, left);
+        Console.Write(CRev + String.PadRight(hint, boxW - 1, " ") + "|" + CReset);
+        string allLine = "|   (all interfaces)";
+        if (ifacePick == 0) {
+          allLine = "| > (all interfaces)";
+        }
+        allLine = String.PadRight(allLine, boxW - 1, " ") + "|";
+        Console.SetCursorPosition(top + 5, left);
+        Console.Write(CRev + allLine + CReset);
+        int displaySlot = 0;
+        int ifcIndex = 0;
+        foreach (string name in ifc) {
+          if (ifcIndex >= ifaceListScroll && displaySlot < listSlots) {
+            displaySlot = displaySlot + 1;
+            string mark = "  ";
+            if (ifacePick == ifcIndex + 1) {
+              mark = "> ";
+            }
+            string line = "| " + mark + name;
+            line = String.PadRight(line, boxW - 1, " ") + "|";
+            Console.SetCursorPosition(top + 5 + displaySlot, left);
+            Console.Write(CRev + line + CReset);
+          }
+          ifcIndex = ifcIndex + 1;
+        }
+        if (ifcTotal > listSlots) {
+          int scrollEnd = ifaceListScroll + listSlots;
+          if (scrollEnd > ifcTotal) {
+            scrollEnd = ifcTotal;
+          }
+          string scrollHint = "| (" + Convert.ToString(ifaceListScroll + 1) + "-" + Convert.ToString(scrollEnd) + " of " + Convert.ToString(ifcTotal) + ")";
+          Console.SetCursorPosition(top + boxH - 2, left);
+          Console.Write(CRev + String.PadRight(scrollHint, boxW - 1, " ") + "|" + CReset);
+        }
+      }
+
+      Console.SetCursorPosition(top + boxH - 1, left);
+      Console.Write(CRev + border + CReset);
+    }
+
+    if (actionMenuOpen) {
+      int actW = 52;
+      int actH = 10;
+      int actTop = (height - actH) / 2;
+      if (actTop < 2) {
+        actTop = 2;
+      }
+      int actLeft = (width - actW) / 2;
+      if (actLeft < 2) {
+        actLeft = 2;
+      }
+      string actBorder = "+" + String.Repeat("-", actW - 2) + "+";
+      Console.SetCursorPosition(actTop, actLeft);
+      Console.Write(CRev + actBorder + CReset);
+      string actTitle = "| Actions for selected socket (j/k, Enter)";
+      actTitle = String.PadRight(actTitle, actW - 1, " ") + "|";
+      Console.SetCursorPosition(actTop + 1, actLeft);
+      Console.Write(CRev + actTitle + CReset);
+      string actSub = "| PID " + Convert.ToString(actionSocketPid);
+      actSub = String.PadRight(actSub, actW - 1, " ") + "|";
+      Console.SetCursorPosition(actTop + 2, actLeft);
+      Console.Write(CRev + actSub + CReset);
+      Console.SetCursorPosition(actTop + 3, actLeft);
+      Console.Write(CRev + actBorder + CReset);
+
+      string act0 = "|  Append line to PortMonitor.log";
+      string act1 = "|  Filter list by process name";
+      string act2 = "|  Show process (ps)";
+      string act3 = "|  Send SIGTERM to PID";
+      if (actionPick == 0) {
+        act0 = "|> Append line to PortMonitor.log";
+      }
+      if (actionPick == 1) {
+        act1 = "|> Filter list by process name";
+      }
+      if (actionPick == 2) {
+        act2 = "|> Show process (ps)";
+      }
+      if (actionPick == 3) {
+        act3 = "|> Send SIGTERM to PID";
+      }
+      act0 = String.PadRight(act0, actW - 1, " ") + "|";
+      act1 = String.PadRight(act1, actW - 1, " ") + "|";
+      act2 = String.PadRight(act2, actW - 1, " ") + "|";
+      act3 = String.PadRight(act3, actW - 1, " ") + "|";
+      Console.SetCursorPosition(actTop + 4, actLeft);
+      Console.Write(CRev + act0 + CReset);
+      Console.SetCursorPosition(actTop + 5, actLeft);
+      Console.Write(CRev + act1 + CReset);
+      Console.SetCursorPosition(actTop + 6, actLeft);
+      Console.Write(CRev + act2 + CReset);
+      Console.SetCursorPosition(actTop + 7, actLeft);
+      Console.Write(CRev + act3 + CReset);
+      string actFoot = "| q cancel";
+      actFoot = String.PadRight(actFoot, actW - 1, " ") + "|";
+      Console.SetCursorPosition(actTop + 8, actLeft);
+      Console.Write(CRev + actFoot + CReset);
+      Console.SetCursorPosition(actTop + 9, actLeft);
+      Console.Write(CRev + actBorder + CReset);
+    }
+
+    Console.WriteLine(CEraseBelow);
+    Console.EndBatchWrite();
+  }
 }
 
 if (mouseEnabled) {
-    Console.DisableMouseReporting();
+  Console.DisableMouseReporting();
 }
 if (Console.IsStdinTerminal()) {
-    Console.ExitInteractiveInputMode();
+  Console.ExitInteractiveInputMode();
 }
 Console.DisableErrorLog();
 Console.WriteLine(CShowCursor + CAltScreenOff + CReset);

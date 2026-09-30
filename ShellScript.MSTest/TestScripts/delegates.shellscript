@@ -5,18 +5,18 @@ delegate string PathProvider();
 PathProvider getApplicationsDir;
 
 string getCurrentUserApplicationsDir() {
-    return "~/.local/share/applications/";
-    echo "tst";
+  return "~/.local/share/applications/";
+  echo "tst";
 }
 
 string getSharedApplicationsDir() {
-    return "/usr/share/applications/";
+  return "/usr/share/applications/";
 }
 
 if (User.IsSuperUser()) {
-    getApplicationsDir = getSharedApplicationsDir;
+  getApplicationsDir = getSharedApplicationsDir;
 } else {
-    getApplicationsDir = getCurrentUserApplicationsDir;
+  getApplicationsDir = getCurrentUserApplicationsDir;
 }
 
 echo getApplicationsDir();

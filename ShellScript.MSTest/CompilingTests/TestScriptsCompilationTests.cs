@@ -32,6 +32,11 @@ namespace ShellScript.MSTest.CompilingTests
 
             foreach (var script in scripts)
             {
+                if (script.Replace('\\', '/').Contains("/parts/", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 foreach (var platform in platforms)
                 {
                     var relativeSourcePath = GetRelativePath(testScriptsRoot, script);

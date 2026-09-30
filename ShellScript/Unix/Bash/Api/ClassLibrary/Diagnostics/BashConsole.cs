@@ -159,7 +159,7 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Diagnostics
                     "    break\n" +
                     "  fi\n" +
                     "  seq=\"${seq}${c}\"\n" +
-                    "  case \"$seq\" in \"[A\"|\"[B\"|\"[C\"|\"[D\"|\"OA\"|\"OB\"|\"OC\"|\"OD\") break ;; esac\n" +
+                    "  case \"$seq\" in \"[A\"|\"[B\"|\"[C\"|\"[D\"|\"OA\"|\"OB\"|\"OC\"|\"OD\"|\"OH\"|\"OF\"|\"[H\"|\"[F\") break ;; esac\n" +
                     "  case \"$c\" in '~') break ;; esac\n" +
                     "  i=$((i + 1))\n" +
                     "done\n" +
@@ -168,9 +168,13 @@ namespace ShellScript.Unix.Bash.Api.ClassLibrary.Diagnostics
                     "  \"[B\"|\"OB\") printf 'DOWN'; return 0 ;;\n" +
                     "  \"[D\"|\"OD\") printf 'LEFT'; return 0 ;;\n" +
                     "  \"[C\"|\"OC\") printf 'RIGHT'; return 0 ;;\n" +
+                    "  \"OH\"|\"[H\") printf 'HOME'; return 0 ;;\n" +
+                    "  \"OF\"|\"[F\") printf 'END'; return 0 ;;\n" +
                     "esac\n" +
                     "if [[ \"$seq\" =~ ^\\[5.*~$ ]]; then printf 'PAGE_UP'; return 0; fi\n" +
                     "if [[ \"$seq\" =~ ^\\[6.*~$ ]]; then printf 'PAGE_DOWN'; return 0; fi\n" +
+                    "if [[ \"$seq\" =~ ^\\[(1|7).*~$ ]]; then printf 'HOME'; return 0; fi\n" +
+                    "if [[ \"$seq\" =~ ^\\[(4|8).*~$ ]]; then printf 'END'; return 0; fi\n" +
                     "if [ -n \"$seq\" ]; then printf 'ESC'; return 0; fi\n" +
                     "printf 'ESC'",
                     info, call.Parameters, call.Info);

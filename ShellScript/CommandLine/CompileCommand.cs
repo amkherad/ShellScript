@@ -89,7 +89,15 @@ namespace ShellScript.CommandLine
                     "shellscript compile 'Examples/**/*.shellscript' Unix-Bash");
             }
 
-            var scripts = SnapshotTester.ResolveScripts(pathArgs).ToArray();
+            var allMatches = SnapshotTester.ResolveScripts(pathArgs).ToArray();
+            var scripts = allMatches.Where(ShellScriptSourceFilters.IsStandaloneEntry).ToArray();
+            var skipped = allMatches.Length - scripts.Length;
+            if (skipped > 0)
+            {
+                warningWriter.WriteLine(
+                    $"Skipping {skipped} path(s) (bin/obj output, include parts/, API resources, or launcher stub).");
+            }
+
             if (scripts.Length == 0)
             {
                 errorWriter.WriteLine("No .shellscript files matched the given path(s).");

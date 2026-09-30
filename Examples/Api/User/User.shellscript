@@ -4,7 +4,9 @@
 
 string name = User.GetUserName();
 bool elevated = User.IsSuperUser();
+bool nameSet = !String.IsNullOrEmpty(name);
 
-echo $"nameSet={!String.IsNullOrEmpty(name)}";
+echo $"nameSet={nameSet}";
 echo $"elevated={elevated}";
+Assert.True(nameSet);
 echo "EXAMPLE_OK:User";

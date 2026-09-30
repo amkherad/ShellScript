@@ -28,6 +28,7 @@ namespace ShellScript
             new CompileCommand(),
             new RunCommand(),
             new TestCommand(),
+            new FormatCommand(),
             new PlatformsCommand(),
             new ExecuteCommand(),
             new VersionInfoCommand(),
