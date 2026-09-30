@@ -1,0 +1,9 @@
+#!/usr/bin/env shellscript
+// Integration test entry: runs Core/Cli/CommandLine.shellscript with sample args.
+// @expect-out Hello, ShellScript!
+// @expect-out [verbose] greet #1
+// @expect-out EXAMPLE_OK:CommandLine
+// @expect-exit 0
+// @args greet --verbose --name=ShellScript --count=1
+
+include "../../Core/Cli/CommandLine.shellscript";

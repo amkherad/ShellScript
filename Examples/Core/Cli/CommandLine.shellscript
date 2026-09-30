@@ -1,0 +1,144 @@
+#!/usr/bin/env shellscript
+// Command-line parsing with Cli: subcommands, global flags, --opt=value, spaced values, positionals.
+//
+// Examples:
+//   ./CommandLine.bash greet --verbose --name=Ada --count=2
+//   ./CommandLine.bash sum 10 20 30
+//   ./CommandLine.bash config show --file=app.ini
+//   ./CommandLine.bash config show --file app.ini extra-key
+
+void printUsage() {
+  echo "CommandLine — Cli parsing demo";
+  echo "";
+  echo "Usage:";
+  echo "  CommandLine <command> [options] [args...]";
+  echo "";
+  echo "Commands:";
+  echo "  greet              Print a greeting (--name / -n, --count, --verbose / -v)";
+  echo "  sum <numbers...>   Sum numeric arguments (flags ignored)";
+  echo "  config show        Show --file= path and optional positional key";
+  echo "";
+  echo "Global:";
+  echo "  --help, -h         Show this help";
+}
+
+void greet() {
+  bool verboseFlag = Cli.HasFlag("--verbose");
+  bool verboseShort = Cli.HasFlag("-v");
+  bool verbose = verboseFlag || verboseShort;
+
+  string name = Cli.GetFlagValue("--name");
+  if (String.IsNullOrEmpty(name)) {
+    name = Cli.GetFlagValue("-n");
+  }
+  if (String.IsNullOrEmpty(name)) {
+    name = "world";
+  }
+
+  string countText = Cli.GetFlagValue("--count");
+  int times = 1;
+  if (!String.IsNullOrEmpty(countText)) {
+    times = Convert.ToInteger(countText);
+  }
+
+  for (int t = 0; t < times; t++) {
+    if (verbose) {
+      echo $"[verbose] greet #{t + 1}";
+    }
+    echo $"Hello, {name}!";
+  }
+}
+
+void sumNumbers() {
+  int argc = Cli.GetArgumentCount();
+  int total = 0;
+  int i = 1;
+
+  while (i < argc) {
+    string token = Cli.GetArgument(i);
+    bool isVerbose = String.Equals(token, "--verbose");
+    bool isVerboseShort = String.Equals(token, "-v");
+    bool skip = isVerbose || isVerboseShort;
+    bool isLongFlag = String.StartsWith(token, "--");
+    if (!skip && isLongFlag) {
+      skip = true;
+    }
+    bool isShortFlag = String.StartsWith(token, "-") && !isLongFlag;
+    if (!skip && isShortFlag) {
+      skip = true;
+    }
+    if (!skip) {
+      total = total + Convert.ToInteger(token);
+    }
+    i = i + 1;
+  }
+
+  Console.WriteLine("sum=" + Convert.ToString(total));
+  Assert.True(total > 0);
+}
+
+void configShow() {
+  string file = Cli.GetFlagValue("--file");
+  if (String.IsNullOrEmpty(file)) {
+    file = "(none)";
+  }
+  Console.WriteLine("config-file=" + file);
+
+  int argc = Cli.GetArgumentCount();
+  int i = 2;
+  while (i < argc) {
+    string token = Cli.GetArgument(i);
+    bool isFlag = String.StartsWith(token, "--");
+    if (!isFlag) {
+      Console.WriteLine("config-key=" + token);
+      i = argc;
+    }
+    i = i + 1;
+  }
+}
+
+void dispatch() {
+  string command = Cli.GetArgument(0);
+
+  switch (command) {
+    case "greet": {
+      greet();
+    }
+    case "sum": {
+      sumNumbers();
+    }
+    case "config": {
+      int configArgc = Cli.GetArgumentCount();
+      if (configArgc < 2) {
+        echo "config: expected subcommand 'show'";
+      } else {
+        string sub = Cli.GetArgument(1);
+        switch (sub) {
+          case "show": {
+            configShow();
+          }
+          default: {
+            echo $"config: unknown subcommand '{sub}'";
+          }
+        }
+      }
+    }
+    default: {
+      echo $"Unknown command: {command}";
+    }
+  }
+}
+
+int argc = Cli.GetArgumentCount();
+bool helpFlag = Cli.HasFlag("--help");
+bool helpShort = Cli.HasFlag("-h");
+
+if (argc == 0 || helpFlag || helpShort) {
+  printUsage();
+  Assert.True(true);
+  echo "EXAMPLE_OK:CommandLine";
+} else {
+  dispatch();
+  Assert.True(argc > 0);
+  echo "EXAMPLE_OK:CommandLine";
+}
