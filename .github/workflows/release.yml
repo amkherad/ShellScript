@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: ${{ matrix.artifact_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: linux-x64
+            os: ubuntu-latest
+            artifact_name: linux-x64
+          - rid: win-x64
+            os: windows-latest
+            artifact_name: win-x64
+          - rid: osx-x64
+            os: macos-latest
+            artifact_name: osx-x64
+          - rid: osx-arm64
+            os: macos-latest
+            artifact_name: osx-arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Publish (single-file, self-contained, ReadyToRun)
+        run: >
+          dotnet publish ShellScript/ShellScript.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:PublishReadyToRun=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=none
+          -p:DebugSymbols=false
+          -o "${{ runner.temp }}/publish"
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $pub = Join-Path $env:RUNNER_TEMP 'publish'
+          $out = Join-Path $env:RUNNER_TEMP 'dist'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $zip = Join-Path $out "ShellScript-$tag-${{ matrix.artifact_name }}.zip"
+          Compress-Archive -Path (Join-Path $pub 'ShellScript.exe') -DestinationPath $zip -Force
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          PUB="${{ runner.temp }}/publish"
+          OUT="${{ runner.temp }}/dist"
+          mkdir -p "$OUT"
+          BASE="ShellScript-${TAG}-${{ matrix.artifact_name }}"
+          chmod +x "$PUB/ShellScript"
+          tar -C "$PUB" -czf "$OUT/${BASE}.tar.gz" ShellScript
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ runner.temp }}/dist/*
+          if-no-files-found: error
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: dist/*

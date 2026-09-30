@@ -1,511 +1,236 @@
 # ShellScript
 
-| Linux Build (Travis-CI) | Code Coverage |
-|-------------------------|---------------|
-| [![Build Status](https://travis-ci.com/amkherad/ShellScript.svg?branch=master)](https://travis-ci.com/amkherad/ShellScript) | [![Coverage Status](https://coveralls.io/repos/github/amkherad/ShellScript/badge.svg?branch=master)](https://coveralls.io/github/amkherad/ShellScript?branch=master) |
+| CI | Releases |
+|----|----------|
+| [![CI](https://github.com/amkherad/ShellScript/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/amkherad/ShellScript/actions/workflows/ci.yml) | Push a **tag** to build single-file binaries for Linux, Windows, and macOS ([workflow](https://github.com/amkherad/ShellScript/actions/workflows/release.yml)) |
 
-[Work In Progress]  
-Cross-platform intermediate shell scripting language.  
-A transpiler to generate native OS shell commands from a shared code base with a powerfull class library and rich language features.
+Cross-platform shell scripting language that **transpiles** (source-to-source compiles) `.shellscript` sources into native shell scripts. One codebase can target **Unix Bash**, **Windows PowerShell**, and **Windows Batch**, with a shared class library (`File`, `Path`, `Console`, `Net`, `Assert`, and more).
 
-Learning all of the shell scripting languages with all those details could be so frustrating and it can be forgotten so easily due to tons of details and special cases, the idea of ShellScript is to create an intermediate language that can be transpiled (source to source compilation) into any shell language with use of paltform-dependent utilities.
+The canonical language definition is **[docs/language/specification.md](docs/language/specification.md)**. API reference pages are generated under **[docs/api/](docs/api/)** (see [Contributing](#contributing)).
+
+## Documentation
+
+| Topic | Location |
+|--------|----------|
+| Language (grammar, types, conformance) | [docs/language/specification.md](docs/language/specification.md) |
+| API reference | [docs/api/index.md](docs/api/index.md) |
+| Architecture | [docs/design/high-level-design.md](docs/design/high-level-design.md) |
+| Contributing & docs site | [docs/contributing.md](docs/contributing.md) |
+| Jekyll site (local preview) | [docs/README-docs.md](docs/README-docs.md) |
+
+Example scripts: `Examples/Api/` (class library), `Examples/Core/` (language features), `Examples/Apps/` (larger programs), `Examples/Events/`.
 
 ## Installing
 
 ### Arch Linux
 
-```
+```bash
 sudo pacman -S shellscript
 ```
-You can install dotnet package using (the above command will install dotnet automatically):
-```
-sudo pacman -S dotnet-runtime
-sudo pacman -S dotnet-host
-```
 
-### Download the Binaries
+The package pulls in the .NET runtime; you can also install the SDK explicitly:
 
-[ShellScript Releases](https://github.com/amkherad/ShellScript/releases) 
-
-### Build from the source
-
-First you need to install dotnet core host and runtime along side with SDK:
-
-Arch Linux:
-```
-sudo pacman -S dotnet-host
-sudo pacman -S dotnet-runtime
-sudo pacman -S dotnet-sdk
+```bash
+sudo pacman -S dotnet-host dotnet-runtime dotnet-sdk
 ```
 
-For other operating systems please refer to [Microsoft .NET downloads](https://www.microsoft.com/net/download) and install .NET Core 2.1
+### Download binaries
 
-Clone the repository and build the solution:
-```
+[ShellScript releases](https://github.com/amkherad/ShellScript/releases)
+
+### Build from source
+
+Install the [.NET SDK](https://dotnet.microsoft.com/download) **8.x** (matches `ShellScript/ShellScript.csproj`).
+
+```bash
 git clone git@github.com:amkherad/ShellScript.git
 cd ShellScript
 dotnet build ShellScript.sln
+dotnet test ShellScript.MSTest/ShellScript.MSTest.csproj
 ```
 
-* You can find the binaries in ShellScript/ShellScript/bin/[Release-Debug]/[Framework]
+The compiler executable is produced under `ShellScript/bin/Debug/net8.0/` (or `Release`).
 
 ### Dev Container (Docker)
 
-You can build and test without installing the .NET SDK on the host:
+Build and test without installing the SDK on the host:
 
-1. Install [Docker](https://docs.docker.com/get-docker/) and the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension (VS Code / Cursor).
-2. Open this repository and run **Dev Containers: Reopen in Container**.
-3. After `postCreateCommand` finishes, use the integrated terminal:
+1. Install [Docker](https://docs.docker.com/get-docker/) and the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
+2. Open the repo and run **Dev Containers: Reopen in Container**.
+3. In the integrated terminal:
 
-```
-dotnet build ShellScript.sln
-dotnet test ShellScript.sln
-```
-
-The image includes .NET SDK 8 (builds `netcoreapp2.1` projects), `bash`, `jq`, and `python3` for compiler and example tests.
-
-To build the image manually:
-
-```
-docker build -f .devcontainer/Dockerfile -t shellscript-dev .
-docker run --rm -it -v "$PWD:/workspace" -w /workspace shellscript-dev bash -lc "dotnet test ShellScript.sln"
-```
-
----
-
-## Getting Started
-
-ShellScript is a C#-like language with less features from C# and some new features to allow coding for shell scripting environments.  
-As of today ShellScript supports transpiling to Unix-Bash and Windows-Batch shell languages.
-
-Here are some rules of the ShellScript:
-
-* Keywords in ShellScript are case-sensitive.
-* White-spaces are totally ignored unless they're inside single or double quote.
-* Blocks are free to use (i.e. you can have {} wherever you want just like C#)
-* Variables are accessible to their scope only.
-* Using arrays will generate hacks to implement the functions, so avoid using arrays as possible.
-* API functions and objects will be written to the output only when they're used inside the code.
-* ShellScript API methods will use platform's dedicated way to get the results wherever possible instead of writing it's own function.
-  ```csharp
-  int x = -23;
-  echo Math.Abs(x); //will generate 'echo ${x#-}' in bash.
-  ```
-* There's no label/goto syntax.
-
-### Data Types
-ShellScript is a strong-typed/static-typed language, all data types are listed below:  
-
-| Data Type | Alias(es)     | Description
-|-----------|---------------|-------------
-| Integer   | int, long     | Any integer number. (e.g. 956)
-| Float     | double, float | Any float number. (e.g. 56.48)
-| Number    | number        | Any number, either integer or float.
-| String    | string        | Representing a string of characters.
-| Boolean   | bool          | Representing a boolean value. (i.e. true or false)
-| Void      | void          | Void data type. (The only usage is to define a void method)
-| Object    | object        | Representing an instance of a class. (different from object in C#) `[NOT IMPLEMENTED YET]`
-| Array     | DATATYPE[]    | Represents an array of items of the given data type. (e.g. int[])
-| Delegate  | delegate      | Holds a reference to a callable object (function).
-
-Example of data types in code:
-```csharp
-int i = 956;
-long l = 956;
-float f = 56.48;
-float f = +8.56e-23;
-double d = +8.56e-23;
-number n = 956;
-number m = +8.56e-23;
-string s = "Hello World";
-boolean b = true || false;
-```
-
-##### Notices
-
-* Types have no boundaries or limitation in the language itself but they're limited to target platform specifications.
-
-* Only integer types can be casted to float types implicitly, for other types an explicit cast is required.
-
-### Variable Definition
-Variable definitions are similar to C#, except there is no var keyword for auto typing.  
-There are four places for variable definitions:  
-* Defining a variable inside a block of code:
-
-  ```csharp
-  int myVariable = 43;
-  ```
-
-
-* Defining a variable inside for/foreach loop:
-
-  ```csharp
-  for (int myVariable = 0; myVariable < 10; myVariable++) { }
-  foreach (int myVariable in GetIntegers()) { }
-  ```
-  - foreach variable is immutable inside foreach block (and inaccessible outside of the block, if it's defined in the foreach statement).
-
-* Defining a parameter in a function definition:
-
-  ```csharp
-  void myFunction (int myParam1) { }
-  ```
-
-##### Notices
-
-* Just like C#, variable definition is not an embedded statement, example:
-  ```csharp
-  for (int i = 0; i < 100; i++)
-      int j = i; //Compiler error.
-  
-  for (int i = 0; i < 100; i++) {
-      int j = i; //OK
-  }
-  ```
-
-### Assignment
-There are four places for assignments:  
-* Assigning a variable inside a block of code:
-
-  ```csharp
-  myVariable = 43;
-  ```
-
-
-* Assigning a variable inside for/foreach loop:
-
-  ```csharp
-  for (myVariable = 0; myVariable < 10; myVariable++) { }
-  foreach (myVariable in GetIntegers()) { }
-  ```
-
-* Assigning a parameter to a default value:
-
-  ```csharp
-  void myFunction (int myParam1 = 10) { }
-  ```
-
-* Assigning a variable inside an evaluation expression:
-
-  ```csharp
-  myVariable = x = 2;
-  while ((that = that.Parent) != null) { }
-  ```
-
-### Function Definition
-ShellScript use same syntax for function definition as C#.  
-
-```csharp
-int myFunction (int parameter1) {
-    return 0;
-}
-```
-
-Same as the C#, all code paths must return a value, so this is a compiler error:
-
-```csharp
-double myDouble (int parameter1) {
-    if (parameter1 < 10) {
-        echo "ERROR";
-
-        //No return from if body. :CompilerError
-    } else {
-        return 0;
-    }
-}
-```
-
-### Conditional Blocks (Branches)
-
-#### If
-`if` block is implemented exactly as C#.
-
-```csharp
-if (condition) {
-    echo ("condition is true");
-} else if (condition2 == true) {
-    echo ("condition2 is true");
-} else {
-    echo ("condition and condition2 are false");
-}
-```
-
-#### Switch Case
-`switch case` block is implemented exactly as C#.
-
-```csharp
-switch (value1) {
-    case "Item1": {
-        echo ("Item1");
-        break;
-    }
-    default: {
-        echo ("Default");
-    }
-}
-```
-
-##### Notices
-
-* Conditional blocks with constant conditions will be compiled if their condition is true.
-  ```csharp
-  if (true) {
-      echo ("true");
-  } else if (false) {
-      echo ("false");
-  } else {
-      echo ("else");
-  }
-  //The entire if statement will be removed and only one echo ("true") will be generated.
-  ```
-* `if` may compile to a `switch case` syntax if required or vice-versa.
-* `if` and `switch case` considered as branch statements, they're required to return a value in every branch inside a non-void method, and may be converted to arithmetic/logical expression to remove branch.
-
-### Loops
-There are four loops in ShellScript.
-
-#### for
-`for` syntax used to iterate using a condition and an optional counter:
-```csharp
-for (int i = 0; i < 10; i++) {
-    echo ("Line: " + i);
-}
-```
-
-#### foreach
-`foreach` syntax used to iterate over an array:
-```csharp
-foreach (int age in GetAges()) {
-    echo ("Age is: " + age);
-}
-```
-
-#### while
-`while` syntax used to iterate using a condition:
-```csharp
-while (_continue) {
-    echo ($"Continue is {_continue}");
-}
-```
-
-#### do while
-`do while` syntax used to iterate at least once using a condition:
-```csharp
-do {
-    echo ("Going to check the condition.");
-} while (_continue);
-```
-
-##### Notices
-
-* Empty loops will be ignored.
-* Preferred loop for infinite iterations is **`for`**.
-  ```csharp
-  for (;;) {
-      //Infinite loop
-  }
-  ```
-
-### Evaluation Expressions And Operators
-
-There's no limitations on expressions, but it's highly suggested to use parenthesis to clarify expressions.
-
-Here are all the operators with their order (first row has the most priority): 
-
-| Category         | Operator                            | Associativity
-|------------------|-------------------------------------|-----------------
-| Primary/Postfix  | () [] ++ -- .                       | Left to right
-| Unary	           | + - ! ~ ++ - - (type)               | Right to left
-| Multiplicative   | * / %                               | Left to right
-| Additive         | + -                                 | Left to right
-| Shift            | `<<` `>>`                           | Left to right
-| Relational       | < <= > >=                           | Left to right
-| Equality         | == !=                               | Left to right
-| Bitwise AND	   | &                                   | Left to right
-| Bitwise XOR	   | ^                                   | Left to right
-| Bitwise OR	   | \|                                  | Left to right
-| Logical AND	   | &&                                  | Left to right
-| Logical OR	   | \|\|                                | Left to right
-| Conditional	   | `?:`                                | Right to left
-| Assignment	   | = `+= -= *= /= %=>>= <<= &= ^= \|=` | Right to left
-| Comma	           | ,                                   | Left to right
-
-`Some operators are not implemented yet.`
-
-```csharp
-return (1024 ^ 1023) + 1024 * 2; //2047 + 2048 = 4095
-```
-
-Non-void functions are considered as evaluation expression:
-```csharp
-return 2 * factorial(20);
-```
-
-##### Notices
-
-* Expressions are parsed from left to right.
-* Expressions may be truncated into multiple helper variables.
-* Constant expressions will be calculated at compile-time. (i.e. 1024 * 2 will generate 2048 constant value)
-* Both void methods or non-void methods will be inlined if there's only one statement inside.
-* By default ShellScript only check errors/exceptions for the methods/commands having throw syntax inside or marked by a throws syntax.
-* Writing raw platform-specific code is considered unsafe and should be avoided unless there's no other way.
-* You can enable value tracking to treat variables as constant if their value is not changed.
-  ```csharp
-  int x = 10;
-  return x * 10 / 3;
-  //if value-tracking enabled it will generate "return 33" constant value instead of arithmetic evaluation.
-  //that's because value of x is not changed before reading it.
-  ```
-* Evaluation of second operand in logical operators is UB (Undefined Behavior) and it depends on the target shell.
-* It's better to avoid micro-optimizations or outsmarting the compiler, because ShellScript will optimize the well-known statements to platform's dedicated way to implement the functionality, even ignore statements or reorder for better results, and doing so will prevent ShellScript from recognizing the function.
-  ```csharp
-  //keep files of a directory in an array to optimize performance.
-  string[] files = Directory.GetFiles("Path-To-Directory");
-  foreach (string fileName in files) {
-      echo (fileName);
-  }
-  //somewhere else in the code, we need to iterate the files again.
-  foreach (string fileName in files) {
-      echo (fileName);
-  }
-
-  //the code above will prevent to query the file system twice, but as said before using arrays will generate hacks,
-  //so the generated code might not be as good as expected.
-
-  //now iterating directory's files by querying file system separately.
-  foreach (string fileName in Directory.GetFiles("Path-To-Directory")) {
-      echo (fileName);
-  }
-  //somewhere else in the code, we need to iterate the files again.
-  foreach (string fileName in Directory.GetFiles("Path-To-Directory")) {
-      echo (fileName);
-  }
-
-  //this code will generate "for filename in Path-To-Directory/*; do" in bash and
-  //it's easier to understand (if required to read the output) and it's not using any hacks.
-  //but it may be slower (you can benchmark your code to choose which is better for your requirements)
-  ```
-
-
-#### String Concatenation
-You can concatenate strings using addition operator (+) or using string interpolation ($"").
-```csharp
-return "Hello" + " " + "World " + dateValue;
-```
-```csharp
-return $"Hello World {dateValue}";
-```
-
-##### Notices
-
-* You can use both single quote or double quote. (both are strings, ShellScript has no character data type)
-* String escaping is exactly like C#.
-* Concatenating constant strings will generate a concatenated constant string.
-* You can use multiplication operator on one integer and one string to repeat the string.
-  ```csharp
-  echo (80 * "-"); //will repeat (-) 80 times.
-  ```
-
-Transpiler will do it's best for reliability and high performance, but sometimes the performance and correctness relies on external utilities, like using floating-point arithmetic in bash, it will use `awk` or other utilities available to do the math but they can reject to calculate the expression. (e.g. compiling `awk` with no math enabled)
-
-## Echo
-Echo is one of the special syntaxes in ShellScript. it's classified as a **void** function call. (i.e. cannot be used inside evaluation expressions)  
-The echo syntax doesn't require parenthesis unlike general function calls.
-
-```csharp
-echo "Hello World";
-```
-
-Most of the times echo is a syntax-to-syntax transpilation, but it can generate different syntaxes on different target platforms, look at this code:
-```csharp
-int myFunction (int param1) {
-    echo ("Hello World");
-    return 10;
-}
-```
-This code will transpile to the following script in unix-bash:
 ```bash
-function myFunction () {
-    echo "Hello World" > /dev/tty
-    echo 10;
-    return 0; //this might be omitted.
+dotnet build ShellScript.sln
+dotnet test ShellScript.MSTest/ShellScript.MSTest.csproj
+```
+
+The image uses .NET SDK 8 and includes `bash`, `jq`, and `python3` for compiler and snapshot tests.
+
+```bash
+docker build -f .devcontainer/Dockerfile -t shellscript-dev .
+docker run --rm -it -v "$PWD:/workspace" -w /workspace shellscript-dev \
+  bash -lc "dotnet test ShellScript.MSTest/ShellScript.MSTest.csproj"
+```
+
+---
+
+## Quick start
+
+Write `hello.shellscript`:
+
+```csharp
+echo "Hello from ShellScript";
+```
+
+Compile for Bash (output path is optional; default is beside the source with a `.bash` extension):
+
+```bash
+dotnet run --project ShellScript/ShellScript.csproj -- \
+  compile hello.shellscript Unix-Bash
+bash hello.bash
+```
+
+Or compile and run in one step (Unix Bash, temporary output):
+
+```bash
+dotnet run --project ShellScript/ShellScript.csproj -- run hello.shellscript
+```
+
+---
+
+## Language overview
+
+ShellScript uses **C#-like** syntax tuned for shell environments: functions, `if`/`else`, loops, `echo`, `return`, delegates, arrays, and static typing. Keywords are **case-sensitive**. Whitespace is ignored outside quoted strings. Statements end with **`;`** (newlines are not statement terminators).
+
+### Target platforms
+
+| Platform name | Role |
+|---------------|------|
+| `Unix-Bash` | Primary backend; full statement and API coverage used in CI |
+| `Windows-PowerShell` | Transpiler and API stubs |
+| `Windows-Batch` | Transpiler and API stubs |
+
+List installed platforms:
+
+```bash
+dotnet run --project ShellScript/ShellScript.csproj -- --platforms
+```
+
+### Types
+
+| Type | Aliases | Notes |
+|------|---------|--------|
+| Integer | `int`, `long` | |
+| Float | `float`, `double` | Often uses `awk` / `bc` / `python3` on Bash when needed |
+| Number | `number` | Integer or floating-point |
+| String | `string` | `'...'` and `"..."`; `$"..."` interpolation |
+| Boolean | `bool` | `true` / `false` (not `boolean`) |
+| Void | `void` | Function return only |
+| Array | `T[]` | e.g. `int[]`, `string[]` |
+| Delegate | `delegate` | Callable references |
+| Object | `object` | Reserved / incomplete |
+
+There is no `var` keyword; types must be written explicitly. Only integer-to-float widening is implicit; other conversions need a cast `(type)`.
+
+### Control flow and structure
+
+On **Unix-Bash**, the compiler currently emits (among others):
+
+- `if` / `else`
+- `while`, `do` / `while`, `foreach`, classic `for`
+- `switch` / `case` / `default`
+- `include "path.shellscript";` at **file root** only (see spec for resolution and `parts/` fragments)
+- Preprocessor `#if` / `#elseif` / `#else` / `#endif` with **parenthesized** constant conditions
+
+Features such as `throw`, `async`/`await`, and user-defined **classes** are reserved or incomplete—see the [feature matrix](docs/language/specification.md#15-implementation-feature-matrix) in the specification.
+
+### Functions, `echo`, and shell semantics
+
+Function syntax matches C#. Non-void functions must return on all paths where required by the compiler.
+
+`echo` is a dedicated statement (parentheses optional). On Bash, inside value-returning functions, user-visible `echo` may be redirected so **stdout can carry the function result**—see [section 8.2](docs/language/specification.md#82-echo) and [section 12](docs/language/specification.md#12-functions-and-shell-result-semantics) of the specification.
+
+```csharp
+int abs(int x) {
+    return x < 0 ? -x : x;
 }
 ```
-The first echo inside the method writes directly to `/dev/tty` in unix. because shell environments use standard-output to return a value. (i.e. by redirecting the output of a command/function to a variable or another command)
 
-## Pre-Processors (Macros)
+API calls such as `Math.Abs` may inline to target-native code when safe:
 
-Like every C-like language ShellScript has pre-processors.  
-Pre-processors are checked before the compilation begins, so you can make statements and tokens conditional, or changing some compilation behaviors.
-
-#### If pre-processor
-`#if` used to make statements and tokens conditional:
 ```csharp
-#if (Bash)
-echo ("Welcome bash users");
-#elseif (Batch)
-echo ("Welcome batch users");
-#else
-echo ("Welcome everyone");
-#endif
+int x = -23;
+echo Math.Abs(x); // may become bash parameter expansion, e.g. ${x#-}
 ```
 
-#### Option pre-processor
-`#option` used to set or override compiler options.
-```csharp
-#option ("Author", "Ali Mousavi Kherad") //this will set the author property.
-#option ("Awk", "Disable") //this will disable usage of awk
-```
+### Testing in examples
 
-###### Notices
-* If pre-processor MUST have parenthesis unlike C#.
+The **`Assert`** API (`Assert.Equals`, `Assert.True`, …) is used throughout `Examples/` for self-checking sample programs. Snapshot tests compare transpiled `.bash` output to `*.output.bash.txt` files (`dotnet test`).
+
+### Preprocessor
+
+Platform constants (e.g. `Bash`, `Unix` on the Bash backend) drive `#if (Bash)` branches at compile time. `#option` can set compiler flags—details in the [specification](docs/language/specification.md#10-preprocessor).
 
 ---
 
-## API and Class Library
-ShellScript provide some API methods to minify the need to write platform-specific code for each platform.  
-These methods try to use the target shell's dedicated way to get the results but in cases they will generate meta functions inside the output script file. (meta codes are at the beginning of the file)
+## Class library
 
-* It's possible to override API functions by knowing the generated function name and writing your own function with that name before the first usage of the API.
+Library definitions live in `ShellScript/Core/Language/Library/`. Bash implementations live under `ShellScript/Unix/Bash/Api/ClassLibrary/`.
 
-[Enter the API documentation here](https://github.com/amkherad/ShellScript/blob/master/docs/ClassLibrary.md)
+After changing public API surface:
+
+```bash
+python3 scripts/generate-api-docs.py
+```
+
+Browse generated pages under [docs/api/](docs/api/). Legacy hand-written notes remain in [docs/ClassLibrary.md](docs/ClassLibrary.md); prefer the generated reference.
+
+Only used APIs are emitted into the output script (plus shared helpers). You can override a generated helper by defining a function with the same name before first use.
 
 ---
 
-## Command-Line
-Command-line format is ShellScript command [parameters] [-switch-name[=switch-value]]
+## Command-line interface
 
-#### help, -h, --help
-To show the help.
+Invocation: `shellscript <command> [arguments] [-switch[=value]]`
 
-#### --platforms
-To print the installed target platforms.
+| Command | Description |
+|---------|-------------|
+| `help`, `-h`, `--help` | Show help |
+| `--platforms` | List target platforms |
+| `-v`, `--version` | Version string |
+| `compile` | Compile `.shellscript` file(s); globs supported; output beside source or explicit path |
+| `run` | Compile to Bash in a temp directory, execute, clean up |
+| `test` | Run snapshot tests (`--snapshot`; optional globs; default `**/*.shellscript` under cwd) |
+| `format` | Format `.shellscript` sources (optional globs; default indent 2 spaces) |
+| `exec` | Run a source/project without writing a permanent compile artifact |
+| `daemon` | Start the runtime daemon |
 
-#### -v, --version
-To print the version of the compiler.
+**Compile** requires a platform name (`Unix-Bash`, `Windows-PowerShell`, or `Windows-Batch`) as the last argument or via `--platform=...`.
 
-#### compile, -c, --compile
-To compile a file/project.
+```bash
+dotnet run --project ShellScript/ShellScript.csproj -- \
+  compile Examples/Api/File/File.shellscript Unix-Bash
 ```
-ShellScript compile Source Output Platform [-switch-name[=switch-value]]
-```
-Example:
-```
-ShellScript compile /home/github/projects/test.shellscript /home/github/projects/build/test.bash Unix-Bash --verbose
+
+Quote globs so the shell does not expand them before the CLI sees them:
+
+```bash
+dotnet run --project ShellScript/ShellScript.csproj -- \
+  compile 'Examples/**/*.shellscript' Unix-Bash
 ```
 
----  
+---
 
 ## Contributing
 
-Please read [Contributing](docs/contributing.md) and the [documentation site](docs/) (language + API reference). API pages are generated with `python3 scripts/generate-api-docs.py`.
+Please read [docs/contributing.md](docs/contributing.md). When you change the class library, run `python3 scripts/generate-api-docs.py` and commit updates under `docs/api/`. Agent workflows are described in [AGENTS.md](AGENTS.md).
 
 ## Authors
 
-* **Ali Mousavi Kherad** - *Owner*
+* **Ali Mousavi Kherad** — owner
 
-See also the list of [contributors](https://github.com/amkherad/ShellScript/contributors) who participated in this project.
+See also [contributors](https://github.com/amkherad/ShellScript/contributors).
 
 ## License
 
-This project is licensed under the MIT License - see the [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT) for details
+MIT — see [opensource.org/licenses/MIT](https://opensource.org/licenses/MIT).
