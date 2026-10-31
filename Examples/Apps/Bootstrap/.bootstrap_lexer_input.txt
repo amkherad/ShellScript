@@ -1,0 +1,3 @@
+// Fixture for bootstrap self-test.
+
+echo "bootstrap-ok";

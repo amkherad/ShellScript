@@ -1,0 +1,37 @@
+#!/usr/bin/env shellscript
+// @expect-out EXAMPLE_OK:Bootstrap
+// @expect-exit 0
+//
+// Bootstrap: ShellScript-hosted compiler toward docs/language/specification.md.
+// Reference phases: bootstrap_tokenize.py, bootstrap_parse.py, bootstrap_emit.py
+// (port into parts/*.shellscript over time; goal is replacing the C# transpiler).
+
+include "parts/spec_registry.shellscript";
+include "parts/lexer.shellscript";
+include "parts/parser.shellscript";
+include "parts/emit_bash.shellscript";
+
+string scriptDir = Platform.GetScriptDirectory();
+string fixture = scriptDir + "/fixtures/minimal.shellscript";
+string tokenPath = BsTokenPath(scriptDir);
+string irPath = BsIrPath(scriptDir);
+string bashPath = scriptDir + "/.bootstrap_selftest.bash";
+
+string source = File.ReadAllText(fixture);
+BsWriteTokens(source, tokenPath);
+int tokenCount = BsCountTokensInFile(tokenPath);
+Assert.True(tokenCount > 0);
+
+BsWriteIr(tokenPath, irPath);
+int stmtCount = BsCountStatementsInFile(irPath);
+Assert.True(stmtCount > 0);
+
+string irText = File.ReadAllText(irPath);
+string bash = BsEmitBashFromIr(irText);
+File.WriteAllText(bashPath, bash);
+Assert.True(String.Contains(File.ReadAllText(bashPath), "bootstrap-ok"));
+
+echo "tokens=" + Convert.ToString(tokenCount);
+echo "statements=" + Convert.ToString(stmtCount);
+echo "phase=lexer,parser,emit-bash";
+echo "EXAMPLE_OK:Bootstrap";

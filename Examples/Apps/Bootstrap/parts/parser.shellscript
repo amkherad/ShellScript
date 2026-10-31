@@ -1,0 +1,17 @@
+string BsIrPath(string scriptDir) {
+  return scriptDir + "/.bootstrap_ir.txt";
+}
+
+void BsWriteIr(string tokenPath, string irOutPath) {
+  string scriptDir = Platform.GetScriptDirectory();
+  string py = scriptDir + "/bootstrap_parse.py";
+  string cmd = "python3 '" + py + "' '" + tokenPath + "'";
+  string ir = Process.RunAndCapture(cmd);
+  File.WriteAllText(irOutPath, ir);
+}
+
+int BsCountStatementsInFile(string irPath) {
+  string text = File.ReadAllText(irPath);
+  string[] lines = Text.Split(text, "\n");
+  return Array.GetLength(lines);
+}

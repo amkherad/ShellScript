@@ -1,0 +1,21 @@
+// Lexical analysis (spec sections 3–4). Tokens: KIND<TAB>VALUE (bootstrap_tokenize.py for now).
+
+string BsTokenPath(string scriptDir) {
+  return scriptDir + "/.bootstrap_tokens.txt";
+}
+
+void BsWriteTokens(string source, string tokenOutPath) {
+  string scriptDir = Platform.GetScriptDirectory();
+  string tmp = scriptDir + "/.bootstrap_lexer_input.txt";
+  File.WriteAllText(tmp, source);
+  string py = scriptDir + "/bootstrap_tokenize.py";
+  string cmd = "python3 '" + py + "' '" + tmp + "'";
+  string tokens = Process.RunAndCapture(cmd);
+  File.WriteAllText(tokenOutPath, tokens);
+}
+
+int BsCountTokensInFile(string tokenPath) {
+  string text = File.ReadAllText(tokenPath);
+  string[] lines = Text.Split(text, "\n");
+  return Array.GetLength(lines);
+}

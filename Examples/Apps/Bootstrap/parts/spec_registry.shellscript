@@ -1,0 +1,24 @@
+// Maps docs/language/specification.md to bootstrap implementation tracking.
+
+string SpecKeywordList() {
+  return "const void int long bool double float number string object any delegate if else for foreach while do loop return new include echo true false null nil switch case default class throw async await";
+}
+
+void SpecPrintRoadmap() {
+  Console.WriteLine("ShellScript Bootstrap — self-hosted compiler roadmap (see docs/language/specification.md)");
+  Console.WriteLine("");
+  Console.WriteLine("Phase 1 Lexer     : whitespace, // comments, identifiers, keywords, numbers, strings, punctuation");
+  Console.WriteLine("Phase 2 Parser    : echo statements; grow toward full grammar");
+  Console.WriteLine("Phase 3 Emit Bash : Unix-Bash backend; Windows targets later");
+  Console.WriteLine("Phase 4 Includes  : include resolution (spec section 8.4)");
+  Console.WriteLine("Phase 5 Full spec : types, functions, control flow, API, preprocessor");
+  Console.WriteLine("");
+  Console.WriteLine("Goal: replace the C# transpiler with ShellScript sources that emit platform shells.");
+  Console.WriteLine("Interim: bootstrap_*.py reference phases; port each module into parts/*.shellscript.");
+}
+
+void SpecPrintKeywordCount() {
+  string[] kws = Text.Split(SpecKeywordList(), " ");
+  int n = Array.GetLength(kws);
+  Console.WriteLine("spec-keywords=" + Convert.ToString(n));
+}

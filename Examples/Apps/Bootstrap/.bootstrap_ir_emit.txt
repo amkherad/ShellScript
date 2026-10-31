@@ -1,0 +1,1 @@
+STMT	ECHO	bootstrap-ok
